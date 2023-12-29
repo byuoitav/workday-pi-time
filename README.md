@@ -10,7 +10,7 @@ EVENT_PROCESSOR_HOST
 WSO2
 CLIENT_KEY
 CLIENT_SECRET
-TOKEN_REFRESH_URL
+TOKEN_REFRESH_URL - used in both WSO2 and in generating the URL in employeeCache.go
 
 pflags
 -p -port --TCP port to listen defaults to 8643

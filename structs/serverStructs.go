@@ -127,22 +127,37 @@ type TimeClockDay struct {
 	PunchedHours          string  `json:"punched_hours"`
 }
 
+type BucketStatus struct {
+	PendingBucket  int
+	ErrorBucket    int
+	EmployeeBucket int
+}
+
 // Punch represents a single punch in or out for an employee
+// type Punch struct {
+// 	PunchType            string  `json:"punch_type"`
+// 	PunchTime            string  `json:"punch_time"`
+// 	SequenceNumber       *int    `json:"sequence_number,omitempty"`
+// 	DeletablePair        *int    `json:"deletable_pair,omitempty"`
+// 	Latitude             *string `json:"latitude,omitempty"`
+// 	Longitude            *string `json:"longitude,omitempty"`
+// 	LocationDescription  *string `json:"location_description,omitempty"`
+// 	TimeCollectionSource *string `json:"time_collection_source,omitempty"`
+// 	WorkOrderID          *string `json:"work_order_id,omitempty"`
+// 	TRCID                *string `json:"trc_id,omitempty"`
+// 	PunchDate            *string `json:"punch_date,omitempty"`
+// 	EmployeeRecord       *int    `json:"employee_record,omitempty"`
+// 	PunchZone            *string `json:"punch_zone,omitempty"`
+// 	InternetAddress      *string `json:"internet_address,omitempty"`
+// }
+
 type Punch struct {
-	PunchType            string  `json:"punch_type"`
-	PunchTime            string  `json:"punch_time"`
-	SequenceNumber       *int    `json:"sequence_number,omitempty"`
-	DeletablePair        *int    `json:"deletable_pair,omitempty"`
-	Latitude             *string `json:"latitude,omitempty"`
-	Longitude            *string `json:"longitude,omitempty"`
-	LocationDescription  *string `json:"location_description,omitempty"`
-	TimeCollectionSource *string `json:"time_collection_source,omitempty"`
-	WorkOrderID          *string `json:"work_order_id,omitempty"`
-	TRCID                *string `json:"trc_id,omitempty"`
-	PunchDate            *string `json:"punch_date,omitempty"`
-	EmployeeRecord       *int    `json:"employee_record,omitempty"`
-	PunchZone            *string `json:"punch_zone,omitempty"`
-	InternetAddress      *string `json:"internet_address,omitempty"`
+	Worker_ID                  string `json:"worker_id"`
+	Position_Number            string `json:"position_number"`
+	Clock_Event_Type           string `json:"clock_event_type"`
+	Time_Entry_Code            string `json:"time_entry_code"`
+	Comment                    string `json:"comment"`
+	Time_Clock_Event_Date_Time string `json:"time_clock_event_date_time"`
 }
 
 // WorkOrderDaySummary is returned when querying a date for work orders logged on that date

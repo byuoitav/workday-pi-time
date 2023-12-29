@@ -1,146 +1,113 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/common/v2/events"
-	"github.com/byuoitav/pi-time/event"
-	"github.com/labstack/echo/v4"
+	"github.com/byuoitav/workday-pi-time/event"
+	"github.com/byuoitav/workday-pi-time/structs"
 
-	"github.com/byuoitav/pi-time/employee"
-	"github.com/byuoitav/pi-time/handlers"
-	"github.com/byuoitav/pi-time/offline"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/byuoitav/workday-pi-time/handlers"
+
 	bolt "go.etcd.io/bbolt"
 )
 
 var updateCacheNowChannel = make(chan struct{})
+var logger *slog.Logger
 
 func main() {
+	//setup logger
+	var logLevel = new(slog.LevelVar)
 	var err error
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
+	slog.SetDefault(logger)
 
-	//open db and pass it in to the functions
-	dbLoc := os.Getenv("CACHE_DATABASE_LOCATION")
-	db, err := bolt.Open(dbLoc, 0600, nil)
-	if err != nil {
-		panic(fmt.Sprintf("could not open db: %s", err))
+	logLevel.Set(slog.LevelInfo)
+	if runtime.GOOS == "windows" {
+		logLevel.Set(slog.LevelDebug)
+		logger.Info("running from Windows, logging set to debug")
 	}
-
-	//create buckets if they do not exist
-	err = db.Update(func(tx *bolt.Tx) error {
-		//create punch bucket if it does not exist
-		log.L.Debug("Checking if Pending Bucket Exists")
-		_, err := tx.CreateBucketIfNotExists([]byte(offline.PENDING_BUCKET))
-		if err != nil {
-			return fmt.Errorf("error creating the pending bucket: %s", err)
-		}
-
-		log.L.Debug("Checking if Error Bucket Exists")
-		_, err = tx.CreateBucketIfNotExists([]byte(offline.ERROR_BUCKET))
-		if err != nil {
-			return fmt.Errorf("error creating the error bucket: %s", err)
-		}
-
-		log.L.Debug("Checking if Employee Bucket Exists")
-		_, err = tx.CreateBucketIfNotExists([]byte(employee.EMPLOYEE_BUCKET))
-		if err != nil {
-			return fmt.Errorf("error creating the employee bucket: %s", err)
-		}
-
-		return nil
-	})
-	if err != nil {
-		panic(fmt.Sprintf("could not create db buckets: %s", err))
-	}
-
-	//start a go routine that will pull the cache information for offline mode
-	//go employee.WatchForCachedEmployees(updateCacheNowChannel, db)
 
 	//start a go routine that will monitor the persistent cache for punches that didn't get posted and post them once the database comes online
 	//go offline.ResendPunches(db)
 
 	//start up a server to serve the angular site and set up the handlers for the UI to use
-	var port *string
-	port = flag.String("p", "8463", "port for microservice to av-api communication")
+	port := flag.String("p", "8463", "port for microservice to av-api communication")
+	flag.Parse()
+	listeningPort := ":" + *port
 
-	router := echo.New()
+	router := gin.Default()
 
 	// health endpoint
-	router.GET("/healthz", func(c echo.Context) error {
-		return c.String(http.StatusOK, "healthy")
+	router.GET("/healthz", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{
+			"message": "healthy",
+		})
 	})
 
-	//Get all the bucket stats (pending, error, employee)
-	router.GET("/statz", offline.GetBucketStatsHandler(db))
+	router.GET("/ping", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
 
-	// push up bucket stats every 5 minutes
-	go sendBucketStats(db)
+	router.GET("/status", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{
+			"message": "good",
+		})
+	})
 
-	//Search for employee in the employee cache
-	router.GET("/employeeBucket/:id", offline.GetEmployeeFromBucket(db))
-
-	//returns all the punches in the error bucket
-	router.GET("/buckets/error/punches", offline.GetErrorBucketPunchesHandler(db))
-
-	//deletes a specific punch in the error bucket
-	router.DELETE("/buckets/error/punches/:punchId", offline.GetDeletePunchFromErrorBucketHandler(db))
-
-	//deletes all the punches in the error bucket
-	router.DELETE("/buckets/error/punches/all", offline.DeleteAllFromPunchBucket(db))
-
-	//moves all requests in the error bucket to the pending bucket and clears the error bucket
-	router.GET("/buckets/error/reset", offline.TransferPunchesHandler(db))
-
-	//login and upgrade to websocket
-	router.GET("/id/:id", handlers.GetLoginUserHandler(db))
+	//get and return all info to ui for employee
+	router.GET("/get_employee_data/:id", func(context *gin.Context) {
+		handlers.GetEmployeeFromTCD(context)
+		handlers.GetEmployeeFromWorkdayAPI(context)
+	})
 
 	//all of the functions to call to add / update / delete / do things on the UI
 
 	//clock in
 	//clock out
-	router.POST("/punch/:id", handlers.PostPunch(db))
+	router.POST("/punch/:id", func(context *gin.Context) {
+		handlers.PostPunch(context)
+	})
 
-	//endpoint for UI events
-	router.POST("/event", handlers.SendEventHandler)
-
-	//force an update of the employee cache
-	router.PUT("/updateCache", updateCacheNow)
-	router.GET("/cache", handlers.CacheDump(db))
-
-	router.GET("/", func(c echo.Context) error {
-		return c.Redirect(http.StatusTemporaryRedirect, "/analog")
+	router.GET("/", func(context *gin.Context) {
+		context.Redirect(http.StatusTemporaryRedirect, "/analog")
 	})
 
 	//serve the angular web page
-	router.Group("/analog", middleware.StaticWithConfig(middleware.StaticConfig{
-		Root:   "analog",
-		Index:  "index.html",
-		HTML5:  true,
-		Browse: true,
-	}))
+	//frontend := router.Group("/analog")
+	router.StaticFS("/assets", http.Dir("./assets"))
+	//  middleware.StaticWithConfig(middleware.StaticConfig{
+	// 	Root:   "analog",
+	// 	Index:  "index.html",
+	// 	HTML5:  true,
+	// 	Browse: true,
+	// })
 
-	server := http.Server{
-		Addr:           *port,
+	server := &http.Server{
+		Addr:           listeningPort,
 		MaxHeaderBytes: 1024 * 10,
 	}
 
-	err = router.StartServer(&server)
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.L.Fatalf("failed to start server: %s", err)
-	}
+	router.Run(server.Addr)
+
 }
 
-func updateCacheNow(ectx echo.Context) error {
+func updateCacheNow(context *gin.Context) {
+	fmt.Println("Updating Cache")
 	updateCacheNowChannel <- struct{}{}
-
-	return ectx.String(http.StatusOK, "cache update initiated")
+	context.String(http.StatusOK, "cache update initiated")
 }
 
 // send bucket stats to the event hub
@@ -149,7 +116,12 @@ func sendBucketStats(db *bolt.DB) {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		stats, err := offline.GetBucketStats(db) //stats is three integers indicating the qty of key/value pairs in the buckets (pending, error, and employee)
+		var stats structs.BucketStatus
+		var err error
+		//stats, err = offline.GetBucketStats(db) //stats is three integers indicating the qty of key/value pairs in the buckets (pending, error, and employee)
+		stats.PendingBucket = 1
+		stats.ErrorBucket = 100
+		stats.EmployeeBucket = 1000
 		if err != nil {
 			log.L.Warnf("unable to get bucket stats: %s", err)
 			continue

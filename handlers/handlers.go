@@ -2,73 +2,92 @@ package handlers
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/byuoitav/common/v2/events"
-	"github.com/byuoitav/pi-time/employee"
-	"github.com/byuoitav/pi-time/event"
-	"github.com/byuoitav/pi-time/helpers"
-	"github.com/byuoitav/pi-time/log"
-	"github.com/byuoitav/pi-time/offline"
-	"github.com/byuoitav/pi-time/structs"
-	"github.com/labstack/echo/v4"
+	"github.com/byuoitav/workday-pi-time/database"
+	"github.com/byuoitav/workday-pi-time/event"
 
-	bolt "go.etcd.io/bbolt"
+	"github.com/gin-gonic/gin"
 )
 
-// Punch adds an in or out punch as determined by the body sent
-func PostPunch(db *bolt.DB) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		byuID := c.Param("id")
+// Returns data from the postgres database - aka the TCD
+func GetEmployeeFromTCD(context *gin.Context) {
+	// //upgrade the connection to a websocket
+	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
 
-		var incomingRequest structs.ClientPunchRequest
-		err := c.Bind(&incomingRequest)
-		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
-		}
+	// //get the id
+	byuID := context.Param("id")
+	slog.Debug("GetEmployeeFromTCD with byuID: " + byuID)
 
-		//call the helper
-		err = helpers.Punch(byuID, incomingRequest)
-		if err != nil {
-			//Add the punch to the bucket if it failed for any reason
-			key := []byte(fmt.Sprintf("%s%s", byuID, time.Now().Format(time.RFC3339)))
-			gerr := offline.AddPunchToBucket(key, incomingRequest, db)
-			if gerr != nil {
-				return fmt.Errorf("two errors occured:%s and %s", err, gerr)
-			}
+	// //get the timesheet for this guy
+	timesheet, isOffline, err := database.GetTimesheet(byuID)
+	fmt.Println("Timesheet", timesheet)
+	fmt.Println("isOffline", isOffline)
 
-			return nil
-		}
+	if err != nil {
 
-		return c.String(http.StatusOK, "ok")
+		context.JSON(http.StatusInternalServerError, err)
 	}
+
+	context.JSON(http.StatusOK, "ok")
+}
+
+// Attempts to get data from the Workday custom API - returns
+func GetEmployeeFromWorkdayAPI(context *gin.Context) {
+	// //upgrade the connection to a websocket
+	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
+
+	// //get the id
+	byuID := context.Param("id")
+	slog.Debug("GetEmployeeFromWorkdayAPI with byuID: " + byuID)
+
+	// //get the timesheet for this guy
+	timesheet, isOffline, err := database.GetTimesheet(byuID)
+	fmt.Println("Timesheet", timesheet)
+	fmt.Println("isOffline", isOffline)
+
+	if err != nil {
+
+		context.JSON(http.StatusInternalServerError, err)
+	}
+
+	context.JSON(http.StatusOK, "ok")
+}
+
+// Punch adds an in or out punch as determined by the body sent
+func PostPunch(context *gin.Context) {
+
+	byuID := context.Param("id")
+	fmt.Println("PostPunch The id is: ", byuID)
+
+	var incomingRequest database.Punch
+
+	err := context.BindJSON(&incomingRequest)
+	if err != nil {
+		context.String(http.StatusBadRequest, err.Error())
+	}
+	fmt.Println(incomingRequest)
+
+	err = database.WritePunch(incomingRequest)
+	if err != nil {
+		context.String(http.StatusBadRequest, err.Error())
+		slog.Error("error writing punch to database", "Error", err)
+	}
+	context.JSON(http.StatusOK, "ok")
 }
 
 // SendEventHandler passes an event to the messenger
-func SendEventHandler(c echo.Context) error {
+func SendEventHandler(context *gin.Context) {
 	var e events.Event
-	if err := c.Bind(&e); err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+	if err := context.Bind(&e); err != nil {
+		context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	if err := event.SendEvent(e); err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
+		context.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	return c.NoContent(http.StatusOK)
-}
-
-// returns a dump of the cache for testing
-func CacheDump(db *bolt.DB) echo.HandlerFunc {
-	return echo.HandlerFunc(func(c echo.Context) error {
-		cache, err := employee.GetCache(db)
-		if err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
-
-		log.P.Info("Returning cache dump", "numEmployees", len(cache.Employees))
-
-		return c.JSON(http.StatusOK, cache)
-	})
+	context.JSON(http.StatusOK, "ok")
 }

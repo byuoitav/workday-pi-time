@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/byuoitav/common/v2/events"
-	"github.com/byuoitav/pi-time/log"
 )
 
 var (
@@ -34,7 +34,7 @@ func SendEvent(e events.Event) error {
 	eventProcessorHostList := strings.Split(eventProcessorHost, ",")
 	for _, hostName := range eventProcessorHostList {
 		// create the request
-		log.P.Debug(fmt.Sprintf("Sending event to address %s", hostName))
+		slog.Debug(fmt.Sprintf("Sending event to address %s", hostName))
 
 		req, err := http.NewRequest("POST", hostName, bytes.NewReader(reqBody))
 		if err != nil {
