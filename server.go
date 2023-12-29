@@ -28,7 +28,6 @@ var logger *slog.Logger
 func main() {
 	//setup logger
 	var logLevel = new(slog.LevelVar)
-	var err error
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
 
