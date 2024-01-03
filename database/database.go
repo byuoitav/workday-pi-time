@@ -90,7 +90,7 @@ var db *sql.DB
 
 const database_timeout = "5"
 
-var apiPassword, apiUser, tokenRefreshURL, apiURL, apiTenant, bdpPageSize string
+var apiPassword, apiUser, tokenRefreshURL, apiURL, apiTenant string
 
 func init() {
 	var err error
@@ -130,11 +130,10 @@ func getGlobalVars() {
 	apiPassword = os.Getenv("WORKDAY_API_PASSWORD")
 	apiURL = os.Getenv("WORKDAY_API_URL")
 	apiTenant = os.Getenv("WORKDAY_API_TENANT")
-	bdpPageSize = os.Getenv("BDP_PAGE_SIZE")
 	if tokenRefreshURL == "" || apiUser == "" || apiPassword == "" || apiURL == "" || apiTenant == "" {
 		slog.Error(`bdp package error
 		error getting environment variables. 
-		BDP_TOKEN_REFRESH_URL, WORKDAY_API_USER, WORKDAY_API_PASSWORD, WORKDAY_API_URL, WORKDAY_API_TENANT, BDP_PAGE_SIZE must be set to valid values. 
+		BDP_TOKEN_REFRESH_URL, WORKDAY_API_USER, WORKDAY_API_PASSWORD, WORKDAY_API_URL, WORKDAY_API_TENANT must be set to valid values. 
 		exiting`)
 		os.Exit(1)
 	}
