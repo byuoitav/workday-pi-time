@@ -7,19 +7,11 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/byuoitav/common/log"
-	"github.com/byuoitav/common/v2/events"
-	"github.com/byuoitav/workday-pi-time/event"
-	"github.com/byuoitav/workday-pi-time/structs"
-
+	"github.com/byuoitav/workday-pi-time/database"
 	"github.com/byuoitav/workday-pi-time/handlers"
-
-	bolt "go.etcd.io/bbolt"
 )
 
 var updateCacheNowChannel = make(chan struct{})
@@ -68,8 +60,12 @@ func main() {
 
 	//get and return all info to ui for employee
 	router.GET("/get_employee_data/:id", func(context *gin.Context) {
-		handlers.GetEmployeeFromTCD(context)
-		handlers.GetEmployeeFromWorkdayAPI(context)
+		var employee database.Employee
+		handlers.GetEmployeeFromTCD(context, &employee)
+		handlers.GetEmployeeFromWorkdayAPI(context, &employee)
+		fmt.Println(employee)
+		//context updated in handler function
+
 	})
 
 	//all of the functions to call to add / update / delete / do things on the UI
@@ -107,51 +103,4 @@ func updateCacheNow(context *gin.Context) {
 	fmt.Println("Updating Cache")
 	updateCacheNowChannel <- struct{}{}
 	context.String(http.StatusOK, "cache update initiated")
-}
-
-// send bucket stats to the event hub
-func sendBucketStats(db *bolt.DB) {
-	ticker := time.NewTicker(10 * time.Minute)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		var stats structs.BucketStatus
-		var err error
-		//stats, err = offline.GetBucketStats(db) //stats is three integers indicating the qty of key/value pairs in the buckets (pending, error, and employee)
-		stats.PendingBucket = 1
-		stats.ErrorBucket = 100
-		stats.EmployeeBucket = 1000
-		if err != nil {
-			log.L.Warnf("unable to get bucket stats: %s", err)
-			continue
-		}
-
-		deviceInfo := events.GenerateBasicDeviceInfo(os.Getenv("SYSTEM_ID"))
-		e := events.Event{
-			Timestamp:    time.Now(),
-			EventTags:    []string{"pi-time"},
-			AffectedRoom: deviceInfo.BasicRoomInfo,
-			TargetDevice: deviceInfo,
-			Key:          "pi-time-pending-bucket-size",
-			Value:        strconv.Itoa(stats.PendingBucket),
-		}
-
-		if err := event.SendEvent(e); err != nil {
-			log.L.Infof("unable to send pending bucket event: %w")
-		}
-
-		e.Key = "pi-time-error-bucket-size"
-		e.Value = strconv.Itoa(stats.ErrorBucket)
-
-		if err := event.SendEvent(e); err != nil {
-			log.L.Infof("unable to send error bucket event: %w")
-		}
-
-		e.Key = "pi-time-employee-bucket-size"
-		e.Value = strconv.Itoa(stats.EmployeeBucket)
-
-		if err := event.SendEvent(e); err != nil {
-			log.L.Infof("unable to send employee bucket event: %w")
-		}
-	}
 }

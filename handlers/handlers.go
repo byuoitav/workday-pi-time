@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 )
 
 // Returns data from the postgres database - aka the TCD
-func GetEmployeeFromTCD(context *gin.Context) {
+func GetEmployeeFromTCD(context *gin.Context, employee *database.Employee) {
 	// //upgrade the connection to a websocket
 	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
 
@@ -21,21 +22,23 @@ func GetEmployeeFromTCD(context *gin.Context) {
 	byuID := context.Param("id")
 	slog.Debug("GetEmployeeFromTCD with byuID: " + byuID)
 
-	// //get the timesheet for this guy
-	timesheet, isOffline, err := database.GetTimesheet(byuID)
-	fmt.Println("Timesheet", timesheet)
-	fmt.Println("isOffline", isOffline)
-
+	// //get the employee info for this worker
+	err := database.GetWorkerInfo(byuID, employee)
 	if err != nil {
 
 		context.JSON(http.StatusInternalServerError, err)
 	}
+	fmt.Println("Employee", employee)
 
-	context.JSON(http.StatusOK, "ok")
+	toSend, err := json.Marshal(employee)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, err)
+	}
+	context.JSON(http.StatusOK, toSend)
 }
 
 // Attempts to get data from the Workday custom API - returns
-func GetEmployeeFromWorkdayAPI(context *gin.Context) {
+func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee) {
 	// //upgrade the connection to a websocket
 	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
 
@@ -44,16 +47,18 @@ func GetEmployeeFromWorkdayAPI(context *gin.Context) {
 	slog.Debug("GetEmployeeFromWorkdayAPI with byuID: " + byuID)
 
 	// //get the timesheet for this guy
-	timesheet, isOffline, err := database.GetTimesheet(byuID)
-	fmt.Println("Timesheet", timesheet)
-	fmt.Println("isOffline", isOffline)
-
+	err := database.GetTimeSheet(byuID, employee)
 	if err != nil {
 
 		context.JSON(http.StatusInternalServerError, err)
 	}
+	fmt.Println("employee", employee)
 
-	context.JSON(http.StatusOK, "ok")
+	toSend, err := json.Marshal(employee)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, err)
+	}
+	context.JSON(http.StatusOK, toSend)
 }
 
 // Punch adds an in or out punch as determined by the body sent
