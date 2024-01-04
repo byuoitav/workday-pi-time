@@ -33,7 +33,7 @@ func main() {
 	//go offline.ResendPunches(db)
 
 	//start up a server to serve the angular site and set up the handlers for the UI to use
-	port := flag.String("p", "8463", "port for microservice to av-api communication")
+	port := flag.String("p", "8464", "port for microservice to av-api communication")
 	flag.Parse()
 	listeningPort := ":" + *port
 
@@ -59,13 +59,29 @@ func main() {
 	})
 
 	//get and return all info to ui for employee
+	type employee_dataReturn struct {
+		Status   map[string]bool   `json:"status"`
+		Employee database.Employee `json:"employee"`
+	}
 	router.GET("/get_employee_data/:id", func(context *gin.Context) {
 		var employee database.Employee
-		handlers.GetEmployeeFromTCD(context, &employee)
-		handlers.GetEmployeeFromWorkdayAPI(context, &employee)
-		fmt.Println(employee)
-		//context updated in handler function
+		status := make(map[string]bool)
+		errSend := make(map[string]string)
+		online, err := handlers.GetEmployeeFromTCD(context, &employee)
+		if err != nil {
+			errSend["error"] = err.Error()
+			context.JSON(http.StatusServiceUnavailable, errSend)
+		} else {
 
+			online2, _ := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
+
+			status["TCD_online"] = online
+			status["workdayAPI_online"] = online2
+			var return_data employee_dataReturn
+			return_data.Status = status
+			return_data.Employee = employee
+			context.JSON(http.StatusOK, return_data)
+		}
 	})
 
 	//all of the functions to call to add / update / delete / do things on the UI

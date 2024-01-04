@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/byuoitav/common/v2/events"
 	"github.com/byuoitav/workday-pi-time/database"
@@ -14,51 +14,35 @@ import (
 )
 
 // Returns data from the postgres database - aka the TCD
-func GetEmployeeFromTCD(context *gin.Context, employee *database.Employee) {
-	// //upgrade the connection to a websocket
-	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
-
+func GetEmployeeFromTCD(context *gin.Context, employee *database.Employee) (bool, error) {
 	// //get the id
+	online := true
 	byuID := context.Param("id")
 	slog.Debug("GetEmployeeFromTCD with byuID: " + byuID)
 
 	// //get the employee info for this worker
 	err := database.GetWorkerInfo(byuID, employee)
 	if err != nil {
-
-		context.JSON(http.StatusInternalServerError, err)
+		online = false
+		return online, err
 	}
-	fmt.Println("Employee", employee)
-
-	toSend, err := json.Marshal(employee)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, err)
-	}
-	context.JSON(http.StatusOK, toSend)
+	return online, nil
 }
 
 // Attempts to get data from the Workday custom API - returns
-func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee) {
-	// //upgrade the connection to a websocket
-	// webSocketClient := cache.ServeWebsocket(c.Response().Writer, c.Request())
-
+func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee) (bool, error) {
 	// //get the id
+	online := true
 	byuID := context.Param("id")
 	slog.Debug("GetEmployeeFromWorkdayAPI with byuID: " + byuID)
 
 	// //get the timesheet for this guy
 	err := database.GetTimeSheet(byuID, employee)
 	if err != nil {
-
-		context.JSON(http.StatusInternalServerError, err)
+		online = false
+		return online, err
 	}
-	fmt.Println("employee", employee)
-
-	toSend, err := json.Marshal(employee)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, err)
-	}
-	context.JSON(http.StatusOK, toSend)
+	return online, nil
 }
 
 // Punch adds an in or out punch as determined by the body sent
@@ -74,11 +58,15 @@ func PostPunch(context *gin.Context) {
 		context.String(http.StatusBadRequest, err.Error())
 	}
 	fmt.Println(incomingRequest)
-
+	incomingRequest.Comment, err = os.Hostname()
+	if err != nil {
+		context.String(http.StatusBadRequest, err.Error())
+		slog.Error("error geting hostname", "error", err)
+	}
 	err = database.WritePunch(incomingRequest)
 	if err != nil {
 		context.String(http.StatusBadRequest, err.Error())
-		slog.Error("error writing punch to database", "Error", err)
+		slog.Error("error writing punch to database", "error", err)
 	}
 	context.JSON(http.StatusOK, "ok")
 }
