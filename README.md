@@ -14,3 +14,14 @@ TOKEN_REFRESH_URL - used in both WSO2 and in generating the URL in employeeCache
 
 pflags
 -p -port --TCP port to listen defaults to 8643
+
+endpoints:
+GET 127.0.0.1:8463/status
+GET 127.0.0.1:8463/ping
+GET 127.0.0.1:8463/healthz
+GET 127.0.0.1:8463/get_employee_data/byuID - queries our database and Lukes API (might be adding workday to this mix) and serves employee info for the front end
+GET 127.0.0.1:8463/logLevel/level - sets log level and returns current level
+GET 127.0.0.1:8463/logLevel - returns current level
+POST 127.0.0.1:8463/punch/byuID - records a punch (comment is set to os.hostname, punch time is current device time)
+
+

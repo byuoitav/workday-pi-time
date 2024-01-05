@@ -15,7 +15,6 @@ import (
 	"github.com/byuoitav/workday-pi-time/handlers"
 )
 
-var updateCacheNowChannel = make(chan struct{})
 var logger *slog.Logger
 
 func main() {
@@ -130,12 +129,6 @@ func main() {
 
 	router.Run(server.Addr)
 
-}
-
-func updateCacheNow(context *gin.Context) {
-	fmt.Println("Updating Cache")
-	updateCacheNowChannel <- struct{}{}
-	context.String(http.StatusOK, "cache update initiated")
 }
 
 func setLogLevel(level string, logLevel *slog.LevelVar) error {
