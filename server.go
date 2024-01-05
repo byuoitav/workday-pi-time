@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,6 +21,7 @@ var logger *slog.Logger
 func main() {
 	//setup logger
 	var logLevel = new(slog.LevelVar)
+	var err error
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
 
@@ -29,11 +31,8 @@ func main() {
 		logger.Info("running from Windows, logging set to debug")
 	}
 
-	//start a go routine that will monitor the persistent cache for punches that didn't get posted and post them once the database comes online
-	//go offline.ResendPunches(db)
-
 	//start up a server to serve the angular site and set up the handlers for the UI to use
-	port := flag.String("p", "8464", "port for microservice to av-api communication")
+	port := flag.String("p", "8463", "port for microservice to av-api communication")
 	flag.Parse()
 	listeningPort := ":" + *port
 
@@ -55,6 +54,24 @@ func main() {
 	router.GET("/status", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
 			"message": "good",
+		})
+	})
+
+	router.GET("/logLevel/:level", func(context *gin.Context) {
+		err = setLogLevel(context.Param("level"), logLevel)
+		if err != nil {
+			logger.Error("can not set log level", "error", err)
+			context.JSON(http.StatusInternalServerError, err.Error())
+			return
+		}
+		context.JSON(http.StatusOK, gin.H{
+			"current logLevel": logLevel.Level(),
+		})
+	})
+
+	router.GET("/logLevel", func(context *gin.Context) {
+		context.JSON(http.StatusOK, gin.H{
+			"current logLevel": logLevel.Level(),
 		})
 	})
 
@@ -119,4 +136,20 @@ func updateCacheNow(context *gin.Context) {
 	fmt.Println("Updating Cache")
 	updateCacheNowChannel <- struct{}{}
 	context.String(http.StatusOK, "cache update initiated")
+}
+
+func setLogLevel(level string, logLevel *slog.LevelVar) error {
+	level = strings.ToLower(level)
+	if level == "debug" {
+		logLevel.Set(slog.LevelDebug)
+	} else if level == "info" {
+		logLevel.Set(slog.LevelInfo)
+	} else if level == "warn" {
+		logLevel.Set(slog.LevelWarn)
+	} else if level == "error" {
+		logLevel.Set(slog.LevelError)
+	} else {
+		return fmt.Errorf("the debug level must be one of (debug, info, warn, error) received %s", level)
+	}
+	return nil
 }

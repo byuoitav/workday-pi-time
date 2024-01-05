@@ -24,6 +24,13 @@ type Punch struct {
 	Time_Clock_Event_Date_Time string `json:"time_clock_event_date_time"`
 }
 
+type PunchResponse struct {
+	Writen_To_TCD    string `json:"written_to_tcd"`
+	Punch_Time       string `json:"punch_time"`
+	Clock_Event_Type string `json:"clock_event_type"`
+	Hostname         string `json:"hostname"`
+}
+
 type Employee struct {
 	Employee_Name      string            `json:"employee_name"`
 	Worker_ID          string            `json:"worker_id"`
@@ -142,8 +149,8 @@ func init() {
 	loc, _ := time.LoadLocation("America/Denver")
 	payPeriodAnchorDate, err = time.ParseInLocation("2006-Jan-02", anchorDate, loc)
 	if err != nil {
-		fmt.Println(err)
-		return
+		slog.Error(err.Error())
+		panic(err)
 	}
 }
 
@@ -164,14 +171,12 @@ func getGlobalVars() {
 }
 
 func DatabaseIO(query string) (*sql.Rows, error) {
-	slog.Info("Stats", "DatabaseOpenConnections", db.Stats().OpenConnections)
+	slog.Debug("Stats", "DatabaseOpenConnections", db.Stats().OpenConnections)
 	var data *sql.Rows
 	var err error
 	slog.Debug("attempting database query", "query", query)
 
 	data, err = db.Query(query)
-	//fmt.Println("Data", data)
-	//fmt.Println("Error", err)
 	if err != nil {
 		return data, fmt.Errorf("error inserting into database with string:\n%s\n error: %w", query, err)
 	}
@@ -181,10 +186,11 @@ func DatabaseIO(query string) (*sql.Rows, error) {
 }
 
 // write a single punch to the postgres database - called form each individual pi on a punch event
-func WritePunch(punch Punch) error {
+func WritePunch(punch Punch) (PunchResponse, error) {
 	hostname, err := os.Hostname()
+	var punchResponse PunchResponse
 	if err != nil {
-		return fmt.Errorf("error gettng hostname: %w", err)
+		return punchResponse, fmt.Errorf("error gettng hostname: %w", err)
 	}
 	dateTime := time.Now()
 	formattedDateTime := dateTime.Format(time.RFC1123Z) // formats to this style for postgres and workday: "02 Jan 06 15:04 -0700"
@@ -194,10 +200,13 @@ func WritePunch(punch Punch) error {
 	slog.Debug("sending database query", "Query", query)
 	data, err := DatabaseIO(query)
 	if err != nil {
-		return fmt.Errorf("error calling DatabaseQuery function %w", err)
+		return punchResponse, fmt.Errorf("error calling DatabaseQuery function %w", err)
 	}
 	defer data.Close()
-	return nil
+	punchResponse.Punch_Time = formattedDateTime
+	punchResponse.Clock_Event_Type = punch.Clock_Event_Type
+	punchResponse.Writen_To_TCD = "true"
+	return punchResponse, nil
 }
 
 // receives list of time codes and returns a map of time codes with their display name from the database table
@@ -228,18 +237,18 @@ func MapTimeCodes(timeCodes []string) (map[string]string, error) {
 		}
 		fromDatabase = append(fromDatabase, row)
 	}
-	fmt.Println("fromDatabase")
-	//loop and organize fromDatabase as a map oftime_code_groups : ui_name
-	timeMap := make(map[string]string)
-	for k, v := range fromDatabase {
-		fmt.Println(k, v)
-		timeMap[v.time_code_groups] = v.ui_name
+	//loop and organize fromDatabase as a map of: "time_code_groups : ui_name" AND "time_code_groups : time_code_reference_id"
+	timeUIMap := make(map[string]string)
+	timeIDMap := make(map[string]string)
+	for _, v := range fromDatabase {
+		timeUIMap[v.time_code_groups] = v.ui_name
+		timeIDMap[v.time_code_groups] = v.time_code_reference_id
 	}
-	fmt.Println("timeMap", timeMap)
 
+	//use the two maps from above and create the map to be sent to the UI
 	for _, v := range timeCodes {
-		if timeMap[v] != "" {
-			toReturn[v] = timeMap[v]
+		if timeUIMap[v] != "" {
+			toReturn[timeIDMap[v]] = timeUIMap[v]
 		}
 	}
 	return toReturn, nil
@@ -251,7 +260,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 	query := fmt.Sprintf(getWorkerQuery, byuid)
 	data, err := DatabaseIO(query)
 	if err != nil {
-		return fmt.Errorf("error calling DatabaseQuery function %w", err)
+		return fmt.Errorf("error calling DatabaseQuery function on employee_cache database %w", err)
 	}
 	defer data.Close()
 
@@ -262,44 +271,49 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("&TCD_Employee.Worker_ID: %s\n, &TCD_Employee.BYU_ID: %s\n, &TCD_Employee.Last_Updated: %s\n, &TCD_Employee.Employee_Name: %s\n, &TCD_Employee.Time_Code_Group: %s\n, &TCD_Employee.Positions: %s\n",
-			emp.Worker_ID, emp.BYU_ID, emp.Last_Updated, emp.Employee_Name, emp.Time_Code_Group, emp.Positions)
 	}
 	if emp.Worker_ID == "" {
-		return fmt.Errorf("no worker at byuID: %s", byuid)
+		return fmt.Errorf("no worker at byuID from employee_cache database: %s", byuid)
 	}
 	employee.Employee_Name = emp.Employee_Name
 	employee.Worker_ID = emp.Worker_ID
 
-	//TCD_Employee.Positions
-	type databasePosition struct {
-	}
-	var testing []string
-	err = json.Unmarshal([]byte(emp.Time_Code_Group), &testing)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("testing:", testing)
-
 	var timeCodeGroupList []string
 	err = json.Unmarshal([]byte(emp.Time_Code_Group), &timeCodeGroupList)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("error unmarshalling emp.Time_Code_Group from employee_cache database %w", err)
 	}
-
-	//get time code group map from database
 
 	//create time code map to put on employee.Time_Entey_Codes
-	timeCodes, err := MapTimeCodes(timeCodeGroupList)
+	employee.Time_Entry_Codes, err = MapTimeCodes(timeCodeGroupList)
 	if err != nil {
-		return fmt.Errorf("could not get the time_entry_code_map database info error: %w", err)
+		return fmt.Errorf("could not get the time_entry_code_map  from employee_cache database. error: %w", err)
 	}
-	employee.Time_Entry_Codes = timeCodes
 
-	//TODO Add positions list!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//TCD_Employee.Positions
+	type databasePosition struct {
+		Position_Number    string `json:"position_number"`
+		Primary_Position   bool   `json:"primary_position"`
+		Is_Active_Position bool   `json:"is_active_position"`
+		Business_Title     string `json:"business_title"`
+	}
+	var databasePositions []databasePosition
+	err = json.Unmarshal([]byte(emp.Positions), &databasePositions)
+	if err != nil {
+		return fmt.Errorf("could not unmarshall positions from employee_cache database. error: %w", err)
+	}
 
-	//TODO Add positions!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//employee.PositionsList = json.Unmarshal(TCD_Employee.Positions)
+	for _, v := range databasePositions {
+		if v.Is_Active_Position {
+			var position Position
+			position.Business_Title = v.Business_Title
+			position.Position_Number = v.Position_Number
+			position.Primary_Position = strconv.FormatBool(v.Primary_Position)
+
+			employee.Positions = append(employee.Positions, position)
+			employee.PositionsList = append(employee.PositionsList, v.Position_Number)
+		}
+	}
 
 	return nil
 }
@@ -321,36 +335,27 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println("1", err)
 		return err
 	}
 	req.Header.Add("Authorization", "Basic "+basicAuth(apiUser, apiPassword))
 
 	response, err := client.Do(req)
 	if err != nil {
-		fmt.Println("2", err)
 		return err
 	}
 	defer response.Body.Close()
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		fmt.Println("3", err)
 		return err
 	}
 
 	err = json.Unmarshal(body, &workerTimeData)
 	if err != nil {
-		fmt.Println("4", err)
 		return err
 	}
 	if workerTimeData.Report_Entry[0].Worker_ID == "" {
 		return fmt.Errorf("no employee_id returned")
 	}
-	// fmt.Println("*******************************************************************************")
-	// fmt.Println("Worker_ID:", workerTimeData.Report_Entry[0].Worker_ID)
-	// fmt.Println("\nTime_Code_Groups:", workerTimeData.Report_Entry[0].Time_Code_Groups)
-	// fmt.Println("\nTime_Blocks:", workerTimeData.Report_Entry[0].Time_Blocks)
-	// fmt.Println("\nTime_Clock_Events:", workerTimeData.Report_Entry[0].Time_Clock_Events)
 
 	err = MapEmployeeTimeData(employeeData, &workerTimeData.Report_Entry[0])
 	if err != nil {
@@ -363,7 +368,7 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 
 func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing
+	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 	periodsSince := (weeksSince / 2)
@@ -377,7 +382,7 @@ func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 
 func ReturnCurrentWeek() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing
+	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 
@@ -425,11 +430,10 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 
 	//associate time events to time block
 	var periodBlock PeriodBlocks
+
 	//get time period and weekly info
 	currentPeriodStart, currentPeriodEnd := ReturnCurrentPayPeriod()
-	fmt.Println("Current Period: ", currentPeriodStart, currentPeriodEnd)
 	currentWeekStart, currentWeekEnd := ReturnCurrentWeek()
-	fmt.Println("Current Week: ", currentWeekStart, currentWeekEnd)
 
 	positionWeekTotal := make(map[string]float64)
 	positionPeriodTotal := make(map[string]float64)
@@ -455,7 +459,6 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 			lengthValue = 0
 			slog.Debug("could not parse lengthValue", "error", err)
 		}
-		fmt.Println("lengthValue", lengthValue)
 
 		if isInDateRange(&periodBlock, currentWeekStart, currentWeekEnd) {
 			positionWeekTotal[periodBlock.Position_Number] = positionWeekTotal[periodBlock.Position_Number] + lengthValue
@@ -467,36 +470,34 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 			totalPeriodHours = totalPeriodHours + lengthValue
 		}
 
-		//Prints list of time blocks without valid data
+		//Logs list of time blocks without valid data
 		if periodBlock.Position_Number == "" || periodBlock.Business_Title == "" || periodBlock.Length == "" || periodBlock.Time_Clock_Event_Date_Time_IN == "" || periodBlock.Time_Clock_Event_Date_Time_OUT == "" || periodBlock.ReferenceID == "" {
-			fmt.Println("***************************************************************************************")
 			slog.Warn("incomplete time block", "reference_id", v.Reference_ID)
-			fmt.Printf("Data\n position: %s\n business_title: %s\n length: %s\n timeIn: %s\n timeOut: %s\n reference_id: %s\n\n", v.Position, block_businessTitle[v.Reference_ID], v.Hours, block_timeIn[v.Reference_ID], block_timeOut[v.Reference_ID], v.Reference_ID)
+			slog.Debug("incomplete time block error", "position", v.Position, "business_title", block_businessTitle[v.Reference_ID], "length", v.Hours, " timeIn", block_timeIn[v.Reference_ID], "timeOut", block_timeOut[v.Reference_ID], "reference_id", v.Reference_ID)
 		}
 		employee.Period_Blocks = append(employee.Period_Blocks, periodBlock)
 	}
 
 	//populate position hours to positions table
-	for _, position := range employee.Positions {
+	for key, position := range employee.Positions {
 		var period, week float64
 		var ok bool
 
 		period, ok = positionPeriodTotal[position.Position_Number]
 		if ok {
-			position.Position_Total_Period_Hours = fmt.Sprintf("%.2f H", period)
+			employee.Positions[key].Position_Total_Period_Hours = fmt.Sprintf("%.2f H", period)
 		} else {
-			position.Position_Total_Period_Hours = "N/A"
+			employee.Positions[key].Position_Total_Period_Hours = "N/A"
 		}
 
 		week, ok = positionWeekTotal[position.Position_Number]
 		if ok {
-			position.Position_Total_Week_Hours = fmt.Sprintf("%.2f H", week)
+			employee.Positions[key].Position_Total_Week_Hours = fmt.Sprintf("%.2f H", week)
 		} else {
-			position.Position_Total_Week_Hours = "N/A"
+			employee.Positions[key].Position_Total_Week_Hours = "N/A"
 		}
 	}
 
-	fmt.Println("totalPeriodHours, totalWeekHours", totalPeriodHours, totalWeekHours)
 	if totalPeriodHours > 0 || totalWeekHours > 0 {
 		employee.Total_Period_Hours = fmt.Sprintf("%.2f H", totalPeriodHours)
 		employee.Total_Week_Hours = fmt.Sprintf("%.2f H", totalWeekHours)
@@ -520,7 +521,6 @@ func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.
 	}
 
 	if blockStartTime.After(timeStart) && blockEndTime.Before(timeEnd) {
-		fmt.Println("......................................", periodBlock.Position_Number)
 		return true
 	}
 	return false

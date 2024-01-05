@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,17 +14,17 @@ import (
 
 // Returns data from the postgres database - aka the TCD
 func GetEmployeeFromTCD(context *gin.Context, employee *database.Employee) (bool, error) {
-	// //get the id
 	online := true
 	byuID := context.Param("id")
 	slog.Debug("GetEmployeeFromTCD with byuID: " + byuID)
 
-	// //get the employee info for this worker
+	// get the employee info for this worker
 	err := database.GetWorkerInfo(byuID, employee)
 	if err != nil {
 		online = false
 		return online, err
 	}
+	slog.Info("GetEmployeeFromTCD success", "response", online, "id", byuID)
 	return online, nil
 }
 
@@ -42,33 +41,35 @@ func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee
 		online = false
 		return online, err
 	}
+	slog.Info("getEmployeeFromWorkdayAPI success", "response", online, "id", byuID)
 	return online, nil
 }
 
 // Punch adds an in or out punch as determined by the body sent
 func PostPunch(context *gin.Context) {
-
-	byuID := context.Param("id")
-	fmt.Println("PostPunch The id is: ", byuID)
-
 	var incomingRequest database.Punch
+	byuID := context.Param("id")
+	slog.Debug("PostPunch with byuID: " + byuID)
 
 	err := context.BindJSON(&incomingRequest)
 	if err != nil {
 		context.String(http.StatusBadRequest, err.Error())
 	}
-	fmt.Println(incomingRequest)
-	incomingRequest.Comment, err = os.Hostname()
+	hostname, err := os.Hostname()
+
+	incomingRequest.Comment = "Wall Clock Punch from: " + hostname
 	if err != nil {
-		context.String(http.StatusBadRequest, err.Error())
 		slog.Error("error geting hostname", "error", err)
-	}
-	err = database.WritePunch(incomingRequest)
-	if err != nil {
 		context.String(http.StatusBadRequest, err.Error())
-		slog.Error("error writing punch to database", "error", err)
 	}
-	context.JSON(http.StatusOK, "ok")
+	response, err := database.WritePunch(incomingRequest)
+	if err != nil {
+		slog.Error("error writing punch to database", "error", err)
+		context.String(http.StatusBadRequest, err.Error())
+	}
+	response.Hostname = hostname
+	slog.Info("postPunch success", "response", response)
+	context.JSON(http.StatusOK, response)
 }
 
 // SendEventHandler passes an event to the messenger
