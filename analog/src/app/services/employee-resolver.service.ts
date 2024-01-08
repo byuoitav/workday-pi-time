@@ -1,10 +1,5 @@
 import { Injectable } from "@angular/core";
-import {
-  Router,
-  Resolve,
-  RouterStateSnapshot,
-  ActivatedRouteSnapshot
-} from "@angular/router";
+import { Router, RouterStateSnapshot, ActivatedRouteSnapshot } from "@angular/router";
 import { Observable, of, EMPTY, Subject, BehaviorSubject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
@@ -15,7 +10,7 @@ import { ToastService } from "./toast.service";
 @Injectable({
   providedIn: "root"
 })
-export class EmployeeResolverService implements Resolve<EmployeeRef> {
+export class EmployeeResolverService  {
   constructor(
     private api: APIService,
     private router: Router,
@@ -37,9 +32,9 @@ export class EmployeeResolverService implements Resolve<EmployeeRef> {
         .subscribe(
           val => {            
             if (val instanceof Employee) {
-              if (val.message !== undefined && val.message.length > 0) {
-                this.toast.showIndefinitely(val.message as string, "DISMISS", true);
-              }
+              // if (val.message !== undefined && val.message.length > 0) {
+              //   this.toast.showIndefinitely(val.message as string, "DISMISS", true);
+              // }
               observer.next(empRef);
               observer.complete();
               unsubscribe.complete();

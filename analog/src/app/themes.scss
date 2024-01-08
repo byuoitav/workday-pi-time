@@ -1,5 +1,5 @@
-@import "~@angular/material/theming";
-@include mat-core();
+@use '@angular/material' as mat;
+@include mat.core();
 
 /* custom templates */
 
@@ -75,6 +75,8 @@ $byu-blue: (
     700: #ffffff
   )
 );
+
+
 $light-blue: (
   300: #6092f2,
   500: #1b65bf,
@@ -85,6 +87,7 @@ $light-blue: (
     700: #ffffff
   )
 );
+
 $warning-red: (
   300: #e53935,
   500: #c1272d,
@@ -96,33 +99,43 @@ $warning-red: (
   )
 );
 
-// default (light) theme
-$default-primary: mat-palette($byu-blue, 500, 300, 700);
-$default-accent: mat-palette($light-blue, 500, 300, 700);
-$default-warn: mat-palette($warning-red, 500, 300, 700);
-$default: mat-light-theme($default-primary, $default-accent, $default-warn);
-@include angular-material-theme($default);
-@include custom($default);
+$default-primary: mat.define-palette($byu-blue, 500, 300, 700);
+$default-accent: mat.define-palette($light-blue, 500, 300, 700);
+$default-warn: mat.define-palette($warning-red, 500, 300, 700);
 
-// theme for status (success/warning/error) colors
-$status-primary: mat-palette($mat-green);
-$status-accent: mat-palette($mat-yellow);
-$status-warn: mat-palette($mat-red);
-$status: mat-light-theme($status-primary, $status-accent, $status-warn);
-.status-theme {
-  @include angular-material-theme($status);
-  @include custom($status);
-}
+$default-theme: mat.define-light-theme((
+ color: (
+   primary: $default-primary,
+   accent: $default-accent,
+   warn: $default-warn,
+ ),
+ typography: mat.define-typography-config(),
+ density: 0,
+));
+@include mat.all-component-themes($default-theme);
 
 // dark theme :)
-$dark: mat-dark-theme($default-primary, $default-accent, $default-warn);
-.dark-theme {
-  @include angular-material-theme($dark);
-  @include custom($dark);
+$dark: mat.define-dark-theme((
+ color: (
+   primary: $default-primary,
+   accent: $default-accent,
+   warn: $default-warn,
+ ),
+ typography: mat.define-typography-config(),
+ density: 0,
+));
 
-  .mat-app-background {
-    background-color: mat-color($default-primary, darker);
+.dark-theme {
+  @include mat.all-component-themes($dark);
+  
+  .mat-mdc-card-outlined, .clock-group[_ngcontent-ng-c825893131] .clock-button[_ngcontent-ng-c825893131] {
+    border-color: #c1272d;
+    border-width: 2px;
   }
+}
+
+.mat-mdc-card {
+  padding: 10px;
 }
 
 .mat-tab-label-active {
@@ -156,3 +169,34 @@ $dark: mat-dark-theme($default-primary, $default-accent, $default-warn);
 .red-snackbar .mat-simple-snackbar-action {
   color: white
 }
+
+//in and out radio button colors
+.dark-theme .mat-mdc-radio-button.mat-accent, .mat-mdc-radio-button.mat-accent {
+  --mdc-radio-disabled-selected-icon-color: #36bf1b;
+  --mdc-radio-disabled-unselected-icon-color: #36bf1b;
+  --mdc-radio-unselected-hover-icon-color: #36bf1b;
+  --mdc-radio-unselected-icon-color: #36bf1b;
+  --mdc-radio-unselected-pressed-icon-color: #36bf1b;
+  --mdc-radio-selected-focus-icon-color: #3cbf1b;
+  --mdc-radio-selected-hover-icon-color: #36bf1b;
+  --mdc-radio-selected-icon-color: #36bf1b;
+  --mdc-radio-selected-pressed-icon-color: #29bf1b;
+  --mat-radio-ripple-color: #36bf1b;
+  --mat-radio-checked-ripple-color: #41bf1b;
+  --mat-radio-disabled-label-color: #36bf1b;
+}
+.dark-theme .mat-mdc-radio-button.mat-warn, .mat-mdc-radio-button.mat-warn {
+  --mdc-radio-disabled-selected-icon-color: #c20909;
+  --mdc-radio-disabled-unselected-icon-color: #c20909;
+  --mdc-radio-unselected-hover-icon-color: #c20909;
+  --mdc-radio-unselected-icon-color: #c20909;
+  --mdc-radio-unselected-pressed-icon-color: #c20909;
+  --mdc-radio-selected-focus-icon-color: #c20909;
+  --mdc-radio-selected-hover-icon-color: #c20909;
+  --mdc-radio-selected-icon-color: #c20909;
+  --mdc-radio-selected-pressed-icon-color: #c20909;
+  --mat-radio-ripple-color: #c20909;
+  --mat-radio-checked-ripple-color: #c20909;
+  --mat-radio-disabled-label-color: #c20909;
+}
+
