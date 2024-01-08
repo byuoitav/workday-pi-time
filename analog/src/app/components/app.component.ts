@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
-import {MatDialog} from "@angular/material";
-import {MatSnackBar} from "@angular/material";
+import {MatDialog} from "@angular/material/dialog";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: "analog",
@@ -38,7 +38,7 @@ export class AppComponent implements OnInit {
         this.router.navigate(["/screensaver"]);
         this.dialog.closeAll();
         this.snackbar.dismiss();
-      } else if (count >= 15 && !isLogin && !isScreensaver) {
+      } else if (count >= 2000 && !isLogin && !isScreensaver) {
         count = 0;
 
         this.router.navigate(["/login"]);
