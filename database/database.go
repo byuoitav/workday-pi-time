@@ -32,15 +32,16 @@ type PunchResponse struct {
 }
 
 type Employee struct {
-	Employee_Name      string            `json:"employee_name"`
-	Worker_ID          string            `json:"worker_id"`
-	Total_Week_Hours   string            `json:"total_week_hours"`
-	Total_Period_Hours string            `json:"total_period_hours"`
-	PositionsList      []string          `json:"positions_list"`
-	Time_Entry_Codes   map[string]string `json:"time_entry_codes"` //time_code_group : ui_name - uses data from time_entry_code_map and employee_cache
-	Positions          []Position        `json:"positions"`
-	Period_Punches     []PeriodPunches   `json:"period_punches"`
-	Period_Blocks      []PeriodBlocks    `json:"period_blocks"`
+	Employee_Name        string            `json:"employee_name"`
+	Worker_ID            string            `json:"worker_id"`
+	International_Status string            `json:"international_status"`
+	Total_Week_Hours     string            `json:"total_week_hours"`
+	Total_Period_Hours   string            `json:"total_period_hours"`
+	PositionsList        []string          `json:"positions_list"`
+	Time_Entry_Codes     map[string]string `json:"time_entry_codes"` //time_code_group : ui_name - uses data from time_entry_code_map and employee_cache
+	Positions            []Position        `json:"positions"`
+	Period_Punches       []PeriodPunches   `json:"period_punches"`
+	Period_Blocks        []PeriodBlocks    `json:"period_blocks"`
 }
 
 type Position struct {
@@ -59,7 +60,7 @@ type PeriodPunches struct {
 	Time_Clock_Event_Date_Time string `json:"time_clock_event_date_time"`
 }
 
-// time blocks are matched clock in and out events
+// time blocks - may have matched
 type PeriodBlocks struct {
 	Position_Number                string `json:"position_number"`
 	Business_Title                 string `json:"business_title"`
@@ -67,6 +68,7 @@ type PeriodBlocks struct {
 	Time_Clock_Event_Date_Time_OUT string `json:"time_clock_event_date_time_out"`
 	Length                         string `json:"length"`
 	ReferenceID                    string `json:"reference_id"`
+	Reported_Date                  string `json:"reported_date"`
 }
 
 // JSON from workday API
@@ -361,14 +363,27 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 	if err != nil {
 		return err
 	}
+
+	err = GetInternationalStatus(employeeData, &workerTimeData.Report_Entry[0])
+	if err != nil {
+		return err
+	}
 	slog.Debug("end GetTimeGroups")
 
 	return nil
 }
 
+func GetInternationalStatus(employee *Employee, worker *WorkdayWorkerTimeData) error {
+	var err error
+
+	//todo make international status work once we get that data from an API
+	employee.International_Status = "false"
+	return err
+}
+
 func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
+	today := time.Now() //.AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 	periodsSince := (weeksSince / 2)
@@ -382,7 +397,7 @@ func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 
 func ReturnCurrentWeek() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now().AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
+	today := time.Now() //.AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 
@@ -397,6 +412,11 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	//don't do anything if there is no data for the worker from the Workday API
 	if len(worker.Time_Clock_Events) < 1 {
 		return fmt.Errorf("no time events found")
+	}
+
+	positionTDtoName := make(map[string]string)
+	for _, v := range employee.Positions {
+		positionTDtoName[v.Position_Number] = v.Business_Title
 	}
 
 	//build period_puhcnes
@@ -441,11 +461,13 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 
 	for _, v := range worker.Time_Blocks {
 		periodBlock.Position_Number = v.Position
-		periodBlock.Business_Title = block_businessTitle[v.Reference_ID]
+		//periodBlock.Business_Title = block_businessTitle[v.Reference_ID]
+		periodBlock.Business_Title = positionTDtoName[v.Position]
 		periodBlock.Length = v.Hours
 		periodBlock.Time_Clock_Event_Date_Time_IN = block_timeIn[v.Reference_ID]
 		periodBlock.Time_Clock_Event_Date_Time_OUT = block_timeOut[v.Reference_ID]
 		periodBlock.ReferenceID = v.Reference_ID
+		periodBlock.Reported_Date = v.Reported_Date
 
 		//auto fill in missing in/out
 		err := calculateMissingStartEndTimes(&periodBlock)
@@ -510,17 +532,27 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	return nil
 }
 
+// look at reported date and determine if it is within the current date range
 func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.Time) bool {
-	blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_IN)
-	if err != nil {
-		return false
-	}
-	blockEndTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_OUT)
+	// blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_IN)
+	// if err != nil {
+	// 	return false
+	// }
+	// blockEndTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_OUT)
+	// if err != nil {
+	// 	return false
+	// }
+
+	// if blockStartTime.After(timeStart) && blockEndTime.Before(timeEnd) {
+	// 	return true
+	// }
+
+	blockDate, err := time.Parse("2006-01-02", periodBlock.Reported_Date)
 	if err != nil {
 		return false
 	}
 
-	if blockStartTime.After(timeStart) && blockEndTime.Before(timeEnd) {
+	if blockDate.After(timeStart) && blockDate.Before(timeEnd) {
 		return true
 	}
 	return false
@@ -549,6 +581,13 @@ func calculateMissingStartEndTimes(periodBlock *PeriodBlocks) error {
 		validEnd = true
 	}
 
+	// blockReportedDate, err := time.Parse("2006-01-02", periodBlock.Reported_Date)
+	// if err != nil {
+	// 	validEnd = false
+	// } else {
+	// 	validEnd = true
+	// }
+
 	if validEnd && validStart { //return if two valid times are sent - no calculation needed
 		return nil
 	} else if validEnd {
@@ -560,8 +599,8 @@ func calculateMissingStartEndTimes(periodBlock *PeriodBlocks) error {
 		periodBlock.Time_Clock_Event_Date_Time_OUT = blockStartTime.Add(time.Second * time.Duration(lengthSeconds)).Format("2006-01-02T15:04:05-07:00")
 
 	} else {
-		periodBlock.Time_Clock_Event_Date_Time_IN = "Time Block Only - No Time Data"
-		periodBlock.Time_Clock_Event_Date_Time_OUT = "Time Block Only - No Time Data"
+		periodBlock.Time_Clock_Event_Date_Time_IN = "N/A"  //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
+		periodBlock.Time_Clock_Event_Date_Time_OUT = "N/A" //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
 	}
 	return nil
 }
