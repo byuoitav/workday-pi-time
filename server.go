@@ -37,6 +37,8 @@ func main() {
 
 	router := gin.Default()
 
+	router.Use(corsMiddleware())
+
 	// health endpoint
 	router.GET("/healthz", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
@@ -145,4 +147,19 @@ func setLogLevel(level string, logLevel *slog.LevelVar) error {
 		return fmt.Errorf("the debug level must be one of (debug, info, warn, error) received %s", level)
 	}
 	return nil
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }

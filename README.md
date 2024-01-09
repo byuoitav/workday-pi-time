@@ -3,14 +3,18 @@
 This is the source code deployed on the raspberry-pi based timeclocks around BYU. Hourly employees use these clocks to clock in/out of their jobs, to review/correct their punches, etc.\\
 
 Environment vars required:\
-CACHE_DATABASE_LOCATION\
-SYSTEM_ID - should we just make this hostname??? -jake\
-EVENT_PROCESSOR_HOST\\
+WORKDAY_DB_HOST\
+WORKDAY_DB_NAME\
+WORKDAY_DB_PASSWORD\
+WORKDAY_DB_PORT\
+WORKDAY_DB_USER\\
 
-WSO2\
-CLIENT_KEY\
-CLIENT_SECRET\
-TOKEN_REFRESH_URL - used in both WSO2 and in generating the URL in employeeCache.go\
+BDP_TOKEN_REFRESH_URL\\
+
+WORKDAY_API_PASSWORD\
+WORKDAY_API_TENANT\
+WORKDAY_API_URL\
+WORKDAY_API_USER\
 
 pflags\
 -p -port --TCP port to listen defaults to 8643\\
