@@ -1,9 +1,35 @@
 <div class="container">
-	<mat-card appearance="outlined" class="mat-elevation-z3">
-		<div *ngIf="day?.punches?.length === 0" class="card-content">
-			<span class="no-punches">No punches recorded for this day.</span>
+		<div *ngIf="day?.punches?.length === 0 && day?.periodBlocks?.length === 0" class="card-content">
+			<span class="no-punches">No time events recorded for this day.</span>
 		</div>
+
+	<div class="col1">
+		<!-- Period Blocks -->
+		<h3>Time Blocks</h3>
+		<div *ngIf="day?.periodBlocks?.length > 0">
+			<div class="periods">
+				<div class="period" *ngFor="let period of day?.periodBlocks">
+					<div class="times" >
+						<div class="start">
+							{{ period?.startDate === undefined ? "!" : getAMPMTimeFromDate(period?.startDate) }}
+						</div>
+						<div class="end">
+							{{ period?.endDate === undefined ? "!" : getAMPMTimeFromDate(period?.endDate) }}
+						</div>
+					</div>
+
+					
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col2">
+
+		<div class="total"> Total Hours: {{ calculateTotalHours(day)?.punchedHours }} </div>
+		<!-- Unmatched Time Events -->
 		<div *ngIf="day?.punches?.length > 0" class="card-content">
+			<h3>Unmatched Time Events</h3>
 			<div class="punches">
 				<div class="punch" *ngFor="let punch of day?.punches">
 					<span class="time" >
@@ -17,8 +43,7 @@
 					</span>
 				</div>
 			</div>
-
-			<span class="total"> Total Hours: {{ calculateTotalHours(day)?.punchedHours }} </span>
 		</div>
-	</mat-card>
+	</div>
+
 </div>

@@ -71,6 +71,29 @@ export enum JobType {
   FullTime = "F",
   PartTime = "P"
 }
+
+@JsonConverter
+export class NumberConverter implements JsonCustomConvert<Number> {
+  serialize(num: Number): any {
+    return num.toString();
+  }
+
+  deserialize(numString: any): Number {
+    // Extract numeric part from the string (e.g., "2.41 H" -> "2.41")
+    const numericPart = numString.match(/[\d.]+/);
+
+    // Check if numeric part is found
+    if (numericPart && numericPart.length > 0) {
+      // Parse the numeric part and convert it to a number
+      return Number(numericPart[0]);
+    }
+
+    // Return undefined if no numeric part is found
+    return undefined;
+  }
+}
+
+
 @JsonConverter
 export class DateConverter implements JsonCustomConvert<Date> {
   serialize(date: Date): any {
@@ -81,6 +104,12 @@ export class DateConverter implements JsonCustomConvert<Date> {
     const pad = n => {
       return n < 10 ? "0" + n : n;
     };
+
+    // Extract timezone offset in the format ±HH:mm
+    const offset = -date.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(offset) / 60);
+    const offsetMinutes = Math.abs(offset) % 60;
+    const timezoneOffset = (offset < 0 ? "-" : "+") + pad(offsetHours) + ":" + pad(offsetMinutes);
 
     return (
       date.getUTCFullYear() +
@@ -94,20 +123,19 @@ export class DateConverter implements JsonCustomConvert<Date> {
       pad(date.getUTCMinutes()) +
       ":" +
       pad(date.getUTCSeconds()) +
-      "Z"
+      timezoneOffset
     );
   }
+
   deserialize(dateString: any): Date {
     if (!dateString || dateString === "0001-01-01T00:00:00Z") {
       return undefined;
     }
-  
-    // Extract date components using a regular expression
-    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})\.000 ([\+\-]\d{4})$/);
-  
+
+    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})([\+\-]\d{2}:\d{2})$/);
+
     if (match) {
       const [, year, month, day, hours, minutes, seconds, offset] = match;
-      const utcOffset = parseInt(offset) / 100; // Convert offset to hours
       const utcMilliseconds = Date.UTC(
         parseInt(year),
         parseInt(month) - 1,
@@ -116,18 +144,47 @@ export class DateConverter implements JsonCustomConvert<Date> {
         parseInt(minutes),
         parseInt(seconds)
       );
-  
+
+      // Parse timezone offset
+      const offsetSign = offset.charAt(0) === '-' ? -1 : 1;
+      const offsetParts = offset.substr(1).split(':');
+      const offsetHours = parseInt(offsetParts[0]) * offsetSign;
+      const offsetMinutes = parseInt(offsetParts[1]) * offsetSign;
+
       // Adjust for UTC offset
-      const localMilliseconds = utcMilliseconds - utcOffset * 60 * 60 * 1000;
+      const localMilliseconds = utcMilliseconds - (offsetHours * 60 + offsetMinutes) * 60 * 1000;
       const localDate = new Date(localMilliseconds);
-  
+
       return localDate;
     }
-  
-    // Return undefined if the format is not recognized
+
     return undefined;
   }
 }
+
+@JsonConverter
+export class PunchTypeConverter implements JsonCustomConvert<string> {
+  serialize(value: string): any {
+    return value.toUpperCase(); // Serialize to uppercase ("IN" or "OUT")
+  }
+
+  deserialize(value: any): string {
+    // Map "check-in" to "IN" and "check-out" to "OUT"
+    if (value && typeof value === 'string') {
+      const lowerCaseValue = value.toLowerCase();
+      if (lowerCaseValue === 'check-in') {
+        return 'IN';
+      } else if (lowerCaseValue === 'check-out') {
+        return 'OUT';
+      }
+    }
+
+    // Return the original value if no mapping is found
+    return value;
+  }
+}
+
+
 
 
 export class Hours {
@@ -191,11 +248,32 @@ export class Punch {
   @JsonProperty("business_title", String, true)
   businessTitle: String = undefined;
 
-  @JsonProperty("clock_event_type", String, true)
+  @JsonProperty("clock_event_type", PunchTypeConverter, true)
   type: String = undefined;
 
   @JsonProperty("time_clock_event_date_time", DateConverter, true)
   time: Date = undefined;
+}
+
+@JsonObject("PeriodBlock")
+export class PeriodBlock {
+  @JsonProperty("position_number", String, true)
+  positionNumber: String = undefined;
+
+  @JsonProperty("business_title", String, true)
+  businessTitle: String = undefined;
+
+  @JsonProperty("time_clock_event_date_time_in", DateConverter, false)
+  startDate: Date = undefined;
+
+  @JsonProperty("time_clock_event_date_time_out", DateConverter, false)
+  endDate: Date = undefined;
+
+  @JsonProperty("length", NumberConverter, false)
+  totalHours: string = undefined;
+
+  @JsonProperty("reference_id", String, false)
+  referenceID: string = undefined;
 }
 
 @JsonObject("Day")
@@ -211,6 +289,11 @@ export class Day {
 
   @JsonProperty("punches", [Punch], true)
   punches: Punch[] = Array<Punch>();
+
+  @JsonProperty("period-blocks", [PeriodBlock], true)
+  periodBlocks: PeriodBlock[] = Array<PeriodBlock>();
+
+  
 
   public static minDay<T extends Day>(days: T[]): Day {
     if (days == null) {
@@ -283,14 +366,17 @@ export class Position {
 
 @JsonObject("Employee")
 export class Employee {
+  @JsonProperty("worker_id", String, true)
   id: string = undefined;
+  @JsonProperty("international_status", String, true)
+  internationalStatus: Boolean = undefined;
   @JsonProperty("employee_name", String, false)
   name: string = undefined;
-  @JsonProperty("total_week_hours", String, false)
-  totalWeekHours: string = undefined;
+  @JsonProperty("total_week_hours", NumberConverter, false)
+  totalWeekHours: Number = undefined;
 
-  @JsonProperty("total_period_hours", String, false)
-  totalPeriodHours: string = undefined;
+  @JsonProperty("total_period_hours", NumberConverter, false)
+  totalPeriodHours: Number = undefined;
 
   @JsonProperty('time_entry_codes', Object)
   timeEntryCodes: { [key: string]: string } = undefined;
@@ -300,17 +386,28 @@ export class Employee {
 
   @JsonProperty("period_punches", [Punch], false)
   periodPunches: Punch[] = undefined;
+  
+  @JsonProperty("period_blocks", [PeriodBlock], false)
+  periodBlocks: PeriodBlock[] = undefined;
 
   showTRC = (): boolean => {
+    if (this.timeEntryCodes) {
+      return Object.keys(this.timeEntryCodes).length > 1;
+    }
     return false;
   }
 }
 
+@JsonObject("ApiResponse")
+export class ApiResponse {
+  @JsonProperty("employee", Employee, true)
+  employee: Employee = undefined;
+}
 
 @JsonObject("PunchRequest") 
 export class PunchRequest {
   @JsonProperty("worker_id", String)
-  workerID: string = undefined;
+  id: string = undefined;
 
   @JsonProperty("position_number", String)
   positionNumber: string = undefined;
@@ -324,33 +421,8 @@ export class PunchRequest {
   @JsonProperty("comment", String)
   comment: string = undefined;
 
-  @JsonProperty("time_clock_event_date_time", DateConverter, String)
+  @JsonProperty("time_clock_event_date_time", String)
   time: String = undefined;
-
-
-}
-@JsonObject("ClientPunchRequest")
-export class ClientPunchRequest {
-  @JsonProperty("byu-id", String)
-  byuID: String;
-
-  @JsonProperty("employee-job-id", Number)
-  jobID: Number;
-
-  @JsonProperty("sequence-number", Number, true)
-  sequenceNumber: Number;
-
-  @JsonProperty("time", DateConverter)
-  time: Date;
-
-  @JsonProperty("type", String)
-  type: String;
-
-  @JsonProperty("work-order-id", String, true)
-  workOrderID: String;
-
-  @JsonProperty("trc-id", String, true)
-  trcID: String;
 }
 
 

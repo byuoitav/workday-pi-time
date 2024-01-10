@@ -52,8 +52,12 @@
           >
             <span style="text-align: center" >{{ day.getDate() }}</span>
             <span
-              *ngIf="dayHasPunch(day)"
+              *ngIf="dayHasPeriod(day) && !dayHasPunch(day) && !dayHasUndefinedPeriod(day)"
               class="dot"
+            ></span>
+            <span
+              *ngIf="dayHasPunch(day) || dayHasUndefinedPeriod(day)"
+              class="reddot"
             ></span>
           </div>
         </mat-grid-tile>

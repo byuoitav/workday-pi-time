@@ -10,9 +10,10 @@ import {ToastService} from "./toast.service";
 import {
   Employee,
   Day,
-  ClientPunchRequest,
+  PunchRequest,
   Punch,
-  DateConverter
+  DateConverter,
+  ApiResponse
 } from "../objects";
 import {
   JsonObject,
@@ -146,24 +147,23 @@ export class APIService {
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
 
-    let protocol = "ws:";
-    if (window.location.protocol === "https:") {
-      protocol = "wss:";
-    }
+    const endpoint = "http://localhost:8463/get_employee_data/" + id;
+    this.http.get(endpoint).subscribe(
+      (data: JSON ) => {
+        const response = this.jsonConvert.deserializeObject(data, ApiResponse);
+        const emp = response.employee;
+        emp.id = String(id);
+        this.loadInStatus(emp);
+        this.loadDays(emp);
 
-    const endpoint = protocol + "//" + window.location.host + "/id/" + id;
-    const ws = new WebSocket(endpoint);
-
-    //send login event
-    if (id) {
-      const event = new Event();
-      event.User = String(id);
-      event.EventTags = ["pitime-ui"];
-      event.Key = "login";
-      event.Value = String(id);
-      event.Timestamp = new Date();
-      this.sendEvent(event);
-    }
+        console.log("updated employee", emp);
+        employee.next(emp);
+      },
+      (err: any) => {
+        console.warn("unable to deserialize employee", err);
+        employee.error("invalid response from api");
+      }
+    );
 
     const empRef = new EmployeeRef(employee, (timeout: Boolean) => {
       if (timeout) {
@@ -172,40 +172,12 @@ export class APIService {
         console.log("logging out employee", employee.value.id);
       }
 
-      // clean up the websocket
-      ws.close();
-
       //get current employee
       const currEmp = employee.value
 
       // no more employee values
       employee.complete();
 
-      // send logout event
-      if (timeout) {
-        if (currEmp) {
-          const event = new Event();
-  
-          event.User = currEmp.id;
-          event.EventTags = ["pitime-ui"];
-          event.Key = "timeout";
-          event.Value = currEmp.id;
-          event.Timestamp = new Date();
-  
-          this.sendEvent(event);
-        }
-      } else {
-        if (currEmp) {
-          const event = new Event();
-  
-          event.User = currEmp.id;
-          event.EventTags = ["pitime-ui"];
-          event.Key = "logout";
-          event.Value = currEmp.id;
-          event.Timestamp = new Date();
-          this.sendEvent(event);
-        }  
-      }
 
       // reset theme
       this.switchTheme("");
@@ -213,34 +185,6 @@ export class APIService {
       // route to login page
       this.router.navigate(["/login"], {replaceUrl: true});
     }, this.router);
-
-    ws.onmessage = event => {
-      const data: JSON = JSON.parse(event.data);      
-     
-      try {
-        const emp = this.jsonConvert.deserializeObject(data, Employee);
-        emp.id = String(id);
-        this.loadInStatus(emp);
-        this.loadDays(emp);
-        
-
-        console.log("updated employee", emp);
-        employee.next(emp);
-      } catch (e) {
-        console.warn("unable to deserialize employee", e);
-        employee.error("invalid response from api");
-      }
-    };
-
-    ws.onerror = event => {
-      console.error("websocket error", event);
-      employee.error("Error with employee - " + event.returnValue);
-    };
-
-    ws.onclose = event => {
-      console.error("websocket close", event);
-      employee.error(event.reason);
-    };
 
     return empRef;
   };
@@ -270,37 +214,22 @@ export class APIService {
     }
   };
 
-  punch = (data: ClientPunchRequest): Observable<any> => {
+  punch = (data: PunchRequest): Observable<any> => {
     try {
-      const json = this.jsonConvert.serialize(data);
-      //Send logout event
-      if (data) {
-        const event = new Event();
-
-        event.User = data.byuID;
-        event.EventTags = ["pitime-ui"];
-        if (data.type === "I") {
-          event.Key = "time-punch-in";
-        } else if (data.type === "O") {
-          event.Key = "time-punch-out";
-        }
-
-        event.Value = data.byuID;
-        event.Timestamp = new Date();
-
-        this.sendEvent(event);
-      }
-
-      return this.http.post("/punch/" + data.byuID, json, {
+      const json = this.jsonConvert.serialize(data, PunchRequest); 
+      console.log(json);
+      return this.http.post("http://localhost:8463/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"
         })
       });
     } catch (e) {
+      console.log("error punching", e);
       return throwError(e);
     }
   };
+  
 
   getOtherHours = (byuID: string, jobID: number, date: string) => {
     try {
@@ -314,13 +243,6 @@ export class APIService {
       return throwError(e);
     }
   };
-
-  sendEvent = (event: Event) => {
-    const data = this.jsonConvert.serializeObject(event);
-    console.log("sending event", data);
-    
-    this.http.post("/event", data).subscribe();
-  }
 
   //determines In/Out status for each position based off most recent punch
   loadInStatus(emp: Employee): any {
@@ -378,10 +300,36 @@ export class APIService {
           }
         }
       }
+
+      // add time blocks to days
+      for (const block of emp.periodBlocks) {
+        if (Number(pos.positionNumber) === Number(block.positionNumber)) {
+          for (const day of days) {
+            if (block.startDate === undefined && block.endDate === undefined) {
+              continue;
+            } 
+            else {
+              if (block.startDate !== undefined) {
+                if (block.startDate.getDate() === day.time.getDate() 
+                && block.startDate.getMonth() === day.time.getMonth() 
+                && block.startDate.getFullYear() === day.time.getFullYear()) {
+                  day.periodBlocks.push(block);
+                }
+              }
+              else {
+                if (block.endDate.getDate() === day.time.getDate()
+                && block.endDate.getMonth() === day.time.getMonth() 
+                && block.endDate.getFullYear() === day.time.getFullYear()) {
+                  day.periodBlocks.push(block);
+                }
+              }
+            }
+          }
+        }
+      }
       pos.days = days;
     }
   }
-
 }
 
 @JsonObject("Event")
