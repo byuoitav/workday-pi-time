@@ -187,18 +187,83 @@ func DatabaseIO(query string) (*sql.Rows, error) {
 	return data, nil
 }
 
+// get all punches fopr a given worker_id from the TCD
+const getPunchesQuery = `SELECT employee_id, clock_event_type, time_entry_code, comment, time_clock_event_date_time, position_id 
+FROM workday.timeevents WHERE employee_id = '%s' AND uploaded_to_workday_date_time IS NULL AND failed_to_upload IS false;`
+
+func GetEmployeePunchesInTCD(workerID string) ([]Punch, error) {
+	var punches []Punch
+	var err error
+
+	query := fmt.Sprintf(getPunchesQuery, workerID)
+	slog.Debug("sending database query", "Query", query)
+	data, err := DatabaseIO(query)
+	if err != nil {
+		return punches, fmt.Errorf("error calling DatabaseQuery function %w", err)
+	}
+	defer data.Close()
+	for data.Next() {
+		var row Punch
+		err := data.Scan(&row.Worker_ID, &row.Clock_Event_Type, &row.Time_Entry_Code, &row.Comment, &row.Time_Clock_Event_Date_Time, &row.Position_Number)
+		if err != nil {
+			slog.Error("can not scan the returned data", "error", err, "data", data)
+			return punches, err
+		}
+		punches = append(punches, row)
+	}
+
+	return punches, err
+}
+
+func GetRecentEmployeePunches(employee *Employee) (int, error) {
+	var err error
+	var count int
+	if employee.Worker_ID == "" {
+		err = fmt.Errorf("must have employee.Worker_ID defined before calling GetRecentEmployeePunches")
+		return count, err
+	}
+	punches, err := GetEmployeePunchesInTCD(employee.Worker_ID)
+	if err != nil {
+		return count, err
+	}
+
+	for _, v := range punches {
+		var livePunch PeriodPunches
+		livePunch.Time_Clock_Event_Date_Time = v.Time_Clock_Event_Date_Time
+		livePunch.Position_Number = v.Position_Number
+
+		for _, position := range employee.Positions {
+			if position.Position_Number == v.Position_Number {
+				livePunch.Business_Title = position.Business_Title
+			}
+		}
+
+		if v.Clock_Event_Type == "IN" {
+			livePunch.Clock_Event_Type = "Check-In"
+		} else if v.Clock_Event_Type == "OUT" {
+			livePunch.Clock_Event_Type = "Check-Out"
+		}
+
+		employee.Period_Punches = append(employee.Period_Punches, livePunch)
+		count++
+	}
+	return count, err
+}
+
 // write a single punch to the postgres database - called form each individual pi on a punch event
+const insertPunchQuery = `INSERT INTO workday.timeevents(employee_id, position_id, clock_event_type, time_entry_code, "comment", time_clock_event_date_time, pi_hostname)
+VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s');`
+
 func WritePunch(punch Punch) (PunchResponse, error) {
-	hostname, err := os.Hostname()
 	var punchResponse PunchResponse
+	hostname, err := os.Hostname()
 	if err != nil {
 		return punchResponse, fmt.Errorf("error gettng hostname: %w", err)
 	}
 	dateTime := time.Now()
 	formattedDateTime := dateTime.Format(time.RFC1123Z) // formats to this style for postgres and workday: "02 Jan 06 15:04 -0700"
 
-	query := fmt.Sprintf(`INSERT INTO workday.timeevents(employee_id, position_id, clock_event_type, time_entry_code, "comment", time_clock_event_date_time, pi_hostname)
-	VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s');`, punch.Worker_ID, punch.Position_Number, punch.Clock_Event_Type, punch.Time_Entry_Code, punch.Comment, formattedDateTime, hostname)
+	query := fmt.Sprintf(insertPunchQuery, punch.Worker_ID, punch.Position_Number, punch.Clock_Event_Type, punch.Time_Entry_Code, punch.Comment, formattedDateTime, hostname)
 	slog.Debug("sending database query", "Query", query)
 	data, err := DatabaseIO(query)
 	if err != nil {
@@ -432,7 +497,13 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		if v.Timeblock_Ref_ID == "" { //add to peroid_punches slice if not associated with a time block
 			periodPunch.Clock_Event_Type = v.Clock_Event_Type
 			periodPunch.Time_Clock_Event_Date_Time = v.Clock_Event_Time
-			periodPunch.Business_Title = v.Position_Descr
+			//periodPunch.Business_Title = v.Position_Descr           //mapping to the positions we get from Workday instead of Lukes API since his API gives weird results
+			//i.e for 779147452 (Jake) we were getting "business_title": "NO JOB PROFILE (EXEMPT) - Jake Peery"
+			for _, position := range employee.Positions {
+				if position.Position_Number == v.Position_Ref_ID {
+					periodPunch.Business_Title = position.Business_Title
+				}
+			}
 			periodPunch.Position_Number = v.Position_Ref_ID
 
 			employee.Period_Punches = append(employee.Period_Punches, periodPunch)
@@ -454,8 +525,6 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	//get time period and weekly info
 	currentPeriodStart, currentPeriodEnd := ReturnCurrentPayPeriod()
 	currentWeekStart, currentWeekEnd := ReturnCurrentWeek()
-	fmt.Println("period", currentPeriodStart, currentPeriodEnd)
-	fmt.Println("week", currentWeekStart, currentWeekEnd)
 
 	positionWeekTotal := make(map[string]float64)
 	positionPeriodTotal := make(map[string]float64)
@@ -476,7 +545,6 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	}
 
 	workdayTimeBlocks := make(map[string]workday.WorkerTimeBlockInfo)
-	fmt.Println("timeblocks", workdayTimeBlocks)
 	count, err := workday.SortCalculatedTimeBlocks(workdayTimeBlocks, body)
 	if err != nil {
 		slog.Error("error sorting CalculatedTimeBlocks from Workday", "error", err)
@@ -512,13 +580,11 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		if isInDateRange(&periodBlock, currentWeekStart, currentWeekEnd) {
 			positionWeekTotal[periodBlock.Position_Number] = positionWeekTotal[periodBlock.Position_Number] + lengthValue
 			totalWeekHours = totalWeekHours + lengthValue
-			fmt.Println("totalWeekHours", totalWeekHours)
 		}
 
 		if isInDateRange(&periodBlock, currentPeriodStart, currentPeriodEnd) {
 			positionPeriodTotal[periodBlock.Position_Number] = positionPeriodTotal[periodBlock.Position_Number] + lengthValue
 			totalPeriodHours = totalPeriodHours + lengthValue
-			fmt.Println("totalPeriodHours", totalPeriodHours)
 		}
 
 		//Logs list of time blocks without valid data

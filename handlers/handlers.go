@@ -41,8 +41,21 @@ func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee
 		online = false
 		return online, err
 	}
-	slog.Info("getEmployeeFromWorkdayAPI success", "response", online, "id", byuID)
+	slog.Info("GetEmployeeFromWorkdayAPI success", "response", online, "id", byuID)
 	return online, nil
+}
+
+// adds in any punches from the TCD that have not been uploaded to Workday - uses employee.Worker_ID - must be defined before running
+func GetEmployeePunchesFromTCD(context *gin.Context, employee *database.Employee) (int, bool, error) {
+	online := true
+	// //get the current punches for employee.Worker_ID
+	count, err := database.GetRecentEmployeePunches(employee)
+	if err != nil {
+		online = false
+		return count, online, err
+	}
+	slog.Info("GetEmployeePunchesFromTCD success", "response", online, "worker_id", employee.Worker_ID)
+	return count, online, nil
 }
 
 // Punch adds an in or out punch as determined by the body sent

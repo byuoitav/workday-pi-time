@@ -81,7 +81,6 @@ func SortCalculatedTimeBlocks(TimeBlocks map[string]WorkerTimeBlockInfo, data []
 
 	err := xml.Unmarshal(data, &block)
 	if err != nil {
-		fmt.Println(err)
 		return 0, err
 	}
 	count := 0

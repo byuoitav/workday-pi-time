@@ -78,8 +78,9 @@ func main() {
 
 	//get and return all info to ui for employee
 	type employee_dataReturn struct {
-		Status   map[string]bool   `json:"status"`
-		Employee database.Employee `json:"employee"`
+		Status        map[string]bool   `json:"status"`
+		Events_In_TCD int               `json:"unprocessed_punches_in_tcd"`
+		Employee      database.Employee `json:"employee"`
 	}
 	router.GET("/get_employee_data/:id", func(context *gin.Context) {
 		var employee database.Employee
@@ -92,12 +93,21 @@ func main() {
 		} else {
 
 			online2, _ := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
+			count, online3, _ := handlers.GetEmployeePunchesFromTCD(context, &employee)
 
-			status["TCD_online"] = online
+			status["TCD_employee_cache_online"] = online
 			status["workdayAPI_online"] = online2
+			status["TCD_timeevents_online"] = online3
+			if count > 0 {
+				status["unprocessed_punches_in_tcd"] = true
+			} else {
+				status["unprocessed_punches_in_tcd"] = false
+			}
+
 			var return_data employee_dataReturn
 			return_data.Status = status
 			return_data.Employee = employee
+			return_data.Events_In_TCD = count
 			context.JSON(http.StatusOK, return_data)
 		}
 	})
@@ -108,6 +118,16 @@ func main() {
 	//clock out
 	router.POST("/punch/:id", func(context *gin.Context) {
 		handlers.PostPunch(context)
+	})
+
+	router.GET("/getPunches/:id", func(context *gin.Context) {
+		var punches []database.Punch
+		workerID := context.Param("id")
+		punches, err := database.GetEmployeePunchesInTCD(workerID)
+		if err != nil {
+			context.JSON(http.StatusServiceUnavailable, err)
+		}
+		context.JSON(http.StatusOK, punches)
 	})
 
 	router.GET("/", func(context *gin.Context) {
