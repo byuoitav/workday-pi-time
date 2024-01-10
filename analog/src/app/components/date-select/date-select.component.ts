@@ -119,11 +119,14 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   canMoveMonthBack(): boolean {
+    if (this.viewYear < this.today.getFullYear()) {
+      return false;
+    }
     return this.viewMonth >= this.today.getMonth();
   }
 
   canMoveMonthForward(): boolean {
-    return this.viewMonth <= this.today.getMonth() && this.viewMonth !== 11;
+    return this.viewMonth < this.today.getMonth() || this.viewYear < this.today.getFullYear();
   }
 
   moveMonthBack() {
@@ -222,6 +225,38 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
       if (empDay) {
         return empDay.punches.length > 0;
+      }
+    }
+
+    return false;
+  }
+
+  dayHasPeriod(day: Date): boolean {
+    if (this.job) {
+      const empDay = this.job.days.find(
+        d => d.time.toDateString() === day.toDateString()
+      );
+
+      if (empDay) {
+        return empDay.periodBlocks.length > 0;
+      }
+    }
+
+    return false;
+  }
+
+  dayHasUndefinedPeriod(day: Date): boolean {
+    if (this.job) {
+      const empDay = this.job.days.find(
+        d => d.time.toDateString() === day.toDateString()
+      );
+
+      if (empDay) {
+        for (const period of empDay.periodBlocks) {
+          if (period.startDate === undefined || period.endDate === undefined) {
+            return true;
+          }
+        }
       }
     }
 

@@ -62,8 +62,13 @@
             {{ Position?.totalPeriodHours }}
           </mat-grid-tile>
 
+          <!-- TRC -->
           <mat-grid-tile *ngIf="emp?.showTRC()" colspan="1" rowspan="1">
-            {{ job?.currentTRC?.id ? job?.currentTRC?.id : "N/A" }}
+            <select id="{{Position.positionNumber}}" class="trcSelect" name="TRC">
+              <ng-container *ngFor="let entry of emp.timeEntryCodes | keyvalue">
+                <option value="{{ entry.value }}">{{ entry.value }}</option>
+              </ng-container>
+            </select>
           </mat-grid-tile>
 
           <!-- clock in/out -->
@@ -71,7 +76,7 @@
             <mat-radio-group
               class="clock-group"
               (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value, $event)
+                clockInOut(jobRef(Position.positionNumber), $event.value)
               "
             >
               <mat-radio-button
@@ -79,9 +84,6 @@
                 color="accent"
                 [value]="punchType.In"
                 [checked]="Position?.inStatus"
-                (click)="
-                  doubleClockConfirm(jobRef(job?.employeeJobID), punchType.In)
-                "
                 >IN</mat-radio-button
               >
               <mat-radio-button
@@ -89,9 +91,6 @@
                 class="clock-button out"
                 [value]="punchType.Out"
                 [checked]="!Position?.inStatus"
-                (click)="
-                  doubleClockConfirm(jobRef(job?.employeeJobID), punchType.Out)
-                "
                 >OUT</mat-radio-button
               >
             </mat-radio-group>
@@ -118,8 +117,13 @@
             {{ Position?.totalPeriodHours }}
           </mat-grid-tile>
 
+          <!-- TRC -->
           <mat-grid-tile *ngIf="emp?.showTRC()" colspan="1" rowspan="1">
-            {{ job?.currentTRC?.id ? job?.currentTRC?.id : "N/A" }}
+            <select id="{{Position.positionNumber}}" class="trcSelect" name="TRC">
+              <ng-container *ngFor="let entry of emp.timeEntryCodes | keyvalue">
+                <option value="{{ entry.value }}">{{ entry.value }}</option>
+              </ng-container>
+            </select>
           </mat-grid-tile>
 
           <!-- clock in/out -->
@@ -127,7 +131,7 @@
             <mat-radio-group
               class="clock-group"
               (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value, $event)
+                clockInOut(jobRef(Position.positionNumber), $event.value)
               "
             >
               <mat-radio-button
@@ -135,9 +139,6 @@
                 color="accent"
                 [value]="punchType.In"
                 [checked]="Position?.inStatus"
-                (click)="
-                  doubleClockConfirm(jobRef(job?.employeeJobID), punchType.In)
-                "
                 >IN</mat-radio-button
               >
               <mat-radio-button
@@ -145,9 +146,6 @@
                 class="clock-button out"
                 [value]="punchType.Out"
                 [checked]="!Position?.inStatus"
-                (click)="
-                  doubleClockConfirm(jobRef(job?.employeeJobID), punchType.Out)
-                "
                 >OUT</mat-radio-button
               >
             </mat-radio-group>

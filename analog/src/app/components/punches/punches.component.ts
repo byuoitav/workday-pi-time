@@ -12,7 +12,7 @@ import {
   PunchType,
   Punch,
   PORTAL_DATA,
-  ClientPunchRequest,
+  PunchRequest,
   Position
 } from "../../objects";
 import {ToastService} from "src/app/services/toast.service";
@@ -76,63 +76,48 @@ export class PunchesComponent implements OnInit, OnDestroy {
   };
 
   public calculateTotalHours(day: Day): Day {
-    if (day.punches.length === 0) {
+    if (day.periodBlocks.length === 0) {
       day.punchedHours = "0.0";
       day.reportedHours = "0.0";
       return day;
     }
-  
     if (day.punchedHours !== undefined) {
       return day;
     }
 
-    let copyPunches = new Array<Punch>;
-    day.punches = day.punches.slice().sort(this.comparePunches);
-    for (let i = 0; i < day.punches.length; i++) {
-      copyPunches.push(day.punches[i]);
-    }
 
     let totalHours: number = 0.0;
 
-    if (copyPunches[0].type === "OUT") {
-      let tempPunch = new Punch();
-      tempPunch.type = "IN";
-      tempPunch.time = new Date();
-      //set the hours minutes and seconds to be 00:00:00
-      tempPunch.time.setTime(day.punches[0].time.getTime());
-      tempPunch.time.setHours(0);
-      tempPunch.time.setMinutes(0);
-      tempPunch.time.setSeconds(0);
-      copyPunches.push(tempPunch);
-    } 
-    
-   
-    if (copyPunches[copyPunches.length - 1].type === "IN") {
-      let tempPunch = new Punch();
-      tempPunch.type = "OUT";
-      tempPunch.time = new Date();
-      //set the hours minutes and seconds to be 23:59:59
-      tempPunch.time.setTime(day.punches[0].time.getTime());
-      tempPunch.time.setHours(23);
-      tempPunch.time.setMinutes(59);
-      tempPunch.time.setSeconds(59);
-      copyPunches.push(tempPunch);
+    for (let i = 0; i < day.periodBlocks.length; i++) {
+      if (day.periodBlocks[i].startDate === undefined || day.periodBlocks[i].endDate === undefined) {
+        continue;
+      } else {
+        let timeDiff = day.periodBlocks[i].endDate.getTime() - day.periodBlocks[i].startDate.getTime();
+        let hours = timeDiff / (1000 * 3600);
+        totalHours += hours;
+      }
+      
     }
-    copyPunches = copyPunches.slice().sort(this.comparePunches);
 
-    for (let i = copyPunches.length - 1; i > 0; i -= 2) {
-      let timeDiff = copyPunches[i].time.getTime() - copyPunches[i - 1].time.getTime();
-      let hours = timeDiff / (1000 * 3600);
-      totalHours += hours;
-    }
-  
-    day.punchedHours = parseFloat(totalHours.toFixed(2)).toString(); 
+    day.punchedHours = parseFloat(totalHours.toFixed(2)).toString();
     day.reportedHours = parseFloat(totalHours.toFixed(2)).toString();
+
     return day;
   }
   
   public comparePunches(a: Punch, b: Punch): number {
     return a.time.getTime() - b.time.getTime();
+  }
+
+  public getAMPMTimeFromDate(date) {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+    const hours12 = hours % 12 || 12; // Convert 0 to 12 for midnight
+  
+    const formattedTime = `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    return formattedTime;
   }
 
 }

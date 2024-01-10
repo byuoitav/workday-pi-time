@@ -9,8 +9,8 @@ import {
   Employee,
   PunchType,
   TRC,
-  ClientPunchRequest,
-  Position
+  Position,
+  PunchRequest
 } from "../../objects";
 import { ToastService } from "src/app/services/toast.service";
 import { ConfirmDialog } from "src/app/dialogs/confirm/confirm.dialog";
@@ -54,23 +54,6 @@ export class ClockComponent implements OnInit {
     });
   }
 
-  doubleClockConfirm(jobRef: BehaviorSubject<Position>, state: PunchType) {
-    //TODO: fix this
-    // if (jobRef.value.clockStatus === (state as string)) {
-    if (false) {
-      this.dialog
-        .open(ConfirmDialog, {
-          data: { state: PunchType.toNormalString(state) }
-        })
-        .afterClosed()
-        .subscribe(confirmed => {
-          if (confirmed === "confirmed") {
-            this.clockInOut(jobRef, state, null);
-          }
-        });
-    }
-  }
-
   jobRef(jobID: number): BehaviorSubject<Position> {
     const position = this.emp.positions.find(j => Number(j.positionNumber) === Number(jobID));
     const ref = new BehaviorSubject(position);
@@ -85,23 +68,39 @@ export class ClockComponent implements OnInit {
     return ref;
   }
 
-  clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType, event?) => {
+  clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
-    const data = new ClientPunchRequest();
-    data.byuID = this.emp.id;
-    data.jobID = jobRef.value.positionNumber;
-    data.type = state;
+    var trc: string;
+    const timeEntryCodesKeys = Object.keys(this.emp.timeEntryCodes);
+    if (timeEntryCodesKeys.length === 1) {
+      trc = timeEntryCodesKeys[0];
+    }
+    else if (this.emp.showTRC()) {
+      const trcList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
+      trc = trcList.options[trcList.selectedIndex].value;
+      for (const key in this.emp.timeEntryCodes) {
+        if (this.emp.timeEntryCodes[key] === trc) {
+          trc = key;
+          break;
+        }
+      }
+    }
+    console.log(this.emp.id);
 
-    
-    // clock in/out here
-    data.time = new Date();
+    const data = new PunchRequest();
+    data.id = this.emp.id;
+    data.positionNumber = String(jobRef.value.positionNumber);
+    data.clockEventType = state === "I" ? "IN" : "OUT";
+    data.time = formatDate(new Date());
+    data.comment = "comment";
+    data.timeEntryCode = trc;
 
     const obs = this.api.punch(data).pipe(share());
     obs.subscribe(
       resp => {
         console.log("response data", resp);
         const msg =
-          "Clocked " + PunchType.toNormalString(state) + " successfully!";
+          "Clocked " + PunchType.toNormalString(state) + " Submitted";
         this.toast.show(msg, "DISMISS", 2000);
       },
       err => {
@@ -120,4 +119,22 @@ export class ClockComponent implements OnInit {
     this._empRef.logout(false);
   };
 
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+  const offset = date.getTimezoneOffset();
+  const offsetHours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
+  const offsetMinutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
+  const offsetSign = offset < 0 ? '+' : '-';
+
+  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds} ${offsetSign}${offsetHours}${offsetMinutes}`;
+
+  return formattedDate;
 }
