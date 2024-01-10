@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/byuoitav/workday-pi-time/workday"
 	_ "github.com/lib/pq"
 )
 
@@ -169,7 +170,6 @@ func getGlobalVars() {
 		exiting`)
 		os.Exit(1)
 	}
-
 }
 
 func DatabaseIO(query string) (*sql.Rows, error) {
@@ -383,7 +383,7 @@ func GetInternationalStatus(employee *Employee, worker *WorkdayWorkerTimeData) e
 
 func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now() //.AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
+	today := time.Now() //.AddDate(0, 0, -7) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 	periodsSince := (weeksSince / 2)
@@ -397,7 +397,7 @@ func ReturnCurrentPayPeriod() (time.Time, time.Time) {
 
 func ReturnCurrentWeek() (time.Time, time.Time) {
 	var start, end time.Time
-	today := time.Now() //.AddDate(0, 0, -14) //////////////////////////////////////Testing - need to remove the date shift
+	today := time.Now() //.AddDate(0, 0, -7) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
 
@@ -454,11 +454,36 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	//get time period and weekly info
 	currentPeriodStart, currentPeriodEnd := ReturnCurrentPayPeriod()
 	currentWeekStart, currentWeekEnd := ReturnCurrentWeek()
+	fmt.Println("period", currentPeriodStart, currentPeriodEnd)
+	fmt.Println("week", currentWeekStart, currentWeekEnd)
 
 	positionWeekTotal := make(map[string]float64)
 	positionPeriodTotal := make(map[string]float64)
 	var totalWeekHours, totalPeriodHours float64
 
+	//get_calculated_time_blocks from Workday so we only get the data once
+	var body []byte
+	var err error
+
+	workerID := employee.Worker_ID
+	today := time.Now()
+	endDate := today.Format("2006-01-02")
+	startDate := today.AddDate(0, -1, 0).Format("2006-01-02")
+
+	body, err = workday.GetDataFromWorkday(workerID, startDate, endDate)
+	if err != nil {
+		slog.Warn("could not get_calculated_time_blocks from Workday", "error", err)
+	}
+
+	workdayTimeBlocks := make(map[string]workday.WorkerTimeBlockInfo)
+	fmt.Println("timeblocks", workdayTimeBlocks)
+	count, err := workday.SortCalculatedTimeBlocks(workdayTimeBlocks, body)
+	if err != nil {
+		slog.Error("error sorting CalculatedTimeBlocks from Workday", "error", err)
+	}
+	slog.Info("got timeblocks from Workday", "timeblock_count", count)
+
+	//loop through returned time blocks and add create the table in employee.PeriodBlocks for the JSON return
 	for _, v := range worker.Time_Blocks {
 		periodBlock.Position_Number = v.Position
 		//periodBlock.Business_Title = block_businessTitle[v.Reference_ID]
@@ -469,8 +494,10 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		periodBlock.ReferenceID = v.Reference_ID
 		periodBlock.Reported_Date = v.Reported_Date
 
-		//auto fill in missing in/out
-		err := calculateMissingStartEndTimes(&periodBlock)
+		//auto fill in missing in/out by querying Workday's SOAP API
+
+		//auto fill in missing in/out based on length and in or out time from another event
+		err := calculateMissingStartEndTimesViaOtherEvents(&periodBlock, workdayTimeBlocks)
 		if err != nil {
 			slog.Warn("time block missing in or out time", "worker_id", worker.Worker_ID, "reference_id", v.Reference_ID)
 		}
@@ -485,11 +512,13 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		if isInDateRange(&periodBlock, currentWeekStart, currentWeekEnd) {
 			positionWeekTotal[periodBlock.Position_Number] = positionWeekTotal[periodBlock.Position_Number] + lengthValue
 			totalWeekHours = totalWeekHours + lengthValue
+			fmt.Println("totalWeekHours", totalWeekHours)
 		}
 
 		if isInDateRange(&periodBlock, currentPeriodStart, currentPeriodEnd) {
 			positionPeriodTotal[periodBlock.Position_Number] = positionPeriodTotal[periodBlock.Position_Number] + lengthValue
 			totalPeriodHours = totalPeriodHours + lengthValue
+			fmt.Println("totalPeriodHours", totalPeriodHours)
 		}
 
 		//Logs list of time blocks without valid data
@@ -534,6 +563,8 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 
 // look at reported date and determine if it is within the current date range
 func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.Time) bool {
+	//this commented out code uses the clock in/out instead of the reported date to determine if the block is in the date range
+
 	// blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_IN)
 	// if err != nil {
 	// 	return false
@@ -558,7 +589,11 @@ func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.
 	return false
 }
 
-func calculateMissingStartEndTimes(periodBlock *PeriodBlocks) error {
+// calculates missing in/out times on time blocks.
+// first uses the block length and in or out if it exists
+// then uses get_calculated_time_blocks from the Workday API
+// and lastly assigns "N/A" to the in and out times
+func calculateMissingStartEndTimesViaOtherEvents(periodBlock *PeriodBlocks, workdayBlocks map[string]workday.WorkerTimeBlockInfo) error {
 	length, err := strconv.ParseFloat(periodBlock.Length, 64)
 	lengthSeconds := int(length * 60 * 60)
 	if err != nil {
@@ -581,13 +616,6 @@ func calculateMissingStartEndTimes(periodBlock *PeriodBlocks) error {
 		validEnd = true
 	}
 
-	// blockReportedDate, err := time.Parse("2006-01-02", periodBlock.Reported_Date)
-	// if err != nil {
-	// 	validEnd = false
-	// } else {
-	// 	validEnd = true
-	// }
-
 	if validEnd && validStart { //return if two valid times are sent - no calculation needed
 		return nil
 	} else if validEnd {
@@ -599,8 +627,14 @@ func calculateMissingStartEndTimes(periodBlock *PeriodBlocks) error {
 		periodBlock.Time_Clock_Event_Date_Time_OUT = blockStartTime.Add(time.Second * time.Duration(lengthSeconds)).Format("2006-01-02T15:04:05-07:00")
 
 	} else {
-		periodBlock.Time_Clock_Event_Date_Time_IN = "N/A"  //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
-		periodBlock.Time_Clock_Event_Date_Time_OUT = "N/A" //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
+		if workdayBlocks[periodBlock.ReferenceID].In_Time != "" || workdayBlocks[periodBlock.ReferenceID].Out_Time != "" {
+			periodBlock.Time_Clock_Event_Date_Time_IN = workdayBlocks[periodBlock.ReferenceID].In_Time   //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
+			periodBlock.Time_Clock_Event_Date_Time_OUT = workdayBlocks[periodBlock.ReferenceID].Out_Time //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
+		} else {
+			periodBlock.Time_Clock_Event_Date_Time_IN = "N/A"
+			periodBlock.Time_Clock_Event_Date_Time_OUT = "N/A"
+
+		}
 	}
 	return nil
 }
