@@ -54,12 +54,12 @@ export class ClockComponent implements OnInit {
     });
   }
 
-  jobRef(jobID: number): BehaviorSubject<Position> {
-    const position = this.emp.positions.find(j => Number(j.positionNumber) === Number(jobID));
+  jobRef(jobID: string): BehaviorSubject<Position> {
+    const position = this.emp.positions.find(j => String(j.positionNumber) === String(jobID));
     const ref = new BehaviorSubject(position);
 
     this._empRef.subject().subscribe(emp => {
-      const position = this.emp.positions.find(j => Number(j.positionNumber) === Number(jobID));
+      const position = this.emp.positions.find(j => String(j.positionNumber) === String(jobID));
       if (position) {
         ref.next(position);
       }
@@ -85,7 +85,6 @@ export class ClockComponent implements OnInit {
         }
       }
     }
-    console.log(this.emp.id);
 
     const data = new PunchRequest();
     data.id = this.emp.id;

@@ -45,12 +45,12 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     "Saturday"
   ];
 
-  private _jobID: number;
+  private _jobID: string;
   Position: Position;
   get job(): Position {
     if (this.emp) {
       for (let i = 0; i < this.emp.positions.length; i++) {
-        if (Number(this.emp.positions[i].positionNumber) === Number(this._jobID)) {
+        if (String(this.emp.positions[i].positionNumber) === String(this._jobID)) {
           return this.emp.positions[i];
         }
       }
@@ -78,7 +78,7 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this._subsToDestroy.push(this.route.paramMap.subscribe(params => {
-      this._jobID = +params.get("jobid");
+      this._jobID = params.get("jobid");
       this.getViewDays();
     }));
 

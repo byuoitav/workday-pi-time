@@ -29,7 +29,7 @@ export class JobSelectComponent implements OnInit, OnDestroy {
 
       this._subsToDestroy.push(this._empRef.subject().subscribe(emp => {
         if (emp && emp.positions.length === 1) {
-          this.selectJob(+emp.positions[0].positionNumber);
+          this.selectJob(emp.positions[0].positionNumber);
         }
       }));
     }));
@@ -42,7 +42,7 @@ export class JobSelectComponent implements OnInit, OnDestroy {
     this._empRef = undefined;
   }
 
-  selectJob = (jobID: number) => {
+  selectJob = (jobID: string) => {
     this.router.navigate(["./" + jobID + "/date/"], {
       relativeTo: this.route,
       queryParamsHandling: "preserve"});

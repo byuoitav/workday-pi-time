@@ -25,10 +25,10 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
     return undefined;
   }
 
-  private _jobID: number;
+  private _jobID: string;
   get job(): Position {
     if (this.emp) {
-      return this.emp.positions.find(j => Number(j.positionNumber) === Number(this._jobID));
+      return this.emp.positions.find(j => String(j.positionNumber) === String(this._jobID));
     }
     return undefined;
   }
@@ -98,7 +98,7 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
 
     this._subsToDestroy.push(this.route.paramMap.subscribe(params => {
       if (params) {
-        this._jobID = +params.get("jobid");
+        this._jobID = params.get("jobid");
         this._date = params.get("date");
       }
     }));

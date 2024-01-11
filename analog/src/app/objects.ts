@@ -345,7 +345,7 @@ export class Day {
 @JsonObject("Position")
 export class Position {
  @JsonProperty('position_number', String)
- positionNumber: number = undefined;
+ positionNumber: string = undefined;
 
  @JsonProperty('primary_position', String)
  primaryPosition: boolean = undefined;

@@ -147,7 +147,7 @@ export class APIService {
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
 
-    const endpoint = "http://localhost:8463/get_employee_data/" + id;
+    const endpoint = "http://10.5.34.231:8463/get_employee_data/" + id;
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
@@ -218,7 +218,7 @@ export class APIService {
     try {
       const json = this.jsonConvert.serialize(data, PunchRequest); 
       console.log(json);
-      return this.http.post("http://localhost:8463/punch/" + data.id, json, {
+      return this.http.post("http://10.5.34.231:8463/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"
@@ -250,7 +250,7 @@ export class APIService {
     for (const pos of emp.positions) {
       let currPunch: Punch;
       for (const punch of emp.periodPunches) {
-       if (Number(pos.positionNumber) === Number(punch.positionNumber)) {
+       if (String(pos.positionNumber) === String(punch.positionNumber)) {
           if (currPunch === undefined) {
             currPunch = punch;
           }
@@ -290,7 +290,7 @@ export class APIService {
 
       //add punches to the days
       for (const punch of emp.periodPunches) {
-        if (Number(pos.positionNumber) === Number(punch.positionNumber)) {
+        if (String(pos.positionNumber) === String(punch.positionNumber)) {
           for (const day of days) {
             if (punch.time.getDate() === day.time.getDate() 
             && punch.time.getMonth() === day.time.getMonth() 
@@ -303,7 +303,7 @@ export class APIService {
 
       // add time blocks to days
       for (const block of emp.periodBlocks) {
-        if (Number(pos.positionNumber) === Number(block.positionNumber)) {
+        if (String(pos.positionNumber) === String(block.positionNumber)) {
           for (const day of days) {
             if (block.startDate === undefined && block.endDate === undefined) {
               continue;

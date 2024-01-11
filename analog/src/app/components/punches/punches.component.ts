@@ -27,7 +27,7 @@ export class PunchesComponent implements OnInit, OnDestroy {
   public punchType = PunchType;
 
   @Input() byuID: string;
-  @Input() jobID: number;
+  @Input() jobID: string;
   @Input() day: Day;
   @Input() job: Position;
 
