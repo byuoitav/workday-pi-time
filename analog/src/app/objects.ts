@@ -345,7 +345,7 @@ export class Day {
 @JsonObject("Position")
 export class Position {
  @JsonProperty('position_number', String)
- positionNumber: number = undefined;
+ positionNumber: string = undefined;
 
  @JsonProperty('primary_position', String)
  primaryPosition: boolean = undefined;
@@ -400,6 +400,9 @@ export class Employee {
 
 @JsonObject("ApiResponse")
 export class ApiResponse {
+  @JsonProperty("status", Object)
+  statuses: { [key: string]: boolean } = undefined;
+
   @JsonProperty("employee", Employee, true)
   employee: Employee = undefined;
 }

@@ -32,14 +32,6 @@ export class ClockComponent implements OnInit {
     return undefined;
   }
 
-  get offline(): Boolean {
-    if (this._empRef) {
-      return this._empRef.offline;
-    }
-
-    return undefined;
-  }
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -52,14 +44,27 @@ export class ClockComponent implements OnInit {
     this.route.data.subscribe(data => {
       this._empRef = data.empRef;
     });
+
+    if (this.api.unsynced) {
+      this.toast.show(
+        "Not all time events have synced yet.",
+        "DISMISS",
+        20000
+      );
+    }
+    
+    if (this.emp.positions.length <= 0) {
+      const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
+      rvwTimesheet.className = "hidden";
+    }
   }
 
-  jobRef(jobID: number): BehaviorSubject<Position> {
-    const position = this.emp.positions.find(j => Number(j.positionNumber) === Number(jobID));
+  jobRef(jobID: string): BehaviorSubject<Position> {
+    const position = this.emp.positions.find(j => String(j.positionNumber) === String(jobID));
     const ref = new BehaviorSubject(position);
 
     this._empRef.subject().subscribe(emp => {
-      const position = this.emp.positions.find(j => Number(j.positionNumber) === Number(jobID));
+      const position = this.emp.positions.find(j => String(j.positionNumber) === String(jobID));
       if (position) {
         ref.next(position);
       }
@@ -85,7 +90,6 @@ export class ClockComponent implements OnInit {
         }
       }
     }
-    console.log(this.emp.id);
 
     const data = new PunchRequest();
     data.id = this.emp.id;

@@ -29,7 +29,6 @@ export class EmployeeRef {
   private _logout: Function;
   private _subsToDestroy: Subscription[] = [];
 
-  public offline: boolean;
   public selectedDate: Date;
 
   get employee() {
@@ -78,6 +77,7 @@ export class APIService {
 
   private jsonConvert: JsonConvert;
   private _hiddenDarkModeCount = 0;
+  unsynced: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -151,6 +151,11 @@ export class APIService {
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
+
+        //check if database and workday are synced
+        const statuses = Object.keys(response.statuses);
+        this.unsynced = response.statuses["unprocessed_punches_in_tcd"];
+
         const emp = response.employee;
         emp.id = String(id);
         this.loadInStatus(emp);
@@ -250,7 +255,7 @@ export class APIService {
     for (const pos of emp.positions) {
       let currPunch: Punch;
       for (const punch of emp.periodPunches) {
-       if (Number(pos.positionNumber) === Number(punch.positionNumber)) {
+       if (String(pos.positionNumber) === String(punch.positionNumber)) {
           if (currPunch === undefined) {
             currPunch = punch;
           }
@@ -290,7 +295,7 @@ export class APIService {
 
       //add punches to the days
       for (const punch of emp.periodPunches) {
-        if (Number(pos.positionNumber) === Number(punch.positionNumber)) {
+        if (String(pos.positionNumber) === String(punch.positionNumber)) {
           for (const day of days) {
             if (punch.time.getDate() === day.time.getDate() 
             && punch.time.getMonth() === day.time.getMonth() 
@@ -303,7 +308,7 @@ export class APIService {
 
       // add time blocks to days
       for (const block of emp.periodBlocks) {
-        if (Number(pos.positionNumber) === Number(block.positionNumber)) {
+        if (String(pos.positionNumber) === String(block.positionNumber)) {
           for (const day of days) {
             if (block.startDate === undefined && block.endDate === undefined) {
               continue;
@@ -331,35 +336,6 @@ export class APIService {
     }
   }
 }
-
-@JsonObject("Event")
-export class Event {
-  @JsonProperty("generating-system", String, true)
-  GeneratingSystem: String = undefined;
-
-  @JsonProperty("timestamp", DateConverter, true)
-  Timestamp: Date = undefined;
-
-  @JsonProperty("event-tags", [String], true)
-  EventTags: String[] = new Array<String>();
-
-  @JsonProperty("key", String, true)
-  Key: String = undefined;
-
-  @JsonProperty("value", String, true)
-  Value: String = undefined;
-
-  @JsonProperty("user", String, true)
-  User: String = undefined;
-
-  @JsonProperty("data", Any, true)
-  Data: any = undefined;
-
-  public hasTag(tag: String): boolean {
-    return this.EventTags.includes(tag);
-  }
-}
-
 interface Message {
   value: object;
 }

@@ -157,9 +157,10 @@
   </mat-card>
 
   <button
+    id = "rvwTimesheet"
     class="view-timesheet"
     color="accent"
-    (click)="toTimesheet()"
+    (click)="this.emp?.positions.length > 0 ? toTimesheet() : null"
   >
     Review Time Entry
   </button>
