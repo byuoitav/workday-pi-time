@@ -90,16 +90,23 @@ function Build {
     Invoke-Expression "go build -v -o dist/${NAME}-arm"
 
     Write-Output "*****************************************"
+    Write-Output "Building for linux-arm"
+    Set-Item -Path env:CGO_ENABLED -Value 0
+    Set-Item -Path env:GOOS -Value "windows"
+    Set-Item -Path env:GOARCH -Value "amd64"
+    Invoke-Expression "go build -v -o dist/${NAME}-windows"
+
+    Write-Output "*****************************************"
     Write-Output "Building Frontend"
     if (Test-Path "analog") {
         Set-Location "analog"
         Write-Output "Entering \analog"
         New-Item -Path dist -ItemType Directory
         #Invoke-Expression "npm run-script build"
-        Invoke-Expression "ng build --aot --optimization --base-href='./analog/dist/'"
+        Invoke-Expression "ng build --aot --optimization --base-href='./'"
         Invoke-Expression "cd .."
         Write-Output "Exiting \analog and moving files to \dist"
-        Move-Item "$location\analog\dist\" -Destination "$location\dist\frontend\"
+        Move-Item "$location\analog\dist\" -Destination "$location\dist\"
     }
 }
 

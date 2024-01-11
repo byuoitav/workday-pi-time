@@ -146,8 +146,8 @@ export class APIService {
 
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
-
-    const endpoint = "http://localhost:8463/get_employee_data/" + id;
+    console.log("window.location.host",window.location.host)
+    const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
@@ -223,7 +223,8 @@ export class APIService {
     try {
       const json = this.jsonConvert.serialize(data, PunchRequest); 
       console.log(json);
-      return this.http.post("http://localhost:8463/punch/" + data.id, json, {
+      console.log("window.location.host",window.location.host)
+      return this.http.post("http://"+window.location.host+"/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"

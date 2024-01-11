@@ -132,14 +132,19 @@ func main() {
 		context.JSON(http.StatusOK, punches)
 	})
 
+	//serve the angular web page
+	sitePath := "/analog"
 	router.GET("/", func(context *gin.Context) {
-		context.Redirect(http.StatusTemporaryRedirect, "/frontend")
+		context.Redirect(http.StatusTemporaryRedirect, sitePath)
 	})
 
-	//serve the angular web page
-	sitePath := "/frontend"
-	webRoot := "./frontend"
-	router.Static(sitePath, webRoot)
+	webRoot := "./dist/analog"
+	fmt.Println("http.Dir(webRoot)", http.Dir(webRoot))
+	router.StaticFS(sitePath, http.Dir(webRoot))
+	//router.Static(sitePath, webRoot)
+	//router.Static("/assets", "./frontend/analog/assets")
+	//router.StaticFile("/favicon.ico", "./frontend/analog/favicon.ico")
+
 	router.NoRoute(func(context *gin.Context) {
 		if strings.HasPrefix(context.Request.RequestURI, sitePath) {
 			// Only redirect if we are already in the angular sitePath
