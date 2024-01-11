@@ -73,16 +73,17 @@ type PeriodBlocks struct {
 	Reported_Date                  string `json:"reported_date"`
 }
 
-// JSON from workday API
+// JSON from workday custom API
 type WorkdayEmployeeTimeReport struct {
 	Report_Entry []WorkdayWorkerTimeData `json:"Report_Entry"`
 }
 
 type WorkdayWorkerTimeData struct {
-	Worker_ID         string              `json:"employee_id"`
-	Time_Code_Groups  string              `json:"time_code_group"`
-	Time_Blocks       []WorkdayTimeBlocks `json:"time_blocks"`
-	Time_Clock_Events []WorkdayTimeEvents `json:"time_clock_events"`
+	Worker_ID            string              `json:"employee_id"`
+	Time_Code_Groups     string              `json:"time_code_group"`
+	International_Status string              `json:"intl_student"`
+	Time_Blocks          []WorkdayTimeBlocks `json:"time_blocks"`
+	Time_Clock_Events    []WorkdayTimeEvents `json:"time_clock_events"`
 }
 
 type WorkdayTimeEvents struct {
@@ -418,8 +419,10 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 		return err
 	}
 
+	slog.Debug("attempting to unmarshall workerTimeData")
 	err = json.Unmarshal(body, &workerTimeData)
 	if err != nil {
+		slog.Error("error unmarshalling workerTimeData", "error", err)
 		return err
 	}
 	if workerTimeData.Report_Entry[0].Worker_ID == "" {
@@ -430,7 +433,7 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 	if err != nil {
 		return err
 	}
-
+	slog.Debug("attempting to get international status")
 	err = GetInternationalStatus(employeeData, &workerTimeData.Report_Entry[0])
 	if err != nil {
 		return err
@@ -442,9 +445,11 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 
 func GetInternationalStatus(employee *Employee, worker *WorkdayWorkerTimeData) error {
 	var err error
-
-	//todo make international status work once we get that data from an API
-	employee.International_Status = "false"
+	if worker.International_Status == "1" {
+		employee.International_Status = "true"
+	} else {
+		employee.International_Status = "false"
+	}
 	return err
 }
 
@@ -484,6 +489,9 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	positionTDtoName := make(map[string]string)
 	for _, v := range employee.Positions {
 		positionTDtoName[v.Position_Number] = v.Business_Title
+		if v.Business_Title == "" {
+			v.Business_Title = "none"
+		}
 	}
 
 	//build period_puhcnes
@@ -507,6 +515,9 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 				}
 			}
 			periodPunch.Position_Number = v.Position_Ref_ID
+			if periodPunch.Business_Title == "" {
+				periodPunch.Business_Title = "none"
+			}
 
 			employee.Period_Punches = append(employee.Period_Punches, periodPunch)
 
@@ -517,6 +528,7 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 				block_timeIn[v.Timeblock_Ref_ID] = v.Clock_Event_Time
 			} else if v.Clock_Event_Type == "Check-out" {
 				block_timeOut[v.Timeblock_Ref_ID] = v.Clock_Event_Time
+
 			}
 		}
 	}

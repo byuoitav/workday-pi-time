@@ -22,6 +22,7 @@ func GetEmployeeFromTCD(context *gin.Context, employee *database.Employee) (bool
 	err := database.GetWorkerInfo(byuID, employee)
 	if err != nil {
 		online = false
+		slog.Error("unable to GetWorkerInfo", "error", err)
 		return online, err
 	}
 	slog.Info("GetEmployeeFromTCD success", "response", online, "id", byuID)
@@ -39,6 +40,7 @@ func GetEmployeeFromWorkdayAPI(context *gin.Context, employee *database.Employee
 	err := database.GetTimeSheet(byuID, employee)
 	if err != nil {
 		online = false
+		slog.Error("unable to GetTimeSheet", "error", err)
 		return online, err
 	}
 	slog.Info("GetEmployeeFromWorkdayAPI success", "response", online, "id", byuID)
@@ -52,6 +54,7 @@ func GetEmployeePunchesFromTCD(context *gin.Context, employee *database.Employee
 	count, err := database.GetRecentEmployeePunches(employee)
 	if err != nil {
 		online = false
+		slog.Error("unable to GetRecentEmployeePunches", "error", err)
 		return count, online, err
 	}
 	slog.Info("GetEmployeePunchesFromTCD success", "response", online, "worker_id", employee.Worker_ID)

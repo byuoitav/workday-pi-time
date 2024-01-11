@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -132,18 +133,27 @@ func main() {
 	})
 
 	router.GET("/", func(context *gin.Context) {
-		context.Redirect(http.StatusTemporaryRedirect, "/analog")
+		context.Redirect(http.StatusTemporaryRedirect, "/frontend")
 	})
 
 	//serve the angular web page
-	//frontend := router.Group("/analog")
-	router.StaticFS("/assets", http.Dir("./assets"))
-	//  middleware.StaticWithConfig(middleware.StaticConfig{
-	// 	Root:   "analog",
-	// 	Index:  "index.html",
-	// 	HTML5:  true,
-	// 	Browse: true,
-	// })
+	sitePath := "/frontend"
+	webRoot := "./frontend"
+	router.Static(sitePath, webRoot)
+	router.NoRoute(func(context *gin.Context) {
+		if strings.HasPrefix(context.Request.RequestURI, sitePath) {
+			// Only redirect if we are already in the angular sitePath
+			context.File(webRoot + "/index.html")
+		}
+
+		if sitePath != "/" {
+			// If someone navigates to the site root exactly, redirect to the angular site at /app
+			router.GET("/", func(c *gin.Context) {
+				location := url.URL{Path: sitePath}
+				c.Redirect(http.StatusFound, location.RequestURI())
+			})
+		}
+	})
 
 	server := &http.Server{
 		Addr:           listeningPort,
