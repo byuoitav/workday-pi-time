@@ -94,6 +94,7 @@ func main() {
 
 			online2, _ := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
 			count, online3, _ := handlers.GetEmployeePunchesFromTCD(context, &employee)
+			fmt.Println(count, online3)
 
 			status["TCD_employee_cache_online"] = online
 			status["workdayAPI_online"] = online2

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/byuoitav/workday-pi-time/workday"
@@ -229,7 +230,8 @@ func GetRecentEmployeePunches(employee *Employee) (int, error) {
 
 	for _, v := range punches {
 		var livePunch PeriodPunches
-		livePunch.Time_Clock_Event_Date_Time = v.Time_Clock_Event_Date_Time
+		modifiedTime := strings.Replace(v.Time_Clock_Event_Date_Time, "Z", "-07:00", 1) //fix time formatting to match
+		livePunch.Time_Clock_Event_Date_Time = modifiedTime
 		livePunch.Position_Number = v.Position_Number
 
 		for _, position := range employee.Positions {
