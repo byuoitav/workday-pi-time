@@ -117,6 +117,18 @@ $card-width: 95%;
   font-size: 1em;
 }
 
+.hidden {
+  width: $card-width + 2%;
+  height: 10vh;
+  margin: 0 0 0.5em;
+  background-color: #bdbbbb;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: #b3b3b3;
+  color: white;
+  font-size: 1em;
+}
+
 .clock-group {
   height: 100%;
   width: 90%;
