@@ -32,14 +32,6 @@ export class ClockComponent implements OnInit {
     return undefined;
   }
 
-  get offline(): Boolean {
-    if (this._empRef) {
-      return this._empRef.offline;
-    }
-
-    return undefined;
-  }
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -52,6 +44,14 @@ export class ClockComponent implements OnInit {
     this.route.data.subscribe(data => {
       this._empRef = data.empRef;
     });
+
+    if (this.api.unsynced) {
+      this.toast.show(
+        "Not all time events have synced yet.",
+        "DISMISS",
+        20000
+      );
+    }
   }
 
   jobRef(jobID: string): BehaviorSubject<Position> {

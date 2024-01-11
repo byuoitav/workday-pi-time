@@ -29,7 +29,6 @@ export class EmployeeRef {
   private _logout: Function;
   private _subsToDestroy: Subscription[] = [];
 
-  public offline: boolean;
   public selectedDate: Date;
 
   get employee() {
@@ -78,6 +77,7 @@ export class APIService {
 
   private jsonConvert: JsonConvert;
   private _hiddenDarkModeCount = 0;
+  unsynced: boolean = false;
 
   constructor(
     private http: HttpClient,
@@ -147,10 +147,15 @@ export class APIService {
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
 
-    const endpoint = "http://10.5.34.231:8463/get_employee_data/" + id;
+    const endpoint = "http://localhost:8463/get_employee_data/" + id;
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
+
+        //check if database and workday are synced
+        const statuses = Object.keys(response.statuses);
+        this.unsynced = response.statuses["unprocessed_punches_in_tcd"];
+
         const emp = response.employee;
         emp.id = String(id);
         this.loadInStatus(emp);
@@ -218,7 +223,7 @@ export class APIService {
     try {
       const json = this.jsonConvert.serialize(data, PunchRequest); 
       console.log(json);
-      return this.http.post("http://10.5.34.231:8463/punch/" + data.id, json, {
+      return this.http.post("http://localhost:8463/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"
@@ -331,35 +336,6 @@ export class APIService {
     }
   }
 }
-
-@JsonObject("Event")
-export class Event {
-  @JsonProperty("generating-system", String, true)
-  GeneratingSystem: String = undefined;
-
-  @JsonProperty("timestamp", DateConverter, true)
-  Timestamp: Date = undefined;
-
-  @JsonProperty("event-tags", [String], true)
-  EventTags: String[] = new Array<String>();
-
-  @JsonProperty("key", String, true)
-  Key: String = undefined;
-
-  @JsonProperty("value", String, true)
-  Value: String = undefined;
-
-  @JsonProperty("user", String, true)
-  User: String = undefined;
-
-  @JsonProperty("data", Any, true)
-  Data: any = undefined;
-
-  public hasTag(tag: String): boolean {
-    return this.EventTags.includes(tag);
-  }
-}
-
 interface Message {
   value: object;
 }

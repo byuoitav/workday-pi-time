@@ -400,6 +400,9 @@ export class Employee {
 
 @JsonObject("ApiResponse")
 export class ApiResponse {
+  @JsonProperty("status", Object)
+  statuses: { [key: string]: boolean } = undefined;
+
   @JsonProperty("employee", Employee, true)
   employee: Employee = undefined;
 }
