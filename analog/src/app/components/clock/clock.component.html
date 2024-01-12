@@ -66,7 +66,10 @@
           <mat-grid-tile *ngIf="emp?.showTRC()" colspan="1" rowspan="1">
             <select id="{{Position.positionNumber}}" class="trcSelect" name="TRC">
               <ng-container *ngFor="let entry of emp.timeEntryCodes | keyvalue">
-                <option value="{{ entry.value }}">{{ entry.value }}</option>
+                <option *ngIf="contains(entry.value, 'default')" value="{{ entry.value }}">{{ entry.value }}</option>
+              </ng-container>
+              <ng-container *ngFor="let entry of emp.timeEntryCodes | keyvalue">
+                <option *ngIf="!contains(entry.value, 'default')" value="{{ entry.value }}">{{ entry.value }}</option>
               </ng-container>
             </select>
           </mat-grid-tile>

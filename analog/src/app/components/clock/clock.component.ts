@@ -119,6 +119,11 @@ export class ClockComponent implements OnInit {
       queryParamsHandling: "preserve" });
   };
 
+  contains = (str : string, substr : string) => {
+    var lowerStr = str.toLowerCase();
+    return lowerStr.indexOf(substr) !== -1 ? true : false;
+  }
+
   logout = () => {
     this._empRef.logout(false);
   };
@@ -142,3 +147,7 @@ function formatDate(date) {
 
   return formattedDate;
 }
+
+
+
+
