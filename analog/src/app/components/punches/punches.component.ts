@@ -74,37 +74,7 @@ export class PunchesComponent implements OnInit, OnDestroy {
 
     return new PortalInjector(this._injector, tokens);
   };
-
-  public calculateTotalHours(day: Day): Day {
-    if (day.periodBlocks.length === 0) {
-      day.punchedHours = "0.0";
-      day.reportedHours = "0.0";
-      return day;
-    }
-    if (day.punchedHours !== undefined) {
-      return day;
-    }
-
-
-    let totalHours: number = 0.0;
-
-    for (let i = 0; i < day.periodBlocks.length; i++) {
-      if (day.periodBlocks[i].startDate === undefined || day.periodBlocks[i].endDate === undefined) {
-        continue;
-      } else {
-        let timeDiff = day.periodBlocks[i].endDate.getTime() - day.periodBlocks[i].startDate.getTime();
-        let hours = timeDiff / (1000 * 3600);
-        totalHours += hours;
-      }
-      
-    }
-
-    day.punchedHours = parseFloat(totalHours.toFixed(2)).toString();
-    day.reportedHours = parseFloat(totalHours.toFixed(2)).toString();
-
-    return day;
-  }
-  
+ 
   public comparePunches(a: Punch, b: Punch): number {
     return a.time.getTime() - b.time.getTime();
   }

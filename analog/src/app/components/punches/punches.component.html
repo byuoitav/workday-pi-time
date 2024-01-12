@@ -27,8 +27,6 @@
 
 
 		<div class="col2">
-
-			<div class="total"> Total Hours: {{ calculateTotalHours(day)?.punchedHours }} </div>
 			<!-- Unmatched Time Events -->
 			<div *ngIf="day?.punches?.length > 0" class="card-content">
 				<h3>Unmatched Time Events</h3>
