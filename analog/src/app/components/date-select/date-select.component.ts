@@ -185,19 +185,13 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     }
 
     if (!this.viewMonth) {
-      if (this._empRef.selectedDate) {
-        this.viewMonth = this._empRef.selectedDate.getMonth();
-      } else {
         this.viewMonth = this.today.getMonth();
-      }
+        this.viewYear = this.today.getFullYear();
     }
 
     if (!this.viewYear) {
-      if (this._empRef.selectedDate) {
-        this.viewYear = this._empRef.selectedDate.getFullYear();
-      } else {
-        this.viewYear = this.today.getFullYear();
-      }
+      this.viewMonth = this.today.getMonth();
+      this.viewYear = this.today.getFullYear();
     }
 
     this.viewDays = [];
