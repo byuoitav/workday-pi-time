@@ -141,7 +141,7 @@ func main() {
 		context.Redirect(http.StatusTemporaryRedirect, sitePath)
 	})
 
-	webRoot := "./dist/dist/analog"
+	webRoot := "./dist/analog"
 	fmt.Println("http.Dir(webRoot)", http.Dir(webRoot))
 	router.StaticFS(sitePath, http.Dir(webRoot))
 	//router.Static(sitePath, webRoot)
