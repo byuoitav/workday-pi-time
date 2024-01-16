@@ -95,7 +95,10 @@ func main() {
 
 			online2, _ := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
 			count, online3, _ := handlers.GetEmployeePunchesFromTCD(context, &employee)
-			fmt.Println(count, online3)
+			err := handlers.DetermineIfClockedIn(&employee.Period_Blocks, &employee.Period_Punches, &employee)
+			if err != nil {
+				fmt.Println("error", err)
+			}
 
 			status["TCD_employee_cache_online"] = online
 			status["workdayAPI_online"] = online2
@@ -138,7 +141,7 @@ func main() {
 		context.Redirect(http.StatusTemporaryRedirect, sitePath)
 	})
 
-	webRoot := "./dist/analog"
+	webRoot := "./dist/dist/analog"
 	fmt.Println("http.Dir(webRoot)", http.Dir(webRoot))
 	router.StaticFS(sitePath, http.Dir(webRoot))
 	//router.Static(sitePath, webRoot)
