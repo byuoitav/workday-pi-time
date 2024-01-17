@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -65,7 +66,6 @@ func GetEmployeePunchesFromTCD(context *gin.Context, employee *database.Employee
 func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches *[]database.PeriodPunches, employee *database.Employee) error {
 	var errRtn error
 	for k := range employee.Positions {
-		fmt.Println("Position", employee.Positions[k])
 		employee.Positions[k].Clocked_In = "false"
 
 		//find latest clock in
@@ -77,7 +77,7 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 			}
 			blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", v.Time_Clock_Event_Date_Time_IN)
 			if err != nil {
-				errRtn = err
+				errRtn = errors.Join(errRtn, err)
 				continue
 			}
 			if blockStartTime.After(lastIn) {
@@ -87,13 +87,11 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 		//find latest event
 		for _, v := range *period_punches {
 			if v.Clock_Event_Type != "Check-in" || employee.Positions[k].Position_Number != v.Position_Number {
-				fmt.Println("Skipped Period Punch", v.Time_Clock_Event_Date_Time, v.Position_Number, v.Clock_Event_Type)
 				continue
 			}
-			fmt.Println("Period Punch", v.Time_Clock_Event_Date_Time, v.Position_Number, v.Clock_Event_Type)
 			eventTime, err := time.Parse("2006-01-02T15:04:05-07:00", v.Time_Clock_Event_Date_Time)
 			if err != nil {
-				errRtn = err
+				errRtn = errors.Join(errRtn, err)
 				continue
 			}
 			if eventTime.After(lastIn) {
@@ -110,7 +108,7 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 			}
 			blockEndTime, err := time.Parse("2006-01-02T15:04:05-07:00", v.Time_Clock_Event_Date_Time_OUT)
 			if err != nil {
-				errRtn = err
+				errRtn = errors.Join(errRtn, err)
 				continue
 			}
 			if blockEndTime.After(lastOut) {
@@ -124,7 +122,7 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 			}
 			eventTime, err := time.Parse("2006-01-02T15:04:05-07:00", v.Time_Clock_Event_Date_Time)
 			if err != nil {
-				errRtn = err
+				errRtn = errors.Join(errRtn, err)
 				continue
 			}
 			if eventTime.After(lastIn) {
@@ -133,9 +131,7 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 		}
 
 		//compare latest in/out and update the value accordingly
-		fmt.Println("!!!!!!!!!!!!!!!!!!!!", lastIn, lastOut)
 		if lastIn.After(lastOut) {
-
 			employee.Positions[k].Clocked_In = "true"
 		}
 	}
@@ -172,7 +168,7 @@ func PostPunch(context *gin.Context) {
 
 	incomingRequest.Comment = "Wall Clock Punch from: " + hostname
 	if err != nil {
-		err = fmt.Errorf("error geting hostname", "error", err)
+		err = fmt.Errorf("error geting hostname. error: %w", err)
 		slog.Error("bad request", "error", err)
 		context.String(http.StatusBadRequest, err.Error())
 		return
