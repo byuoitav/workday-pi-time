@@ -64,7 +64,7 @@ func GetEmployeePunchesFromTCD(context *gin.Context, employee *database.Employee
 }
 func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches *[]database.PeriodPunches, employee *database.Employee) error {
 	var errRtn error
-	for k, _ := range employee.Positions {
+	for k := range employee.Positions {
 		fmt.Println("Position", employee.Positions[k])
 		employee.Positions[k].Clocked_In = "false"
 
@@ -144,25 +144,45 @@ func DetermineIfClockedIn(period_blocks *[]database.PeriodBlocks, period_punches
 
 // Punch adds an in or out punch as determined by the body sent
 func PostPunch(context *gin.Context) {
+	var err error
 	var incomingRequest database.Punch
-	byuID := context.Param("id")
-	slog.Debug("PostPunch with byuID: " + byuID)
-
-	err := context.BindJSON(&incomingRequest)
-	if err != nil {
+	worker_ID := context.Param("id")
+	slog.Debug("PostPunch with worker_ID: " + worker_ID)
+	if len(worker_ID) != 9 {
+		err = fmt.Errorf("missing punch data, request must include worker_ID to be a valid request. worker_id received: %s", worker_ID)
+		slog.Error("bad request", "error", err)
 		context.String(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = context.BindJSON(&incomingRequest)
+	if err != nil {
+		err = fmt.Errorf("error parsing incoming response body. error: %w", err)
+		slog.Error("bad request body", "error", err)
+		context.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	if incomingRequest.Clock_Event_Type == "" || incomingRequest.Worker_ID == "" || incomingRequest.Position_Number == "" || incomingRequest.Time_Entry_Code == "" {
+		err = fmt.Errorf("missing punch data, request must include worker_id, position_number, clock_event_type, and time_entry_code in the request body")
+		slog.Error("bad request", "error", err)
+		context.String(http.StatusBadRequest, err.Error())
+		return
 	}
 	hostname, err := os.Hostname()
 
 	incomingRequest.Comment = "Wall Clock Punch from: " + hostname
 	if err != nil {
-		slog.Error("error geting hostname", "error", err)
+		err = fmt.Errorf("error geting hostname", "error", err)
+		slog.Error("bad request", "error", err)
 		context.String(http.StatusBadRequest, err.Error())
+		return
 	}
 	response, err := database.WritePunch(incomingRequest)
 	if err != nil {
-		slog.Error("error writing punch to database", "error", err)
+		err = fmt.Errorf("error writing punch to database %w", err)
+		slog.Error("bad request", "error", err)
 		context.String(http.StatusBadRequest, err.Error())
+		return
 	}
 	response.Hostname = hostname
 	slog.Info("postPunch success", "response", response)
