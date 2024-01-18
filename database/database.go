@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/byuoitav/workday-pi-time/workday"
@@ -18,12 +18,12 @@ import (
 )
 
 type Punch struct {
-	Worker_ID                  string `json:"worker_id"`
-	Position_Number            string `json:"position_number"`
-	Clock_Event_Type           string `json:"clock_event_type"`
-	Time_Entry_Code            string `json:"time_entry_code"`
-	Comment                    string `json:"comment"`
-	Time_Clock_Event_Date_Time string `json:"time_clock_event_date_time"`
+	Worker_ID                  string    `json:"worker_id"`
+	Position_Number            string    `json:"position_number"`
+	Clock_Event_Type           string    `json:"clock_event_type"`
+	Time_Entry_Code            string    `json:"time_entry_code"`
+	Comment                    string    `json:"comment"`
+	Time_Clock_Event_Date_Time time.Time `json:"time_clock_event_date_time"`
 }
 
 type PunchResponse struct {
@@ -34,16 +34,22 @@ type PunchResponse struct {
 }
 
 type Employee struct {
-	Employee_Name        string            `json:"employee_name"`
-	Worker_ID            string            `json:"worker_id"`
-	International_Status string            `json:"international_status"`
-	Total_Week_Hours     string            `json:"total_week_hours"`
-	Total_Period_Hours   string            `json:"total_period_hours"`
-	PositionsList        []string          `json:"positions_list"`
-	Time_Entry_Codes     map[string]string `json:"time_entry_codes"` //time_code_group : ui_name - uses data from time_entry_code_map and employee_cache
-	Positions            []Position        `json:"positions"`
-	Period_Punches       []PeriodPunches   `json:"period_punches"`
-	Period_Blocks        []PeriodBlocks    `json:"period_blocks"`
+	Employee_Name        string           `json:"employee_name"`
+	Worker_ID            string           `json:"worker_id"`
+	International_Status string           `json:"international_status"`
+	Total_Week_Hours     string           `json:"total_week_hours"`
+	Total_Period_Hours   string           `json:"total_period_hours"`
+	PositionsList        []string         `json:"positions_list"`
+	Time_Entry_Codes     []TimeEntryCodes `json:"time_entry_codes"`
+	Positions            []Position       `json:"positions"`
+	Period_Punches       []PeriodPunches  `json:"period_punches"`
+	Period_Blocks        []PeriodBlocks   `json:"period_blocks"`
+}
+
+type TimeEntryCodes struct {
+	Backend_ID   string `json:"backend_id"`
+	Display_Name string `json:"frontend_name"`
+	Sort_Order   int    `json:"sort_order"`
 }
 
 type Position struct {
@@ -52,6 +58,7 @@ type Position struct {
 	Business_Title              string `json:"business_title"`
 	Position_Total_Week_Hours   string `json:"position_total_week_hours"`
 	Position_Total_Period_Hours string `json:"position_total_period_hours"`
+	Clocked_In                  string `json:"clocked_in"`
 }
 
 // Punches not related to a time block
@@ -231,8 +238,11 @@ func GetRecentEmployeePunches(employee *Employee) (int, error) {
 
 	for _, v := range punches {
 		var livePunch PeriodPunches
-		modifiedTime := strings.Replace(v.Time_Clock_Event_Date_Time, "Z", "-07:00", 1) //fix time formatting to match
-		livePunch.Time_Clock_Event_Date_Time = modifiedTime
+
+		modifiedTime := v.Time_Clock_Event_Date_Time //fix time formatting and timezone to match
+		location := time.Now().Location()            //.LoadLocation("America/Denver")
+		livePunch.Time_Clock_Event_Date_Time = modifiedTime.In(location).Format("2006-01-02T15:04:05-07:00")
+
 		livePunch.Position_Number = v.Position_Number
 
 		for _, position := range employee.Positions {
@@ -242,9 +252,9 @@ func GetRecentEmployeePunches(employee *Employee) (int, error) {
 		}
 
 		if v.Clock_Event_Type == "IN" {
-			livePunch.Clock_Event_Type = "Check-In"
+			livePunch.Clock_Event_Type = "Check-in"
 		} else if v.Clock_Event_Type == "OUT" {
-			livePunch.Clock_Event_Type = "Check-Out"
+			livePunch.Clock_Event_Type = "Check-out"
 		}
 
 		employee.Period_Punches = append(employee.Period_Punches, livePunch)
@@ -279,19 +289,20 @@ func WritePunch(punch Punch) (PunchResponse, error) {
 	return punchResponse, nil
 }
 
-// receives list of time codes and returns a map of time codes with their display name from the database table
-const getTimeCodesQery = `SELECT time_code_groups, time_entry_code, entry_method, time_code_reference_id, ui_name FROM workday.time_entry_code_map WHERE ui_name is not null ;`
+// receives list of time codes, queries the database and returns a time code struct with data from the database table
+const getTimeCodesQery = `SELECT time_code_groups, time_entry_code, entry_method, time_code_reference_id, ui_name, sort_order FROM workday.time_entry_code_map WHERE ui_name is not null ;`
 
-func MapTimeCodes(timeCodes []string) (map[string]string, error) {
+func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
 	type databaseInfo struct {
 		time_code_groups       string
 		time_entry_code        string
 		entry_method           string
 		time_code_reference_id string
 		ui_name                string
+		sort_order             int
 	}
 	data, err := DatabaseIO(getTimeCodesQery)
-	toReturn := make(map[string]string)
+	var toReturn []TimeEntryCodes
 
 	var fromDatabase []databaseInfo
 	if err != nil {
@@ -301,26 +312,30 @@ func MapTimeCodes(timeCodes []string) (map[string]string, error) {
 
 	for data.Next() {
 		var row databaseInfo
-		err := data.Scan(&row.time_code_groups, &row.time_entry_code, &row.entry_method, &row.time_code_reference_id, &row.ui_name)
+		err := data.Scan(&row.time_code_groups, &row.time_entry_code, &row.entry_method, &row.time_code_reference_id, &row.ui_name, &row.sort_order)
 		if err != nil {
 			return toReturn, err
 		}
 		fromDatabase = append(fromDatabase, row)
 	}
 	//loop and organize fromDatabase as a map of: "time_code_groups : ui_name" AND "time_code_groups : time_code_reference_id"
-	timeUIMap := make(map[string]string)
-	timeIDMap := make(map[string]string)
+
 	for _, v := range fromDatabase {
-		timeUIMap[v.time_code_groups] = v.ui_name
-		timeIDMap[v.time_code_groups] = v.time_code_reference_id
+		if slices.Contains(timeCodes, v.time_code_groups) {
+			var timeEntryCode TimeEntryCodes
+			timeEntryCode.Backend_ID = v.time_code_reference_id
+			timeEntryCode.Display_Name = v.ui_name
+			timeEntryCode.Sort_Order = v.sort_order
+			toReturn = append(toReturn, timeEntryCode)
+		}
 	}
 
 	//use the two maps from above and create the map to be sent to the UI
-	for _, v := range timeCodes {
-		if timeUIMap[v] != "" {
-			toReturn[timeIDMap[v]] = timeUIMap[v]
-		}
-	}
+	// for _, v := range timeCodes {
+	// 	if timeUIMap[v] != "" {
+	// 		toReturn[timeIDMap[v]] = timeUIMap[v]
+	// 	}
+	// }
 	return toReturn, nil
 }
 
@@ -618,14 +633,14 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		if ok {
 			employee.Positions[key].Position_Total_Period_Hours = fmt.Sprintf("%.2f H", period)
 		} else {
-			employee.Positions[key].Position_Total_Period_Hours = "N/A"
+			employee.Positions[key].Position_Total_Period_Hours = "0 H"
 		}
 
 		week, ok = positionWeekTotal[position.Position_Number]
 		if ok {
 			employee.Positions[key].Position_Total_Week_Hours = fmt.Sprintf("%.2f H", week)
 		} else {
-			employee.Positions[key].Position_Total_Week_Hours = "N/A"
+			employee.Positions[key].Position_Total_Week_Hours = "0 H"
 		}
 	}
 
@@ -634,8 +649,8 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		employee.Total_Week_Hours = fmt.Sprintf("%.2f H", totalWeekHours)
 	} else {
 		//set default values to be displayed if no worker data comes from workday
-		employee.Total_Period_Hours = "N/A"
-		employee.Total_Week_Hours = "N/A"
+		employee.Total_Period_Hours = "0 H"
+		employee.Total_Week_Hours = "0 H"
 	}
 
 	return nil
@@ -708,8 +723,8 @@ func calculateMissingStartEndTimesViaOtherEvents(periodBlock *PeriodBlocks, work
 
 	} else {
 		if workdayBlocks[periodBlock.ReferenceID].In_Time != "" || workdayBlocks[periodBlock.ReferenceID].Out_Time != "" {
-			periodBlock.Time_Clock_Event_Date_Time_IN = workdayBlocks[periodBlock.ReferenceID].In_Time   //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
-			periodBlock.Time_Clock_Event_Date_Time_OUT = workdayBlocks[periodBlock.ReferenceID].Out_Time //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
+			periodBlock.Time_Clock_Event_Date_Time_IN = workdayBlocks[periodBlock.ReferenceID].In_Time + "-07:00"   //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
+			periodBlock.Time_Clock_Event_Date_Time_OUT = workdayBlocks[periodBlock.ReferenceID].Out_Time + "-07:00" //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
 		} else {
 			periodBlock.Time_Clock_Event_Date_Time_IN = "N/A"
 			periodBlock.Time_Clock_Event_Date_Time_OUT = "N/A"

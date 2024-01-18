@@ -80,11 +80,15 @@ func main() {
 	//get and return all info to ui for employee
 	type employee_dataReturn struct {
 		Status        map[string]bool   `json:"status"`
+		Error         []string          `json:"error"`
 		Events_In_TCD int               `json:"unprocessed_punches_in_tcd"`
 		Employee      database.Employee `json:"employee"`
 	}
 	router.GET("/get_employee_data/:id", func(context *gin.Context) {
 		var employee database.Employee
+		var return_data employee_dataReturn
+		var err error
+
 		status := make(map[string]bool)
 		errSend := make(map[string]string)
 		online, err := handlers.GetEmployeeFromTCD(context, &employee)
@@ -93,9 +97,21 @@ func main() {
 			context.JSON(http.StatusServiceUnavailable, errSend)
 		} else {
 
-			online2, _ := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
-			count, online3, _ := handlers.GetEmployeePunchesFromTCD(context, &employee)
-			fmt.Println(count, online3)
+			online2, err := handlers.GetEmployeeFromWorkdayAPI(context, &employee)
+			if err != nil {
+				slog.Error("error with handlers.GetEmployeeFromWorkdayAPI ", "error", err)
+				return_data.Error = append(return_data.Error, err.Error())
+			}
+			count, online3, err := handlers.GetEmployeePunchesFromTCD(context, &employee)
+			if err != nil {
+				slog.Error("error with handlers.GetEmployeePunchesFromTCD ", "error", err)
+				return_data.Error = append(return_data.Error, err.Error())
+			}
+			err = handlers.DetermineIfClockedIn(&employee.Period_Blocks, &employee.Period_Punches, &employee)
+			if err != nil {
+				slog.Error("error with DetermineIfClockedIn ", "error", err)
+				return_data.Error = append(return_data.Error, err.Error())
+			}
 
 			status["TCD_employee_cache_online"] = online
 			status["workdayAPI_online"] = online2
@@ -106,7 +122,6 @@ func main() {
 				status["unprocessed_punches_in_tcd"] = false
 			}
 
-			var return_data employee_dataReturn
 			return_data.Status = status
 			return_data.Employee = employee
 			return_data.Events_In_TCD = count
