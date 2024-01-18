@@ -20,4 +20,4 @@
 	<div class="total"> Total Hours: {{ calculateTotalHours(day)?.punchedHours }} </div>
 </div>
 
-<punches class="tab-content" [byuID]="emp?.id" [jobID]="job?.positionNumber" [day]="day" [job]="job"></punches>
+<punches class="tab-content" [emp]="emp" [byuID]="emp?.id" [day]="day"></punches>

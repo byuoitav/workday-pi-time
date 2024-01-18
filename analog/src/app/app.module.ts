@@ -35,7 +35,6 @@ import { ClockComponent } from "./components/clock/clock.component";
 import { LoginComponent } from "./components/login/login.component";
 import { HoursPipe } from "./pipes/hours.pipe";
 import { ActivityButton } from "./components/activity-button/activity-button.component";
-import { JobSelectComponent } from "./components/job-select/job-select.component";
 import { DateSelectComponent } from "./components/date-select/date-select.component";
 import { DayOverviewComponent } from "./components/day-overview/day-overview.component";
 import { ErrorDialog } from "./dialogs/error/error.dialog";
@@ -52,7 +51,6 @@ import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
         LoginComponent,
         HoursPipe,
         ActivityButton,
-        JobSelectComponent,
         DateSelectComponent,
         DayOverviewComponent,
         ErrorDialog,

@@ -1,7 +1,12 @@
+.contents {
+    padding: 15px;
+    padding-bottom: 0;
+    height: 75vh;
+    overflow: auto;
+}
+
 .container {
-    width: 96vw;
-    height: 72vh;
-    padding: 2vh 2vw;
+    max-width: 96vw;
     display: flex;
     flex-direction: row;
     align-content: center;
@@ -12,11 +17,37 @@ h3 {
     margin-bottom: 15px;
     font-size: 1.4em;
 }
+
+h4 {
+    margin: 0;
+    font-size: 1.1em;
+}
+
 .col1, .col2 {
     width:50%;
     padding: 15px;
     display: flex;
     flex-direction: column;
+}
+
+.divider {
+    border: 1px solid #000; 
+    margin: 5px 0;
+}
+
+
+.jobBlock {
+    border-width: 0;
+    border-radius: 20px;
+    border-style: solid;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #dde5f3;
+}
+
+.businessTitle {
+    font-size: large;
+    font-weight: bold;
 }
 
 .times {
@@ -30,68 +61,34 @@ h3 {
     background-color: #002e5d;
     margin: 5px;
     border-radius: 15px;
-    width: 95%;
-}
-
-/* TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version. */
-mat-card {
-    width: 97%;
-    height: 100%;
-}
-
-.no-punches {
-    padding: 3vh 0;
-    font-size: 1.5em;
-}
-
-.card-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-}
-
-.punches {
-    width: 40vw;
-    align-items: center;
-    margin-left: 5vw;
-    max-height: 50vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    pointer-events: all;
-    &::-webkit-scrollbar {
-        width: 7px;
-    }
-    &::-webkit-scrollbar-track {
-        background: #ffffff;
-    }
-    &::-webkit-scrollbar-thumb {
-        background: #969595;
-        border-radius: 10px;
-    }
-    &::-webkit-scrollbar-thumb:hover {
-        background: #aaaaaa;
-    }
+    max-width: 95%;
 }
 
 .punch {
-    margin: 0.1vh 0;
-    height: 8vh;
-    width: 95%;
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
-    align-items: center;
-    font-size: 1.15em;
-    .time {
-        width: 12vw;
-        height: 6vh;
-        &.edit {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: rgba(181, 40, 40, 0.45);
-        }
-    }
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 15px;
+    color: #002e5d;
+    background-color: white;
+    margin: 5px;
+    border-radius: 15px;
+    max-width: 90%;
+    border-color: #fc4c4c;
+    border-width: 3px;
+    border-style: solid;
+}
+
+
+
+.no-punches {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    font-size: 1.5em;
+    padding-top: 30px;
 }
 
 .delete {

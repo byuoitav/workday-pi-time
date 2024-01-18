@@ -1,50 +1,55 @@
-<div *ngIf="day?.punches?.length === 0 && day?.periodBlocks?.length === 0" class="card-content">
+<div *ngIf="!dayHasPunch(day.time) && !dayHasPeriod(day.time)" class="card-content">
 	<span class="no-punches">No time events recorded for this day.</span>
 </div>
 
-<div *ngIf="day?.punches?.length !== 0 || day?.periodBlocks?.length !== 0">
-	<div class="container">
-		<div class="col1">
-			<!-- Period Blocks -->
-			<h3>Time Blocks</h3>
-			<div *ngIf="day?.periodBlocks?.length > 0">
-				<div class="periods">
-					<div class="period" *ngFor="let period of day?.periodBlocks">
-						<div class="times" >
-							<div class="start">
-								{{ period?.startDate === undefined ? "!" : getAMPMTimeFromDate(period?.startDate) }}
-							</div>
-							<div class="end">
-								{{ period?.endDate === undefined ? "!" : getAMPMTimeFromDate(period?.endDate) }}
+<div *ngIf="dayHasPunch(day.time) || dayHasPeriod(day.time)" class="contents">
+	
+	<div class="jobBlock" *ngFor="let pos of emp.positions">
+		<span class="businessTitle"> {{ pos.businessTitle }} </span>
+		<hr class="divider">
+		<div class="container">
+			<div class="col1">
+				<h4>Time Blocks:</h4>
+				<!-- Period Blocks -->
+				<div *ngFor="let d of pos.days">
+					<div *ngIf="d.time.getDate() === day?.time.getDate()">
+						<div class="period" *ngFor="let period of d?.periodBlocks">
+							<div class="times" >
+								<div class="start">
+									{{ period?.startDate === undefined ? "!" : getAMPMTimeFromDate(period?.startDate) }}
+								</div>
+								<div class="end">
+									{{ period?.endDate === undefined ? "!" : getAMPMTimeFromDate(period?.endDate) }}
+								</div>
 							</div>
 						</div>
-
-						
 					</div>
 				</div>
 			</div>
-		</div>
 
 
-		<div class="col2">
-			<!-- Unmatched Time Events -->
-			<div *ngIf="day?.punches?.length > 0" class="card-content">
-				<h3>Unmatched Time Events</h3>
-				<div class="punches">
-					<div class="punch" *ngFor="let punch of day?.punches">
-						<span class="time" >
-							{{ punch?.time ? (punch?.time | date: "shortTime") : "--:--" }}
-						</span>
+			<div class="col2">
+				<h4>Unmatched Time Events:</h4>
+				<!-- Unmatched Time Events -->
+				<div *ngFor="let d of pos.days">
+					<div  *ngIf="d.time.getDate() === day.time.getDate()">
+						<div class="punch" *ngFor="let punch of d.punches">
 
-						<span class="type"  [ngStyle]="{'color' : punchType.toString(punch?.type) === 'IN' ? 'darkgreen' : 'darkred'}">
-							<b>
-								{{ punchType.toString(punch?.type) }}
-							</b>
-						</span>
+							<span class="time" >
+								{{ punch.time ? (punch?.time | date: "shortTime") : "--:--" }}
+							</span>
+
+							<span class="type"  [ngStyle]="{'color' : punchType.toString(punch?.type) === 'IN' ? 'darkgreen' : 'darkred'}">
+								<b>
+									{{ punchType.toString(punch?.type) }}
+								</b>
+							</span>
+
+						</div>
 					</div>
 				</div>
 			</div>
+
 		</div>
 	</div>
-
 </div>

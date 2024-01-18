@@ -45,20 +45,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     "Saturday"
   ];
 
-  private _jobID: string;
-  Position: Position;
-  get job(): Position {
-    if (this.emp) {
-      for (let i = 0; i < this.emp.positions.length; i++) {
-        if (String(this.emp.positions[i].positionNumber) === String(this._jobID)) {
-          return this.emp.positions[i];
-        }
-      }
-    }
-  
-    return undefined;
-  }
-
   private _empRef: EmployeeRef;
   get emp(): Employee {
     if (this._empRef) {
@@ -78,7 +64,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this._subsToDestroy.push(this.route.paramMap.subscribe(params => {
-      this._jobID = params.get("jobid");
       this.getViewDays();
     }));
 
@@ -86,11 +71,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
       this._empRef = data.empRef;
 
       this._subsToDestroy.push(this._empRef.subject().subscribe(emp => {
-        if (this.job) {
-          // this.minDay = Day.minDay(this.job.days);
-          // this.maxDay = Day.maxDay(this.job.days);
-        }
-
         this.getViewDays();
       }));
     }));
@@ -105,17 +85,10 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
-    if (this.emp.positions.length > 1) {
-      // job select
-      this.router.navigate(["/employee/" + this.emp.id + "/job"], {
-        queryParamsHandling: "preserve"
-      });
-    } else {
       // clock
       this.router.navigate(["/employee/" + this.emp.id], {
         queryParamsHandling: "preserve"
       });
-    }
   }
 
   canMoveMonthBack(): boolean {
@@ -154,22 +127,10 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   selectDay = (date: Date) => {
     console.log("CLICKED", date);
     const str = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-    console.log("str", str);
     this.router.navigate(["./" + str], {
       relativeTo: this.route,
       queryParamsHandling: "preserve"
     });
-    if (!this.job) {
-      console.warn("job", this._jobID, "is undefined for this employee");
-      return;
-    }
-
-    const day = this.job.days.find(
-      d =>
-        d.time.getFullYear() === date.getFullYear() &&
-        d.time.getMonth() === date.getMonth() &&
-        d.time.getDate() === date.getDate()
-    );
 
     //add cookie to know what current date they are looking at
     if (this._empRef) {
@@ -212,43 +173,51 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   dayHasPunch(day: Date): boolean {
-    if (this.job) {
-      const empDay = this.job.days.find(
-        d => d.time.toDateString() === day.toDateString()
-      );
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
 
-      if (empDay) {
-        return empDay.punches.length > 0;
+        if (empDay) {
+          if (empDay.punches.length > 0) {
+            return true
+          };
+        }
       }
     }
-
     return false;
   }
 
   dayHasPeriod(day: Date): boolean {
-    if (this.job) {
-      const empDay = this.job.days.find(
-        d => d.time.toDateString() === day.toDateString()
-      );
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
 
-      if (empDay) {
-        return empDay.periodBlocks.length > 0;
+        if (empDay) {
+          if (empDay.periodBlocks.length > 0) {
+            return true;
+          }
+        }
       }
     }
-
     return false;
   }
 
   dayHasUndefinedPeriod(day: Date): boolean {
-    if (this.job) {
-      const empDay = this.job.days.find(
-        d => d.time.toDateString() === day.toDateString()
-      );
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
 
-      if (empDay) {
-        for (const period of empDay.periodBlocks) {
-          if (period.startDate === undefined || period.endDate === undefined) {
-            return true;
+        if (empDay) {
+          for (const period of empDay.periodBlocks) {
+            if (period.startDate === undefined || period.endDate === undefined) {
+              return true;
+            }
           }
         }
       }

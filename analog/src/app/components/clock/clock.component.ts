@@ -8,7 +8,7 @@ import { APIService, EmployeeRef } from "../../services/api.service";
 import {
   Employee,
   PunchType,
-  TRC,
+  TEC,
   Position,
   PunchRequest
 } from "../../objects";
@@ -47,13 +47,13 @@ export class ClockComponent implements OnInit {
 
     if (this.api.unsynced) {
       this.toast.show(
-        "Not all time events have synced yet.",
+        "Offline Mode.",
         "DISMISS",
         20000
       );
     }
     
-    if (this.emp.positions.length <= 0) {
+    if (this.emp.positions.length <= 0 || this.api.unsynced) {
       const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
       rvwTimesheet.className = "hidden";
     }
@@ -75,17 +75,17 @@ export class ClockComponent implements OnInit {
 
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
-    var trc: string;
+    var tec: string;
     const timeEntryCodesKeys = Object.keys(this.emp.timeEntryCodes);
     if (timeEntryCodesKeys.length === 1) {
-      trc = timeEntryCodesKeys[0];
+      tec = timeEntryCodesKeys[0];
     }
-    else if (this.emp.showTRC()) {
-      const trcList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
-      trc = trcList.options[trcList.selectedIndex].value;
+    else if (this.emp.showTEC()) {
+      const tecList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
+      tec = tecList.options[tecList.selectedIndex].value;
       for (const key in this.emp.timeEntryCodes) {
-        if (this.emp.timeEntryCodes[key] === trc) {
-          trc = key;
+        if (this.emp.timeEntryCodes[0].frontendName === tec) {
+          tec = key;
           break;
         }
       }
@@ -95,9 +95,7 @@ export class ClockComponent implements OnInit {
     data.id = this.emp.id;
     data.positionNumber = String(jobRef.value.positionNumber);
     data.clockEventType = state === "I" ? "IN" : "OUT";
-    data.time = formatDate(new Date());
-    data.comment = "comment";
-    data.timeEntryCode = trc;
+    data.timeEntryCode = tec;
 
     const obs = this.api.punch(data).pipe(share());
     obs.subscribe(
@@ -114,15 +112,10 @@ export class ClockComponent implements OnInit {
   };
 
   toTimesheet = () => {
-    this.router.navigate(["./job/"], { 
+    this.router.navigate(["./date/"], { 
       relativeTo: this.route,
       queryParamsHandling: "preserve" });
   };
-
-  contains = (str : string, substr : string) => {
-    var lowerStr = str.toLowerCase();
-    return lowerStr.indexOf(substr) !== -1 ? true : false;
-  }
 
   logout = () => {
     this._empRef.logout(false);

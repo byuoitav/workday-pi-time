@@ -13,7 +13,8 @@ import {
   Punch,
   PORTAL_DATA,
   PunchRequest,
-  Position
+  Position,
+  Employee
 } from "../../objects";
 import {ToastService} from "src/app/services/toast.service";
 
@@ -27,9 +28,9 @@ export class PunchesComponent implements OnInit, OnDestroy {
   public punchType = PunchType;
 
   @Input() byuID: string;
-  @Input() jobID: string;
   @Input() day: Day;
   @Input() job: Position;
+  @Input() emp: Employee;
 
   private _overlayRef: OverlayRef;
   private _subsToDestroy: Subscription[] = [];
@@ -62,7 +63,6 @@ export class PunchesComponent implements OnInit, OnDestroy {
     }
   }
 
-
   private createInjector = (
     overlayRef: OverlayRef,
     data: any
@@ -88,6 +88,60 @@ export class PunchesComponent implements OnInit, OnDestroy {
   
     const formattedTime = `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
     return formattedTime;
+  }
+
+  dayHasPunch(day: Date): boolean {
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
+
+        if (empDay) {
+          if (empDay.punches.length > 0) {
+            return true
+          };
+        }
+      }
+    }
+    return false;
+  }
+
+  dayHasPeriod(day: Date): boolean {
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
+
+        if (empDay) {
+          if (empDay.periodBlocks.length > 0) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  dayHasUndefinedPeriod(day: Date): boolean {
+    for (const job of this.emp.positions) {
+      if (job) {
+        const empDay = job.days.find(
+          d => d.time.toDateString() === day.toDateString()
+        );
+
+        if (empDay) {
+          for (const period of empDay.periodBlocks) {
+            if (period.startDate === undefined || period.endDate === undefined) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
   }
 
 }

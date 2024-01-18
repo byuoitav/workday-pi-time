@@ -222,13 +222,16 @@ export class Hours {
 }
 
 
-@JsonObject("TRC")
-export class TRC {
-  @JsonProperty("id", String, true)
+@JsonObject("TEC")
+export class TEC {
+  @JsonProperty("backend_id", String, true)
   id: string = undefined;
 
-  @JsonProperty("description", String, true)
-  description: string = undefined;
+  @JsonProperty("frontend_name", String, true)
+  frontendName: string = undefined;
+
+  @JsonProperty("sort_order", Number)
+  sortOrder: number = undefined;
 }
 
 @JsonObject("TotalTime")
@@ -364,6 +367,7 @@ export class Position {
 
 }
 
+
 @JsonObject("Employee")
 export class Employee {
   @JsonProperty("worker_id", String, true)
@@ -378,8 +382,8 @@ export class Employee {
   @JsonProperty("total_period_hours", NumberConverter, false)
   totalPeriodHours: Number = undefined;
 
-  @JsonProperty('time_entry_codes', Object)
-  timeEntryCodes: { [key: string]: string } = undefined;
+  @JsonProperty('time_entry_codes', [TEC])
+  timeEntryCodes: TEC[] = undefined;
 
   @JsonProperty('positions', [Position])
   positions: Position[] = undefined; 
@@ -390,7 +394,7 @@ export class Employee {
   @JsonProperty("period_blocks", [PeriodBlock], false)
   periodBlocks: PeriodBlock[] = undefined;
 
-  showTRC = (): boolean => {
+  showTEC = (): boolean => {
     if (this.timeEntryCodes) {
       return Object.keys(this.timeEntryCodes).length > 1;
     }
@@ -420,12 +424,6 @@ export class PunchRequest {
 
   @JsonProperty("time_entry_code", String)
   timeEntryCode: string = undefined;
-
-  @JsonProperty("comment", String)
-  comment: string = undefined;
-
-  @JsonProperty("time_clock_event_date_time", String)
-  time: String = undefined;
 }
 
 

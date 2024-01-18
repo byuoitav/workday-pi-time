@@ -3,10 +3,6 @@ $card-width: 95%;
     flex: 1 1 auto;
 }
 
-.tab-content {
-    height: 100%;
-    width: 100%;
-}
 
 .punchesText {
     font-size: 1.4em;
@@ -58,7 +54,7 @@ $card-width: 95%;
     }
 }
 
-.do-sheet {
+.container {
     overflow-y: auto;
     height: 64vh;
     width: $card-width;
