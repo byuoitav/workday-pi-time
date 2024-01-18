@@ -77,10 +77,8 @@ export class ClockComponent implements OnInit {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
     var tec: string;
     const timeEntryCodesKeys = Object.keys(this.emp.timeEntryCodes);
-    if (timeEntryCodesKeys.length === 1) {
-      tec = timeEntryCodesKeys[0];
-    }
-    else if (this.emp.showTEC()) {
+    tec = this.emp.timeEntryCodes[timeEntryCodesKeys[0]].id;
+    if (this.emp.showTEC()) {
       const tecList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
       tec = tecList.options[tecList.selectedIndex].value;
       for (const key in this.emp.timeEntryCodes) {
