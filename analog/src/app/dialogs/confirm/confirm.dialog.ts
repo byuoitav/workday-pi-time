@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { PunchType } from 'src/app/objects';
+
 
 @Component({
   selector: 'confirm-dialog',
@@ -18,13 +18,16 @@ export class ConfirmDialog implements OnInit {
     this.ref.disableClose = true;
   }
 
-  ngOnInit() {}
+
+  ngOnInit() {
+  }
 
   close = () => {
-    this.ref.close();
+    this.ref.close("logout");
   };
 
   confirmed = () => {
     this.ref.close("confirmed");
   }
+
 }

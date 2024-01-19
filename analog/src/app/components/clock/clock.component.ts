@@ -94,7 +94,15 @@ export class ClockComponent implements OnInit {
     data.positionNumber = String(jobRef.value.positionNumber);
     data.clockEventType = state === "I" ? "IN" : "OUT";
     data.timeEntryCode = tec;
-
+    this.dialog.open(ConfirmDialog, {
+      data: {state: data.clockEventType}
+    })
+    .afterClosed()
+    .subscribe(confirmed => {
+      if (confirmed === "logout") {
+        this.logout();
+      }
+    })
     const obs = this.api.punch(data).pipe(share());
     obs.subscribe(
       resp => {
