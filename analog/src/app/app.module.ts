@@ -38,6 +38,7 @@ import { ActivityButton } from "./components/activity-button/activity-button.com
 import { DateSelectComponent } from "./components/date-select/date-select.component";
 import { DayOverviewComponent } from "./components/day-overview/day-overview.component";
 import { ErrorDialog } from "./dialogs/error/error.dialog";
+import { InternationalDialog } from "./dialogs/international/international.dialog";
 import { ManagementComponent } from './components/management/management.component';
 import { PunchesComponent } from "./components/punches/punches.component";
 import { ScreenSaverComponent } from "./components/screen-saver/screen-saver.component";
@@ -54,6 +55,7 @@ import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
         DateSelectComponent,
         DayOverviewComponent,
         ErrorDialog,
+        InternationalDialog,
         PunchesComponent,
         ScreenSaverComponent,
         ConfirmDialog,

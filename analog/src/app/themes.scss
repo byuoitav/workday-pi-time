@@ -236,6 +236,11 @@ $dark: mat.define-dark-theme((
   --mat-radio-disabled-label-color: #c20909;
 }
 
+.mat-mdc-dialog-container, .mdc-dialog__surface {
+  border-radius: 20px !important;
+  padding: 20px;
+}
+
 html {
     user-select: none;
 }

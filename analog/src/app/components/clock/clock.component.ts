@@ -14,6 +14,7 @@ import {
 } from "../../objects";
 import { ToastService } from "src/app/services/toast.service";
 import { ConfirmDialog } from "src/app/dialogs/confirm/confirm.dialog";
+import { InternationalDialog } from "src/app/dialogs/international/international.dialog";
 
 @Component({
   selector: "clock",
@@ -51,6 +52,14 @@ export class ClockComponent implements OnInit {
         "DISMISS",
         20000
       );
+    }
+
+    if (this.emp.internationalStatus && Number(this.emp.totalWeekHours) >= 15) {
+      this.dialog.open(InternationalDialog, {
+        data: {
+          msg: "You have worked more than 15 hours this week."
+        }
+      })
     }
     
     if (this.emp.positions.length <= 0 || this.api.unsynced) {
