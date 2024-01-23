@@ -166,7 +166,15 @@ export class APIService {
       },
       (err: any) => {
         console.warn("unable to deserialize employee", err);
-        employee.error("invalid response from api");
+        if (err.status === 0) {
+          employee.error("Unable to Connect to API");
+        }
+        else if (err.error.error.substring(0, 9) === "no worker") {
+          employee.error("No Worker Matches ID");
+        } else {
+          employee.error(err.error.error);
+        }
+        
       }
     );
 

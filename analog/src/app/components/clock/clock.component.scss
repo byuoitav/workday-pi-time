@@ -13,11 +13,11 @@ $card-width: 95%;
 
 .tecSelect {
   background-color: white;
-  border-radius: 5px;
+  border-radius: 20px;
   min-height: 6vh;
   min-width: 10vw;
-  padding: 0.8vh 0.55vw;
-  border: 0.3vh solid #b3b3b3;
+  padding: 0.8vh 0.8vw;
+  border: 0.3vh solid  #b3b3b3;
   .select-selected:after {
     position: absolute;
     content: "";
@@ -111,7 +111,7 @@ $card-width: 95%;
   height: 10vh;
   margin: 0 0 0.5em;
   background-color: #1b65bf;
-  border-radius: 10px;
+  border-radius: 20px;
   border-width: 0px;
   color: white;
   font-size: 1em;
@@ -122,7 +122,7 @@ $card-width: 95%;
   height: 10vh;
   margin: 0 0 0.5em;
   background-color: #bdbbbb;
-  border-radius: 10px;
+  border-radius: 20px;
   border-width: 1px;
   border-color: #b3b3b3;
   color: white;
@@ -143,7 +143,7 @@ $card-width: 95%;
     min-width: 10vw;
     padding: 0.8vh 0.55vw;
     border: 0.3vh solid #b3b3b3;
-    border-radius: 12px; // fully rounded
+    border-radius: 20px; // fully rounded
   }
 }
 
