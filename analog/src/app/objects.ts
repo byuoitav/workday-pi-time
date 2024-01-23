@@ -362,7 +362,9 @@ export class Position {
  @JsonProperty('position_total_period_hours', String)
  totalPeriodHours: number = undefined;
 
- inStatus: boolean = undefined;
+ @JsonProperty('clocked_in', String)
+ inStatus: boolean = false;
+
  days = Array<Day>();
 
 }

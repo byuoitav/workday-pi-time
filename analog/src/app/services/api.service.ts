@@ -13,7 +13,8 @@ import {
   PunchRequest,
   Punch,
   DateConverter,
-  ApiResponse
+  ApiResponse,
+  PeriodBlock
 } from "../objects";
 import {
   JsonObject,
@@ -158,7 +159,6 @@ export class APIService {
 
         const emp = response.employee;
         emp.id = String(id);
-        this.loadInStatus(emp);
         this.loadDays(emp);
 
         console.log("updated employee", emp);
@@ -182,7 +182,6 @@ export class APIService {
 
       // no more employee values
       employee.complete();
-
 
       // reset theme
       this.switchTheme("");
@@ -249,35 +248,6 @@ export class APIService {
       return throwError(e);
     }
   };
-
-  //determines In/Out status for each position based off most recent punch
-  loadInStatus(emp: Employee): any {
-    const today = new Date();
-    for (const pos of emp.positions) {
-      let currPunch: Punch;
-      for (const punch of emp.periodPunches) {
-       if (String(pos.positionNumber) === String(punch.positionNumber)) {
-          if (currPunch === undefined) {
-            currPunch = punch;
-          }
-          else if (punch.time > currPunch.time) {
-            currPunch = punch;
-          }
-       }
-      }
-      if (currPunch !== undefined) {
-        if (currPunch.type === "IN") {
-          pos.inStatus = true;
-        }
-        else {
-          pos.inStatus = false;
-        }
-      }
-      else {
-        pos.inStatus = false;
-      }
-    }
-  } 
 
   loadDays(emp: Employee) {
     const today = Date.now();

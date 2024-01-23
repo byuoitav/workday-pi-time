@@ -127,10 +127,13 @@ $dark: mat.define-dark-theme((
 
 .dark-theme {
   @include mat.all-component-themes($dark);
-  
-  .mat-mdc-card-outlined, .clock-group[_ngcontent-ng-c825893131] .clock-button[_ngcontent-ng-c825893131] {
-    border-color: #c1272d;
-    border-width: 2px;
+  .container, .base {
+    background-color: rgba(255, 255, 255, .1);
+  }
+  .mat-mdc-card-outlined, .mat-mdc-card, .mat-mdc-card, .clock-group[_ngcontent-ng-c825893131] .clock-button[_ngcontent-ng-c825893131] {
+    border-color: #c1272d !important;
+    border-width: 2px !important;
+    border-style: solid !important;
   }
 
   .tecSelect {
@@ -145,7 +148,7 @@ $dark: mat.define-dark-theme((
     border-width: 2px;
   }
 
-  .jobBlock {
+  .jobBlock, .container {
     background-color: #414141 !important;
   }
 
@@ -161,6 +164,14 @@ $dark: mat.define-dark-theme((
 
 .mat-mdc-card {
   padding: 10px;
+  border-radius: 15px !important;
+  background-color: white;
+  border-width: 0;
+  border-style: hidden !important;
+}
+
+.container, .base {
+  background-color: #dde5f3;
 }
 
 .mat-tab-label-active {
@@ -225,3 +236,6 @@ $dark: mat.define-dark-theme((
   --mat-radio-disabled-label-color: #c20909;
 }
 
+html {
+    user-select: none;
+}

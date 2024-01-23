@@ -86,14 +86,14 @@
                 class="clock-button in"
                 color="accent"
                 [value]="punchType.In"
-                [checked]="Position?.inStatus"
+                [checked]="Position.inStatus === 'true'"
                 >IN</mat-radio-button
               >
               <mat-radio-button
                 color = "warn"
                 class="clock-button out"
                 [value]="punchType.Out"
-                [checked]="!Position?.inStatus"
+                [checked]="Position.inStatus === 'false'"
                 >OUT</mat-radio-button
               >
             </mat-radio-group>
@@ -141,19 +141,19 @@
               "
             >
               <mat-radio-button
-                class="clock-button in"
-                color="accent"
-                [value]="punchType.In"
-                [checked]="Position?.inStatus"
-                >IN</mat-radio-button
-              >
-              <mat-radio-button
-                color = "warn"
-                class="clock-button out"
-                [value]="punchType.Out"
-                [checked]="!Position?.inStatus"
-                >OUT</mat-radio-button
-              >
+              class="clock-button in"
+              color="accent"
+              [value]="punchType.In"
+              [checked]="Position.inStatus === 'true'"
+              >IN</mat-radio-button
+            >
+            <mat-radio-button
+              color = "warn"
+              class="clock-button out"
+              [value]="punchType.Out"
+              [checked]="Position.inStatus === 'false'"
+              >OUT</mat-radio-button
+            >
             </mat-radio-group>
           </mat-grid-tile>
         </ng-container>
