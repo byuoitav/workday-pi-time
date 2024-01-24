@@ -3,16 +3,31 @@ $card-width: 95%;
     flex: 1 1 auto;
 }
 
-.tab-content {
-    height: 100%;
-    width: 100%;
-}
 
 .punchesText {
     font-size: 1.4em;
     font-weight: bold;
     color: white;
 
+}
+
+.banner {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100vw;
+    height: 10vh;
+    background-color: #1a6bbb;
+    color: white;
+    padding-right: 30px;
+    padding-left: 30px;
+}
+
+.total {
+    color: white;
+    font-size: 1.3em;
+    font-weight: bold;
 }
 
 .do-header {
@@ -39,7 +54,7 @@ $card-width: 95%;
     }
 }
 
-.do-sheet {
+.container {
     overflow-y: auto;
     height: 64vh;
     width: $card-width;

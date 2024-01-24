@@ -25,29 +25,17 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
     return undefined;
   }
 
-  private _jobID: string;
-  get job(): Position {
-    if (this.emp) {
-      return this.emp.positions.find(j => String(j.positionNumber) === String(this._jobID));
-    }
-    return undefined;
-  }
-
   private _date: string;
   get day(): Day {
-    if (this.job) {
-      const date = new Date(this._date + " 00:00:00");
-      let day: Day = this.job.days.find(
-        d =>
-          d.time.getFullYear() === date.getFullYear() &&
-          d.time.getMonth() === date.getMonth() &&
-          d.time.getDate() === date.getDate()
-      );
-      
-      return day;
-    }
-
-    return undefined;
+    const date = new Date(this._date + " 00:00:00");
+    let day: Day = this.emp.positions[0].days.find(
+      d =>
+        d.time.getFullYear() === date.getFullYear() &&
+        d.time.getMonth() === date.getMonth() &&
+        d.time.getDate() === date.getDate()
+    );
+    
+    return day;
   }
 
   private _selectedTab: string;
@@ -98,7 +86,6 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
 
     this._subsToDestroy.push(this.route.paramMap.subscribe(params => {
       if (params) {
-        this._jobID = params.get("jobid");
         this._date = params.get("date");
       }
     }));
@@ -116,25 +103,48 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
     }));
   }
 
+  
+
   ngOnDestroy() {
     for (const s of this._subsToDestroy) {
       s.unsubscribe();
     }
 
     this._empRef = undefined;
-    this._jobID = undefined;
     this._date = undefined;
     this._selectedTab = undefined;
   }
 
   goBack() {
     this.router.navigate(
-      ["/employee/" + this.emp.id + "/job/" + this.job.positionNumber + "/date"],
+      ["/employee/" + this.emp.id + "/date"],
       {
         preserveFragment: false,
         queryParamsHandling: "preserve"
       }
     );
+  }
+
+  public calculateTotalHours(day: Day): Day {
+    let totalHours = 0;
+    for (const pos of this.emp.positions) {
+      for (const d of pos.days) {
+        if (d.time.getFullYear() === day.time.getFullYear() &&
+          d.time.getMonth() === day.time.getMonth() &&
+          d.time.getDate() === day.time.getDate()) {
+            for (const b of d.periodBlocks) {
+              if (b.startDate !== undefined && b.endDate !== undefined) {
+                totalHours += (b.endDate.getHours() + (b.endDate.getMinutes() / 60)) - (b.startDate.getHours() + (b.startDate.getMinutes() / 60));
+              }
+            }
+        }
+      }      
+    }
+
+    day.punchedHours = parseFloat(totalHours.toFixed(2)).toString();
+    day.reportedHours = parseFloat(totalHours.toFixed(2)).toString();
+
+    return day;
   }
 
   logout = () => {

@@ -1,0 +1,36 @@
+.mat-mdc-dialog-container {
+    border-radius: 20px !important;
+    padding: 20px;
+}
+
+.mat-mdc-dialog-title {
+    text-align: center;
+    font-size: 1.8em;
+  }
+  
+  .mat-mdc-dialog-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+  
+    margin: 5vh 0;
+  
+    font-size: 1.5em;
+  }
+  
+  .mat-mdc-dialog-actions {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+  
+    .mat-mdc-raised-button {
+      font-size: 1.2em;
+    }
+  }
+
+  button {
+    border-radius: 20px;
+  }
+
+  

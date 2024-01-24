@@ -3,15 +3,10 @@
 		<mat-icon style="transform: scale(2)">keyboard_arrow_left </mat-icon>
 	</button>
 	<span (click)="goBack()">
-		{{
-      job?.businessTitle.length > 15
-        ? job?.businessTitle.substring(0, 15) + "..."
-        : job?.businessTitle
-    }}
+		{{ day?.time | date: "EEE. MMM d, y" }}
 	</span>
 
 	<span class="do-header-spacer"></span>
-	<span (click)="api?.hiddenDarkMode()">{{ day?.time | date: "EEE. MMM d, y" }}</span>
 	<span class="do-header-spacer"></span>
 
 	<span (click)="logout()">{{ emp?.name }} </span>
@@ -20,13 +15,9 @@
 	</button>
 </mat-toolbar>
 
-<mat-tab-group mat-stretch-tabs backgroundColor="accent" color="none" [(selectedIndex)]="selectedTab"
-	[disableRipple]="true" [@.disabled]="true">
-	<mat-tab>
-		<ng-template mat-tab-label>
-			<span class="punchesText" >Time Events</span>
-		
-		</ng-template>
-		<punches class="tab-content" [byuID]="emp?.id" [jobID]="job?.positionNumber" [day]="day" [job]="job"></punches>
-	</mat-tab>
-</mat-tab-group>
+<div class="banner">
+	<div class="punchesText" (click)="api?.hiddenDarkMode()" >Time Events</div>
+	<div class="total"> Total Hours: {{ calculateTotalHours(day)?.punchedHours }} </div>
+</div>
+
+<punches class="tab-content" [emp]="emp" [byuID]="emp?.id" [day]="day"></punches>
