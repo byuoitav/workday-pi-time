@@ -169,8 +169,16 @@ export class APIService {
         if (err.status === 0) {
           employee.error("Unable to Connect to API");
         }
-        else if (err.error.error.substring(0, 9) === "no worker") {
-          employee.error("No Worker Matches ID");
+        else if (err.status === 404) {
+          employee.error("Error 404: API not Found")
+        }
+        else if (err.error.error !== undefined && typeof(err.error.error) === "string") {
+          if (err.error.error.substring(0, 9) === "no worker") {
+            employee.error("No Worker Matches ID");
+          }
+          else {
+            employee.error(err.error.error)
+          }
         } else {
           employee.error(err.error.error);
         }
