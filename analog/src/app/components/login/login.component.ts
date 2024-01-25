@@ -1,6 +1,5 @@
 import {Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
-
 import {APIService} from "../../services/api.service";
 
 
@@ -31,8 +30,21 @@ export class LoginComponent implements OnInit {
 
   login = async () => {
     console.log("navigating to jobs with id", this.id);
+    this.loadAnimation();
     const success = await this.router.navigate(["/employee/" + this.id]);
-
+    this.stopAnimation();
     this.id = ""; // reset the id
   };
+
+  loadAnimation = () => {
+    const logo = document.getElementById("medallion") as HTMLObjectElement;
+    const blueCircle = logo.contentDocument.getElementById("blueCircle") as HTMLElement;
+    blueCircle.classList.add("loader");
+  }
+
+  stopAnimation = () => {
+    const logo = document.getElementById("medallion") as HTMLObjectElement;
+    const blueCircle = logo.contentDocument.getElementById("blueCircle") as HTMLElement;
+    blueCircle.classList.remove("loader");
+  }
 }

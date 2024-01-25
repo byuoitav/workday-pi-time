@@ -64,7 +64,7 @@ export class ClockComponent implements OnInit {
       })
     }
     
-    if (this.emp.positions.length <= 0 || this.api.unsynced) {
+    if (this.emp.positions.length <= 0 ) {
       const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
       rvwTimesheet.className = "hidden";
     }
