@@ -3,7 +3,7 @@
 This is the source code deployed on the raspberry-pi based timeclocks around BYU. Hourly employees use these clocks to clock in/out of their jobs, to review/correct their punches, etc.
 
 
-* Environment vars required:
+## Environment vars required:
   * WORKDAY_DB_HOST
   * WORKDAY_DB_NAME
   * WORKDAY_DB_PASSWORD
@@ -19,10 +19,10 @@ This is the source code deployed on the raspberry-pi based timeclocks around BYU
   * WORKDAY_API_URL
   * WORKDAY_API_USER
 
-* pflags
+## pflags
   * -p -port --TCP port to listen defaults to 8643
 
-* endpoints:
+## endpoints:
   * GET 127.0.0.1:8463/status
   * GET 127.0.0.1:8463/ping
   * GET 127.0.0.1:8463/healthz
