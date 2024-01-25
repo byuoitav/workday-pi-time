@@ -9,11 +9,7 @@ This is the source code deployed on the raspberry-pi based timeclocks around BYU
   * WORKDAY_DB_PASSWORD
   * WORKDAY_DB_PORT
   * WORKDAY_DB_USER
-
-
   * BDP_TOKEN_REFRESH_URL
-
-
   * WORKDAY_API_PASSWORD
   * WORKDAY_API_TENANT
   * WORKDAY_API_URL
