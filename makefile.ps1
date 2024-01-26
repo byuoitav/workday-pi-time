@@ -1,7 +1,7 @@
 $COMMAND = $args[0]
 
 $NAME = "workday-pi-time"
-$OWNER = "byuoitav"
+$OWNER = "jime567"
 $PKG = "github.com/$OWNER/$NAME"
 $DOCKER_URL = "docker.pkg.github.com"
 $DOCKER_PKG = "$DOCKER_URL/$OWNER/$NAME"
@@ -75,26 +75,26 @@ function Build {
     # Copy-Item "$location\redirect.html" -Destination "$location\dist\"
     # Copy-Item "$location\version.txt" -Destination "$location\dist\"
 
-    Write-Output "*****************************************"
-    Write-Output "Building for linux-amd64"
-    Set-Item -Path env:CGO_ENABLED -Value 0
-    Set-Item -Path env:GOOS -Value "linux"
-    Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-bin"
+    # Write-Output "*****************************************"
+    # Write-Output "Building for linux-amd64"
+    # Set-Item -Path env:CGO_ENABLED -Value 0
+    # Set-Item -Path env:GOOS -Value "linux"
+    # Set-Item -Path env:GOARCH -Value "amd64"
+    # Invoke-Expression "go build -v -o dist/${NAME}-bin"
 
-    Write-Output "*****************************************"
-    Write-Output "Building for linux-arm"
-    Set-Item -Path env:CGO_ENABLED -Value 0
-    Set-Item -Path env:GOOS -Value "linux"
-    Set-Item -Path env:GOARCH -Value "arm"
-    Invoke-Expression "go build -v -o dist/${NAME}-arm"
+    # Write-Output "*****************************************"
+    # Write-Output "Building for linux-arm"
+    # Set-Item -Path env:CGO_ENABLED -Value 0
+    # Set-Item -Path env:GOOS -Value "linux"
+    # Set-Item -Path env:GOARCH -Value "arm"
+    # Invoke-Expression "go build -v -o dist/${NAME}-arm"
 
-    Write-Output "*****************************************"
-    Write-Output "Building for linux-arm"
-    Set-Item -Path env:CGO_ENABLED -Value 0
-    Set-Item -Path env:GOOS -Value "windows"
-    Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-windows"
+    # Write-Output "*****************************************"
+    # Write-Output "Building for linux-arm"
+    # Set-Item -Path env:CGO_ENABLED -Value 0
+    # Set-Item -Path env:GOOS -Value "windows"
+    # Set-Item -Path env:GOARCH -Value "amd64"
+    # Invoke-Expression "go build -v -o dist/${NAME}-windows"
 
     Write-Output "*****************************************"
     Write-Output "Building Frontend"
