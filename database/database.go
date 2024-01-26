@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/byuoitav/workday-pi-time/workday"
 	_ "github.com/lib/pq"
 )
 
@@ -107,6 +106,8 @@ type WorkdayTimeBlocks struct {
 	Time_Type     string `json:"time_type"`
 	Reference_ID  string `json:"reference_id"`
 	Position      string `json:"position"`
+	In_Time       string `json:"in_time"`
+	Out_Time      string `json:"out_time"`
 }
 
 type TCD_Employee struct {
@@ -318,8 +319,8 @@ func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
 		}
 		fromDatabase = append(fromDatabase, row)
 	}
-	//loop and organize fromDatabase as a map of: "time_code_groups : ui_name" AND "time_code_groups : time_code_reference_id"
 
+	//loop and organize fromDatabase as a map of: "time_code_groups : ui_name" AND "time_code_groups : time_code_reference_id"
 	for _, v := range fromDatabase {
 		if slices.Contains(timeCodes, v.time_code_groups) {
 			var timeEntryCode TimeEntryCodes
@@ -330,12 +331,6 @@ func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
 		}
 	}
 
-	//use the two maps from above and create the map to be sent to the UI
-	// for _, v := range timeCodes {
-	// 	if timeUIMap[v] != "" {
-	// 		toReturn[timeIDMap[v]] = timeUIMap[v]
-	// 	}
-	// }
 	return toReturn, nil
 }
 
@@ -413,7 +408,8 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 	today := time.Now()
 	lastMonth := today.AddDate(0, -1, 0)
 
-	url := apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timekeeping_System?employee_id=" + byuID + "&start_date=" + lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
+	url := apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timekeeping_System?employee_id=" + byuID + "&start_date=" +
+		lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
 	slog.Debug("making request to", "url", url)
 
 	client := &http.Client{}
@@ -468,18 +464,18 @@ func GetInternationalStatus(employee *Employee, worker *WorkdayWorkerTimeData) e
 	return err
 }
 
-func ReturnCurrentPayPeriod() (time.Time, time.Time) {
-	var start, end time.Time
+func ReturnCurrentPayPeriod() (start, end time.Time) {
+
 	today := time.Now() //.AddDate(0, 0, -7) //////////////////////////////////////Testing - need to remove the date shift
 	difference := today.Sub(payPeriodAnchorDate)
 	weeksSince := int(difference.Hours() / 24 / 7)
-	periodsSince := (weeksSince / 2)
+	periodsSince := int((weeksSince / 2))
 
 	start = payPeriodAnchorDate.AddDate(0, 0, periodsSince*14)
 	end = start.AddDate(0, 0, 13)
 	end = end.Add(24*time.Hour - 1*time.Second)
 
-	return start, end
+	return
 }
 
 func ReturnCurrentWeek() (time.Time, time.Time) {
@@ -522,8 +518,7 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 		if v.Timeblock_Ref_ID == "" { //add to peroid_punches slice if not associated with a time block
 			periodPunch.Clock_Event_Type = v.Clock_Event_Type
 			periodPunch.Time_Clock_Event_Date_Time = v.Clock_Event_Time
-			//periodPunch.Business_Title = v.Position_Descr           //mapping to the positions we get from Workday instead of Lukes API since his API gives weird results
-			//i.e for 779147452 (Jake) we were getting "business_title": "NO JOB PROFILE (EXEMPT) - Jake Peery"
+
 			for _, position := range employee.Positions {
 				if position.Position_Number == v.Position_Ref_ID {
 					periodPunch.Business_Title = position.Business_Title
@@ -559,45 +554,17 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 	positionPeriodTotal := make(map[string]float64)
 	var totalWeekHours, totalPeriodHours float64
 
-	//get_calculated_time_blocks from Workday so we only get the data once
-	var body []byte
-	var err error
-
-	workerID := employee.Worker_ID
-	today := time.Now()
-	endDate := today.Format("2006-01-02")
-	startDate := today.AddDate(0, -1, 0).Format("2006-01-02")
-
-	body, err = workday.GetDataFromWorkday(workerID, startDate, endDate)
-	if err != nil {
-		slog.Warn("could not get_calculated_time_blocks from Workday", "error", err)
-	}
-
-	workdayTimeBlocks := make(map[string]workday.WorkerTimeBlockInfo)
-	count, err := workday.SortCalculatedTimeBlocks(workdayTimeBlocks, body)
-	if err != nil {
-		slog.Error("error sorting CalculatedTimeBlocks from Workday", "error", err)
-	}
-	slog.Info("got timeblocks from Workday", "timeblock_count", count)
-
 	//loop through returned time blocks and add create the table in employee.PeriodBlocks for the JSON return
 	for _, v := range worker.Time_Blocks {
 		periodBlock.Position_Number = v.Position
-		//periodBlock.Business_Title = block_businessTitle[v.Reference_ID]
 		periodBlock.Business_Title = positionTDtoName[v.Position]
 		periodBlock.Length = v.Hours
 		periodBlock.Time_Clock_Event_Date_Time_IN = block_timeIn[v.Reference_ID]
 		periodBlock.Time_Clock_Event_Date_Time_OUT = block_timeOut[v.Reference_ID]
 		periodBlock.ReferenceID = v.Reference_ID
 		periodBlock.Reported_Date = v.Reported_Date
-
-		//auto fill in missing in/out by querying Workday's SOAP API
-
-		//auto fill in missing in/out based on length and in or out time from another event
-		err := calculateMissingStartEndTimesViaOtherEvents(&periodBlock, workdayTimeBlocks)
-		if err != nil {
-			slog.Warn("time block missing in or out time", "worker_id", worker.Worker_ID, "reference_id", v.Reference_ID)
-		}
+		periodBlock.Time_Clock_Event_Date_Time_IN = v.In_Time
+		periodBlock.Time_Clock_Event_Date_Time_OUT = v.Out_Time
 
 		//calculate timeBlock period and weekly hours per position and total
 		lengthValue, err := strconv.ParseFloat(periodBlock.Length, 64)
@@ -658,20 +625,6 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 
 // look at reported date and determine if it is within the current date range
 func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.Time) bool {
-	//this commented out code uses the clock in/out instead of the reported date to determine if the block is in the date range
-
-	// blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_IN)
-	// if err != nil {
-	// 	return false
-	// }
-	// blockEndTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_OUT)
-	// if err != nil {
-	// 	return false
-	// }
-
-	// if blockStartTime.After(timeStart) && blockEndTime.Before(timeEnd) {
-	// 	return true
-	// }
 
 	blockDate, err := time.Parse("2006-01-02", periodBlock.Reported_Date)
 	if err != nil {
@@ -682,56 +635,6 @@ func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.
 		return true
 	}
 	return false
-}
-
-// calculates missing in/out times on time blocks.
-// first uses the block length and in or out if it exists
-// then uses get_calculated_time_blocks from the Workday API
-// and lastly assigns "N/A" to the in and out times
-func calculateMissingStartEndTimesViaOtherEvents(periodBlock *PeriodBlocks, workdayBlocks map[string]workday.WorkerTimeBlockInfo) error {
-	length, err := strconv.ParseFloat(periodBlock.Length, 64)
-	lengthSeconds := int(length * 60 * 60)
-	if err != nil {
-		length = 0
-	}
-
-	// parse start and end times to time.Time
-	var validStart, validEnd bool
-	blockStartTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_IN)
-	if err != nil {
-		validStart = false
-	} else {
-		validStart = true
-	}
-
-	blockEndTime, err := time.Parse("2006-01-02T15:04:05-07:00", periodBlock.Time_Clock_Event_Date_Time_OUT)
-	if err != nil {
-		validEnd = false
-	} else {
-		validEnd = true
-	}
-
-	if validEnd && validStart { //return if two valid times are sent - no calculation needed
-		return nil
-	} else if validEnd {
-		//calculate start based on length and valid end
-		periodBlock.Time_Clock_Event_Date_Time_IN = blockEndTime.Add(time.Second * -time.Duration(lengthSeconds)).Format("2006-01-02T15:04:05-07:00")
-
-	} else if validStart {
-		//calculate end based on length and valid start
-		periodBlock.Time_Clock_Event_Date_Time_OUT = blockStartTime.Add(time.Second * time.Duration(lengthSeconds)).Format("2006-01-02T15:04:05-07:00")
-
-	} else {
-		if workdayBlocks[periodBlock.ReferenceID].In_Time != "" || workdayBlocks[periodBlock.ReferenceID].Out_Time != "" {
-			periodBlock.Time_Clock_Event_Date_Time_IN = workdayBlocks[periodBlock.ReferenceID].In_Time + "-07:00"   //blockReportedDate.Add(time.Second * time.Duration(3600)).Format("2006-01-02T15:04:05-07:00")
-			periodBlock.Time_Clock_Event_Date_Time_OUT = workdayBlocks[periodBlock.ReferenceID].Out_Time + "-07:00" //blockReportedDate.Add(time.Second * time.Duration(3600 + float64(lengthSeconds))).Format("2006-01-02T15:04:05-07:00")
-		} else {
-			periodBlock.Time_Clock_Event_Date_Time_IN = "N/A"
-			periodBlock.Time_Clock_Event_Date_Time_OUT = "N/A"
-
-		}
-	}
-	return nil
 }
 
 func basicAuth(username, password string) string {
