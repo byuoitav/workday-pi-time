@@ -63,5 +63,8 @@
         </mat-grid-tile>
       </ng-container>
     </mat-grid-list>
+    <div *ngIf="api.unsynced" class="unprocessed">
+      {{ "⚠ " + this.api.unsyncedPunches + " events have not yet processed." }}
+    </div>
   </mat-card>
 </div>

@@ -48,11 +48,11 @@ export class ClockComponent implements OnInit {
       this._empRef = data.empRef;
     });
 
-    if (this.api.unsynced) {
+    if (!this.api.employee_cache || !this.api.timeevents_online || !this.api.workdayAPI_online) {
       this.toast.show(
         "Offline Mode.",
         "DISMISS",
-        7000
+        6000
       );
     }
 

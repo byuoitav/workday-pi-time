@@ -388,7 +388,7 @@ export class Employee {
   timeEntryCodes: TEC[] = undefined;
 
   @JsonProperty('positions', [Position])
-  positions: Position[] = undefined; 
+  positions: Position[] = []; 
 
   @JsonProperty("period_punches", [Punch], false)
   periodPunches: Punch[] = undefined;
@@ -411,6 +411,12 @@ export class ApiResponse {
 
   @JsonProperty("employee", Employee, true)
   employee: Employee = undefined;
+
+  @JsonProperty("error", String, true)
+  error: string = undefined;
+
+  @JsonProperty("unprocessed_punches_in_tcd", Number, true)
+  unprocessedPunches: string = undefined;
 }
 
 @JsonObject("PunchRequest") 
