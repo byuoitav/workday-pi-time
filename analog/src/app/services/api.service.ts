@@ -79,6 +79,11 @@ export class APIService {
   private jsonConvert: JsonConvert;
   private _hiddenDarkModeCount = 0;
   unsynced: boolean = false;
+  employee_cache: boolean = true;
+  timeevents_online: boolean = true;
+  workdayAPI_online: boolean = true;
+  unsyncedPunches: String = "0";
+
 
   constructor(
     private http: HttpClient,
@@ -156,7 +161,10 @@ export class APIService {
         //check if database and workday are synced
         const statuses = Object.keys(response.statuses);
         this.unsynced = response.statuses["unprocessed_punches_in_tcd"];
-
+        this.employee_cache = response.statuses["TCD_employee_cache_online"];
+        this.timeevents_online = response.statuses["TCD_timeevents_online"];
+        this.workdayAPI_online = response.statuses["workdayAPI_online"];
+        this.unsyncedPunches = response.unprocessedPunches;
         const emp = response.employee;
         emp.id = String(id);
         this.loadDays(emp);
@@ -281,45 +289,53 @@ export class APIService {
       }
 
       //add punches to the days
-      for (const punch of emp.periodPunches) {
-        if (String(pos.positionNumber) === String(punch.positionNumber)) {
-          for (const day of days) {
-            if (punch.time.getDate() === day.time.getDate() 
-            && punch.time.getMonth() === day.time.getMonth() 
-          && punch.time.getFullYear() === day.time.getFullYear()) {
-              day.punches.push(punch);
+      if (emp.periodPunches !== undefined && emp.periodPunches !== null) {
+        if (emp.periodPunches[0] !== null ) {
+          for (const punch of emp.periodPunches) {
+            if (String(pos.positionNumber) === String(punch.positionNumber)) {
+              for (const day of days) {
+                if (punch.time.getDate() === day.time.getDate() 
+                && punch.time.getMonth() === day.time.getMonth() 
+              && punch.time.getFullYear() === day.time.getFullYear()) {
+                  day.punches.push(punch);
+                }
+              }
             }
           }
-        }
+        } 
       }
 
       // add time blocks to days
-      for (const block of emp.periodBlocks) {
-        if (String(pos.positionNumber) === String(block.positionNumber)) {
-          for (const day of days) {
-            if (block.startDate === undefined && block.endDate === undefined) {
-              continue;
-            } 
-            else {
-              if (block.startDate !== undefined) {
-                if (block.startDate.getDate() === day.time.getDate() 
-                && block.startDate.getMonth() === day.time.getMonth() 
-                && block.startDate.getFullYear() === day.time.getFullYear()) {
-                  day.periodBlocks.push(block);
-                }
-              }
-              else {
-                if (block.endDate.getDate() === day.time.getDate()
-                && block.endDate.getMonth() === day.time.getMonth() 
-                && block.endDate.getFullYear() === day.time.getFullYear()) {
-                  day.periodBlocks.push(block);
+      if (emp.periodBlocks !== undefined && emp.periodBlocks !== null) {
+        if (emp.periodBlocks[0] !== null ) {
+          for (const block of emp.periodBlocks) {
+            if (String(pos.positionNumber) === String(block.positionNumber)) {
+              for (const day of days) {
+                if (block.startDate === undefined && block.endDate === undefined) {
+                  continue;
+                } 
+                else {
+                  if (block.startDate !== undefined) {
+                    if (block.startDate.getDate() === day.time.getDate() 
+                    && block.startDate.getMonth() === day.time.getMonth() 
+                    && block.startDate.getFullYear() === day.time.getFullYear()) {
+                      day.periodBlocks.push(block);
+                    }
+                  }
+                  else {
+                    if (block.endDate.getDate() === day.time.getDate()
+                    && block.endDate.getMonth() === day.time.getMonth() 
+                    && block.endDate.getFullYear() === day.time.getFullYear()) {
+                      day.periodBlocks.push(block);
+                    }
+                  }
                 }
               }
             }
           }
         }
       }
-      pos.days = days;
+    pos.days = days;
     }
   }
 }
