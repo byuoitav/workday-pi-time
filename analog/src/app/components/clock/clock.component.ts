@@ -111,7 +111,6 @@ export class ClockComponent implements OnInit {
       resp => {
         const response = JSON.parse(resp);
         if (response.written_to_tcd === 'true') {
-          console.log("Punch Successful:", resp)
           this.dialog.open(ConfirmDialog, {
             data: {state: data.clockEventType}
           })

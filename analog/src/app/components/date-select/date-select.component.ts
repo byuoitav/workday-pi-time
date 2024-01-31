@@ -125,7 +125,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   selectDay = (date: Date) => {
-    console.log("CLICKED", date);
     const str = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
     if (date > this.today) {
       return;

@@ -29,7 +29,6 @@ export class LoginComponent implements OnInit {
   }
 
   login = async () => {
-    console.log("navigating to jobs with id", this.id);
     this.loadAnimation();
     const success = await this.router.navigate(["/employee/" + this.id]);
     this.stopAnimation();
