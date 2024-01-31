@@ -71,9 +71,9 @@ function Build {
     New-Item -Path dist -ItemType Directory
     $location = Get-Location
     Write-Output $location\deps
-    # Write-Output "$location\redirect.html"
-    # Copy-Item "$location\redirect.html" -Destination "$location\dist\"
-    # Copy-Item "$location\version.txt" -Destination "$location\dist\"
+    Write-Output "$location\redirect.html"
+    Copy-Item "$location\redirect.html" -Destination "$location\dist\"
+    Copy-Item "$location\version.txt" -Destination "$location\dist\"
 
     Write-Output "*****************************************"
     Write-Output "Building for linux-amd64"

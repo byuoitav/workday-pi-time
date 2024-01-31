@@ -152,7 +152,8 @@ $dark: mat.define-dark-theme((
     background-color: #414141 !important;
   }
 
-  .punch {
+  .punch,
+  .unprocessed {
     background-color:  #503e3e  !important;
     color: white !important;
   }
@@ -241,6 +242,24 @@ $dark: mat.define-dark-theme((
   padding: 20px;
 }
 
+// Applying the fonts to the whole app
+
 html {
-    user-select: none;
+  font-family: 'HCo Ringside Narrow SSm', 'Open Sans', Helvetica, Arial, sans-serif !important;
+  user-select: none;
+}
+
+.mat-toolbar.mat-primary,
+button, b, span, option, select,
+.mdc-form-field > label,
+.mdc-label .view-timesheet .tecSelect,
+.tecSelect,
+.view-timesheet,
+.tecSelect > option,
+.mat-mdc-dialog-title
+.mat-mdc-dialog-content
+.mdc-dialog__content
+.mat-mdc-dialog-container 
+.mdc-dialog__title {
+  font-family: 'HCo Ringside Narrow SSm', 'Open Sans', Helvetica, Arial, sans-serif !important;
 }

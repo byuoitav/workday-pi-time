@@ -166,7 +166,7 @@
     id = "rvwTimesheet"
     class="view-timesheet"
     color="accent"
-    (click)="this.emp?.positions.length > 0 && !this.api.unsynced ? toTimesheet() : null"
+    (click)="this.emp?.positions.length > 0 ? toTimesheet() : null"
   >
     Review Time Entry
   </button>
