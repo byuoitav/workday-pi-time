@@ -12,7 +12,7 @@
 				<h4>Time Blocks:</h4>
 				<!-- Period Blocks -->
 				<div *ngFor="let d of pos.days">
-					<div *ngIf="d.time.getDate() === day?.time.getDate()">
+					<div *ngIf="d.time.getDate() === day?.time.getDate() && d.time.getMonth() === day?.time.getMonth()">
 						<div class="period" *ngFor="let period of d?.periodBlocks">
 							<div class="times" >
 								<div class="start">
@@ -32,7 +32,7 @@
 				<h4>Unmatched Time Events:</h4>
 				<!-- Unmatched Time Events -->
 				<div *ngFor="let d of pos.days">
-					<div  *ngIf="d.time.getDate() === day.time.getDate()">
+					<div  *ngIf="d.time.getDate() === day.time.getDate() && d.time.getMonth() === day.time.getMonth()">
 						<div class="punch" *ngFor="let punch of d.punches">
 
 							<span class="time" >

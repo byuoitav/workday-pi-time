@@ -143,3 +143,14 @@ $date-diameter: 4.5vw;
         background-color: #f6f6f6;
     }
 }
+
+.unprocessed {
+    display: flex;
+    align-self: center;
+    padding: 8px;
+    background-color: white;
+    border-radius: 20px;
+    border-style: solid;
+    border-color: red;
+    z-index: 1;
+}
