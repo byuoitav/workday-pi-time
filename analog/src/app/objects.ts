@@ -93,6 +93,36 @@ export class NumberConverter implements JsonCustomConvert<Number> {
   }
 }
 
+@JsonConverter
+export class TimeFormatConverter implements JsonCustomConvert<String> {
+  serialize(num: String): any {
+    return Number(num);
+  }
+
+  deserialize(numString: any): String {
+    // Extract numeric part from the string (e.g., "2.41 H" -> "2.41")
+    const numericPart = numString.match(/[\d.]+/);
+
+    // Check if numeric part is found
+    if (numericPart && numericPart.length > 0) {
+      // Parse the numeric part and convert it to a number
+      const num = Number(numericPart[0]);
+      var str = "";
+      var hours = Math.floor(num);
+      var minutes = ((num - hours) * 60).toFixed(0);
+      str += hours + ":";
+      if (Number(minutes) < 10) {
+        str += "0";
+      }
+      str += minutes;
+      return str;
+    }
+
+    // Return undefined if no numeric part is found
+    return undefined;
+  }
+}
+
 
 @JsonConverter
 export class DateConverter implements JsonCustomConvert<Date> {
@@ -356,11 +386,11 @@ export class Position {
  @JsonProperty('business_title')
  businessTitle: string = undefined;
 
- @JsonProperty('position_total_week_hours', String)
- totalWeekHours: number = undefined;
+ @JsonProperty('position_total_week_hours', TimeFormatConverter)
+ totalWeekHours: String = undefined;
 
- @JsonProperty('position_total_period_hours', String)
- totalPeriodHours: number = undefined;
+ @JsonProperty('position_total_period_hours', TimeFormatConverter)
+ totalPeriodHours: String = undefined;
 
  @JsonProperty('clocked_in', String)
  inStatus: boolean = false;
@@ -378,11 +408,11 @@ export class Employee {
   internationalStatus: Boolean = undefined;
   @JsonProperty("employee_name", String, false)
   name: string = undefined;
-  @JsonProperty("total_week_hours", NumberConverter, false)
-  totalWeekHours: Number = undefined;
+  @JsonProperty("total_week_hours", TimeFormatConverter, false)
+  totalWeekHours: String = undefined;
 
-  @JsonProperty("total_period_hours", NumberConverter, false)
-  totalPeriodHours: Number = undefined;
+  @JsonProperty("total_period_hours", TimeFormatConverter, false)
+  totalPeriodHours: String = undefined;
 
   @JsonProperty('time_entry_codes', [TEC])
   timeEntryCodes: TEC[] = undefined;
