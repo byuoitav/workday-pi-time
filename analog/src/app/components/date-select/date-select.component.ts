@@ -109,7 +109,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     } else {
       this.viewMonth--;
     }
-
     this.getViewDays();
   }
 
@@ -142,12 +141,11 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
   getViewDays() {
     this.today = new Date();
-
     if (!this._empRef) {
       return;
     }
 
-    if (!this.viewMonth) {
+    if (!this.viewMonth && this.viewMonth !== 0) {
         this.viewMonth = this.today.getMonth();
         this.viewYear = this.today.getFullYear();
     }
@@ -161,7 +159,6 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     const lastDayOfLastMonth = new Date(this.viewYear, this.viewMonth, 0);
     const start = lastDayOfLastMonth.getDate() - lastDayOfLastMonth.getDay();
     const startDate = new Date(this.viewYear, this.viewMonth - 1, start);
-
     for (let i = 0; i < 42; i++) {
       const d = new Date(
         startDate.getFullYear(),
