@@ -103,7 +103,7 @@ function Build {
         Write-Output "Entering \analog"
         New-Item -Path dist -ItemType Directory
         #Invoke-Expression "npm run-script build"
-        Invoke-Expression "ng build --aot --optimization --base-href='./'"
+        Invoke-Expression "npm run ng build --aot --optimization --base-href='./'"
         Invoke-Expression "cd .."
         Write-Output "Exiting \analog and moving files to \dist"
         Move-Item "$location\analog\dist\" -Destination "$location\dist\"

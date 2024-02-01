@@ -1,9 +1,9 @@
-FROM gcr.io/distroless/static
-MAINTAINER Daniel Randall <danny_randall@byu.edu>
+FROM alpine:3.18
+
 
 ARG NAME
 
-COPY ${NAME} /pi-time
-COPY analog /analog
+COPY ${NAME} /workday-pi-time
+COPY dist/analog /analog
 
-ENTRYPOINT ["/pi-time"]
+ENTRYPOINT ["/workday-pi-time"]
