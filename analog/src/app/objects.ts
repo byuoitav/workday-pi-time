@@ -94,6 +94,20 @@ export class NumberConverter implements JsonCustomConvert<Number> {
 }
 
 @JsonConverter
+export class TECConverter implements JsonCustomConvert<any> {
+  serialize(tec: String): any {
+    if (tec === null) {
+      return null;
+    }
+    return tec;
+  }
+
+  deserialize(tecString: any): TEC {
+    return null;
+  }
+}
+
+@JsonConverter
 export class BoolConverter implements JsonCustomConvert<boolean> {
   serialize(bool: boolean): any {
     if (bool) {
@@ -480,8 +494,8 @@ export class PunchRequest {
   @JsonProperty("clock_event_type", String)
   clockEventType: string = undefined;
 
-  @JsonProperty("time_entry_code", String)
-  timeEntryCode: string = undefined;
+  @JsonProperty("time_entry_code", TECConverter)
+  timeEntryCode: any = null;
 }
 
 
