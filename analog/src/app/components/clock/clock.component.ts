@@ -120,6 +120,13 @@ export class ClockComponent implements OnInit {
             if (confirmed === "logout") {
               this.logout();
             }
+            else if (confirmed === "confirmed") {
+              this.router.navigate([], {
+                queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+                this.api.theme == "default" ? "light" : "default"},
+                queryParamsHandling: "merge"
+              });
+            }
           })
         } else {
           console.log(resp.written_to_tcd)

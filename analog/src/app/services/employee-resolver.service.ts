@@ -23,7 +23,6 @@ export class EmployeeResolverService  {
   ): Observable<EmployeeRef> | Observable<never> {
     const id = route.paramMap.get("id");
     const unsubscribe = new Subject();
-
     const empRef = this.api.getEmployee(id);
 
     return new Observable(observer => {
