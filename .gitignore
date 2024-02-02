@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.stackdump
 
 # Test binary, build with `go test -c`
 *.test
@@ -19,4 +20,3 @@ analog-dist
 
 dist/
 _testing/
-makefile1.ps1
