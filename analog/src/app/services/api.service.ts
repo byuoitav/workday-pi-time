@@ -83,7 +83,7 @@ export class APIService {
   timeevents_online: boolean = true;
   workdayAPI_online: boolean = true;
   unsyncedPunches: String = "0";
-
+  showAlert: boolean = true;
 
   constructor(
     private http: HttpClient,
@@ -210,6 +210,7 @@ export class APIService {
 
       // route to login page
       this.router.navigate(["/login"], {replaceUrl: true});
+      this.showAlert = true;
     }, this.router);
 
     return empRef;

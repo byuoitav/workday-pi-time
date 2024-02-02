@@ -57,7 +57,9 @@ export class ClockComponent implements OnInit {
     }
 
     const weekHours = this.emp.totalWeekHours.length === 5 ? Number((this.emp.totalWeekHours).substring(0, 2)) : Number((this.emp.totalWeekHours).substring(0, 1));
-    if (this.emp.internationalStatus && weekHours >= 15) {
+    console.log("alert", this.api.showAlert);
+    if (this.emp.internationalStatus && weekHours >= 15 && this.api.showAlert) {
+      this.api.showAlert = false;
       this.dialog.open(InternationalDialog, {
         data: {
           msg: "You have worked more than 15 hours this week."
