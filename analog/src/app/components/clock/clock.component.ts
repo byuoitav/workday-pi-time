@@ -56,7 +56,8 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    if (this.emp.internationalStatus && Number(this.emp.totalWeekHours) >= 15) {
+    const weekHours = this.emp.totalWeekHours.length === 5 ? Number((this.emp.totalWeekHours).substring(0, 2)) : Number((this.emp.totalWeekHours).substring(0, 1));
+    if (this.emp.internationalStatus && weekHours >= 15) {
       this.dialog.open(InternationalDialog, {
         data: {
           msg: "You have worked more than 15 hours this week."

@@ -94,6 +94,23 @@ export class NumberConverter implements JsonCustomConvert<Number> {
 }
 
 @JsonConverter
+export class BoolConverter implements JsonCustomConvert<boolean> {
+  serialize(bool: boolean): any {
+    if (bool) {
+      return "true";
+    }
+    return "false";
+  }
+
+  deserialize(bool: any): boolean {
+    if (bool === "true") {
+      return true;
+    }
+    return false;
+  }
+}
+
+@JsonConverter
 export class TimeFormatConverter implements JsonCustomConvert<String> {
   serialize(num: String): any {
     return Number(num);
@@ -404,10 +421,13 @@ export class Position {
 export class Employee {
   @JsonProperty("worker_id", String, true)
   id: string = undefined;
-  @JsonProperty("international_status", String, true)
-  internationalStatus: Boolean = undefined;
+
+  @JsonProperty("international_status", BoolConverter, true)
+  internationalStatus: boolean = undefined;
+
   @JsonProperty("employee_name", String, false)
   name: string = undefined;
+
   @JsonProperty("total_week_hours", TimeFormatConverter, false)
   totalWeekHours: String = undefined;
 
