@@ -83,7 +83,7 @@ export class APIService {
   timeevents_online: boolean = true;
   workdayAPI_online: boolean = true;
   unsyncedPunches: String = "0";
-
+  showAlert: boolean = true;
 
   constructor(
     private http: HttpClient,
@@ -127,8 +127,6 @@ export class APIService {
   }
 
   public switchTheme(name: string) {
-    console.log("switching theme to", name);
-
     this.router.navigate([], {
       queryParams: {theme: name},
       queryParamsHandling: "merge"
@@ -152,7 +150,6 @@ export class APIService {
 
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
-    console.log("window.location.host",window.location.host)
     const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
@@ -213,6 +210,7 @@ export class APIService {
 
       // route to login page
       this.router.navigate(["/login"], {replaceUrl: true});
+      this.showAlert = true;
     }, this.router);
 
     return empRef;
@@ -247,7 +245,6 @@ export class APIService {
     try {
       const json = this.jsonConvert.serialize(data, PunchRequest); 
       console.log(json);
-      console.log("window.location.host",window.location.host)
       return this.http.post("http://"+window.location.host+"/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({

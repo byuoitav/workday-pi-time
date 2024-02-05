@@ -56,7 +56,9 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    if (this.emp.internationalStatus && Number(this.emp.totalWeekHours) >= 15) {
+    const weekHours = this.emp.totalWeekHours.length === 5 ? Number((this.emp.totalWeekHours).substring(0, 2)) : Number((this.emp.totalWeekHours).substring(0, 1));
+    if (this.emp.internationalStatus && weekHours >= 15 && this.api.showAlert) {
+      this.api.showAlert = false;
       this.dialog.open(InternationalDialog, {
         data: {
           msg: "You have worked more than 15 hours this week."
@@ -86,20 +88,25 @@ export class ClockComponent implements OnInit {
 
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
-    var tec: string;
-    const timeEntryCodesKeys = Object.keys(this.emp.timeEntryCodes);
-    tec = this.emp.timeEntryCodes[timeEntryCodesKeys[0]].id;
-    if (this.emp.showTEC()) {
-      const tecList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
-      tec = tecList.options[tecList.selectedIndex].value;
-      for (const key in this.emp.timeEntryCodes) {
-        if (this.emp.timeEntryCodes[0].frontendName === tec) {
-          tec = key;
-          break;
+    
+    //Get the Time Entry Code
+    var tec: string = null;
+    if (this.emp.timeEntryCodes !== null) {
+      const timeEntryCodesKeys = Object.keys(this.emp.timeEntryCodes);
+      tec = this.emp.timeEntryCodes[timeEntryCodesKeys[0]].id;
+      if (this.emp.showTEC()) {
+        const tecList = document.getElementById(String(jobRef.value.positionNumber)) as HTMLSelectElement;
+        tec = tecList.options[tecList.selectedIndex].value;
+        for (const key in this.emp.timeEntryCodes) {
+          if (this.emp.timeEntryCodes[0].frontendName === tec) {
+            tec = key;
+            break;
+          }
         }
       }
     }
 
+    //Construct and Send Punch Request
     const data = new PunchRequest();
     data.id = this.emp.id;
     data.positionNumber = String(jobRef.value.positionNumber);
@@ -111,7 +118,6 @@ export class ClockComponent implements OnInit {
       resp => {
         const response = JSON.parse(resp);
         if (response.written_to_tcd === 'true') {
-          console.log("Punch Successful:", resp)
           this.dialog.open(ConfirmDialog, {
             data: {state: data.clockEventType}
           })
@@ -119,6 +125,13 @@ export class ClockComponent implements OnInit {
           .subscribe(confirmed => {
             if (confirmed === "logout") {
               this.logout();
+            }
+            else if (confirmed === "confirmed") {
+              this.router.navigate([], {
+                queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+                this.api.theme == "default" ? "light" : "default"},
+                queryParamsHandling: "merge"
+              });
             }
           })
         } else {
@@ -155,23 +168,6 @@ export class ClockComponent implements OnInit {
 
 }
 
-function formatDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
-  const offset = date.getTimezoneOffset();
-  const offsetHours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
-  const offsetMinutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-  const offsetSign = offset < 0 ? '+' : '-';
-
-  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds} ${offsetSign}${offsetHours}${offsetMinutes}`;
-
-  return formattedDate;
-}
 
 
 

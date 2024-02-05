@@ -32,6 +32,7 @@ const routes: Routes = [
       },
       {
         path: "employee/:id",
+        runGuardsAndResolvers: 'pathParamsOrQueryParamsChange', 
         resolve: {
           empRef: EmployeeResolverService
         },
@@ -60,13 +61,13 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload' })],
+  exports: [RouterModule],  
   providers: [
     {
       provide: APP_BASE_HREF,
       useValue: "/analog"
     }
   ],
-  exports: [RouterModule]
 })
 export class AppRoutingModule {}
