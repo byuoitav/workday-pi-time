@@ -9,8 +9,8 @@
 
 <div class="container">
   <mat-card appearance="outlined" class="card totals mat-elevation-z2">
-    <span><b>Week Total: </b> {{ emp?.totalWeekHours }}</span>
-    <span><b>Pay Period Total: </b> {{ emp?.totalPeriodHours }}</span>
+    <span><b>Week Total: </b> {{ emp?.totalWeekHours ? emp?.totalWeekHours : "⌀" }}</span>
+    <span><b>Pay Period Total: </b> {{ emp?.totalPeriodHours ? emp?.totalPeriodHours : "⌀" }}</span>
   </mat-card>
 
   <mat-card appearance="outlined" class="jobs card mat-elevation-z2">
@@ -52,12 +52,12 @@
 
           <!-- week total -->
           <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalWeekHours }}
+            {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
           </mat-grid-tile>
 
           <!-- pay period total -->
           <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalPeriodHours }}
+            {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
           </mat-grid-tile>
 
           <!-- TEC -->
@@ -110,12 +110,12 @@
 
           <!-- week total -->
           <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalWeekHours }}
+            {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
           </mat-grid-tile>
 
           <!-- pay period total -->
           <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalPeriodHours }}
+            {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
           </mat-grid-tile>
 
           <!-- TEC -->
@@ -164,7 +164,7 @@
     id = "rvwTimesheet"
     class="view-timesheet"
     color="accent"
-    (click)="this.emp?.positions.length > 0 ? toTimesheet() : null"
+    (click)="this.emp?.positions.length > 0 && this.api.workdayAPI_online ? toTimesheet() : null"
   >
     Review Time Entry
   </button>

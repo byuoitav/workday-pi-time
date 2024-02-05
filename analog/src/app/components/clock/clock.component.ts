@@ -56,8 +56,14 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    const weekHours = this.emp.totalWeekHours.length === 5 ? Number((this.emp.totalWeekHours).substring(0, 2)) : Number((this.emp.totalWeekHours).substring(0, 1));
-    if (this.emp.internationalStatus && weekHours >= 15 && this.api.showAlert) {
+    console.log(this.api.workdayAPI_online);
+    if (this.emp?.positions.length <= 0 || this.api.workdayAPI_online === false) {
+      const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
+      rvwTimesheet.className = "hidden";
+    }
+
+    const weekHours = this.emp?.totalWeekHours.length === 5 ? Number((this.emp?.totalWeekHours).substring(0, 2)) : Number((this.emp?.totalWeekHours).substring(0, 1));
+    if (this.emp?.internationalStatus && weekHours >= 15 && this.api.showAlert) {
       this.api.showAlert = false;
       this.dialog.open(InternationalDialog, {
         data: {
@@ -66,10 +72,6 @@ export class ClockComponent implements OnInit {
       })
     }
     
-    if (this.emp.positions.length <= 0 ) {
-      const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
-      rvwTimesheet.className = "hidden";
-    }
   }
 
   jobRef(jobID: string): BehaviorSubject<Position> {
