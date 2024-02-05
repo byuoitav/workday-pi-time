@@ -153,6 +153,7 @@ export class APIService {
     const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
     this.http.get(endpoint).subscribe(
       (data: JSON ) => {
+        try {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
 
         //check if database and workday are synced
@@ -168,6 +169,11 @@ export class APIService {
 
         console.log("updated employee", emp);
         employee.next(emp);
+        } catch (e) {
+          console.log("error deserializing employee", e);
+          employee.error("Error Deserializing Employee");
+        }
+        
       },
       (err: any) => {
         console.warn("unable to deserialize employee", err);
