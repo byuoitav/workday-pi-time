@@ -134,7 +134,11 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
           d.time.getDate() === day.time.getDate()) {
             for (const b of d.periodBlocks) {
               if (b.startDate !== undefined && b.endDate !== undefined) {
-                totalHours += (b.endDate.getHours() + (b.endDate.getMinutes() / 60)) - (b.startDate.getHours() + (b.startDate.getMinutes() / 60));
+                var nextHours = (b.endDate.getHours() + (b.endDate.getMinutes() / 60)) - (b.startDate.getHours() + (b.startDate.getMinutes() / 60));
+                if (nextHours < 0) {
+                  nextHours += 24;
+                }
+                totalHours += nextHours;
               }
             }
         }
