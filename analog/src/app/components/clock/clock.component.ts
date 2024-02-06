@@ -56,7 +56,6 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    console.log(this.api.workdayAPI_online);
     if (this.emp?.positions.length <= 0 || this.api.workdayAPI_online === false) {
       const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
       rvwTimesheet.className = "hidden";
@@ -70,8 +69,7 @@ export class ClockComponent implements OnInit {
           msg: "You have worked more than 15 hours this week."
         }
       })
-    }
-    
+    }   
   }
 
   jobRef(jobID: string): BehaviorSubject<Position> {

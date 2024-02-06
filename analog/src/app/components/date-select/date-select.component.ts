@@ -144,15 +144,24 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     if (!this._empRef) {
       return;
     }
+    // console.log(this._empRef?.selectedDate.getMonth());
 
     if (!this.viewMonth && this.viewMonth !== 0) {
         this.viewMonth = this.today.getMonth();
         this.viewYear = this.today.getFullYear();
+        if (this._empRef.selectedDate) {
+          this.viewMonth = this._empRef.selectedDate.getMonth();
+          this.viewYear = this._empRef.selectedDate.getFullYear();
+        } 
     }
 
     if (!this.viewYear) {
       this.viewMonth = this.today.getMonth();
       this.viewYear = this.today.getFullYear();
+      if (this._empRef.selectedDate) {
+        this.viewYear = this._empRef.selectedDate.getFullYear();
+        this.viewMonth = this._empRef.selectedDate.getMonth();
+      } 
     }
 
     this.viewDays = [];
