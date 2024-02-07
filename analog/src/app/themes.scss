@@ -126,7 +126,6 @@ $dark: mat.define-dark-theme((
 ));
 
 .dark-theme {
-  @include mat.all-component-themes($dark);
   .container, .base {
     background-color: rgba(255, 255, 255, .1);
   }
