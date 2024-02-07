@@ -38,46 +38,6 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
     return day;
   }
 
-  private _selectedTab: string;
-  get selectedTab(): string | number {
-    switch (this._selectedTab) {
-      case "punches":
-        return 0;
-      case "wo/sr":
-        return 1;
-      case "other-hours":
-        return 2;
-      default:
-        return undefined;
-    }
-  }
-
-  set selectedTab(tab: string | number) {
-    if (typeof tab === "number") {
-      switch (tab) {
-        case 0:
-          tab = "punches";
-          break;
-        case 1:
-          tab = "wo/sr";
-          break;
-        case 2:
-          tab = "other-hours";
-          break;
-        default:
-          tab = "punches";
-          break;
-      }
-    }
-
-    this._selectedTab = tab;
-
-    this.router.navigate([], {
-      queryParamsHandling: "preserve",
-      fragment: this._selectedTab
-    });
-  }
-
   private _subsToDestroy: Subscription[] = [];
 
   constructor(public api: APIService, private route: ActivatedRoute, private router: Router) {}
@@ -96,11 +56,6 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
       }
     }));
 
-    this._subsToDestroy.push(this.route.fragment.subscribe(frag => {
-      if (frag) {
-        this.selectedTab = frag;
-      }
-    }));
   }
 
   
@@ -112,7 +67,6 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
 
     this._empRef = undefined;
     this._date = undefined;
-    this._selectedTab = undefined;
   }
 
   goBack() {
