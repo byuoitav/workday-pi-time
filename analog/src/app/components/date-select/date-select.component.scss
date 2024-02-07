@@ -75,7 +75,7 @@ $date-diameter: 4.5vw;
                 bottom: 29%;
                 height: 3%;
                 width: $width;
-                margin-left: (100% - $width) / 2;
+                margin-left: calc((100% - $width) / 2);
                 background-color: #c5c5c5;
                 content: "";
             }
@@ -114,7 +114,7 @@ $date-diameter: 4.5vw;
     &.exception {
         background-color: #B52828;
         color: white;
-        border-radius: $date-diameter / 2;
+        border-radius: calc($date-diameter / 2);
     }
 }
 
