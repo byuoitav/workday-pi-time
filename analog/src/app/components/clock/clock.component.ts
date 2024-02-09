@@ -157,6 +157,7 @@ export class ClockComponent implements OnInit {
   };
 
   toTimesheet = () => {
+    this._empRef.selectedDate = new Date();
     this.router.navigate(["./date/"], { 
       relativeTo: this.route,
       queryParamsHandling: "preserve" });
