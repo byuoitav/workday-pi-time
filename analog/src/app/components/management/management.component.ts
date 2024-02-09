@@ -71,4 +71,15 @@ export class ManagementComponent implements OnChanges, OnInit {
   reset() {
     this.defcon = LOW;
   }
+
+  clicked() {
+    const cosmo = document.getElementById("cosmo") as HTMLObjectElement;
+    cosmo.classList.add("cosmo-slide");
+    cosmo.classList.remove("cosmo-hide");
+    setTimeout(() => {
+      cosmo.classList.remove("cosmo-slide");
+      cosmo.classList.add("cosmo-hide");
+    }, 4000);
+
+  }
 }

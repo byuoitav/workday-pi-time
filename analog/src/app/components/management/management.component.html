@@ -34,4 +34,17 @@
         (click)="update(0)"
       ></button>
     </div>
+    <button
+        *ngIf="true"
+        #leftmiddle
+        name="cosmo"
+        mat-button
+        color="accent"
+        class="left middle button cosmo"
+        (click)="clicked()"
+      ></button>
+  </div>
+
+  <div id="cosmo" class="cosmo-container cosmo-hide">
+      <object type="image/svg+xml" data="./assets/cosmo.svg"></object>
   </div>
