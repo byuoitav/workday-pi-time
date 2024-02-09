@@ -1,10 +1,10 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, BehaviorSubject, Subscription} from "rxjs";
+import {Subscription} from "rxjs";
 
 import {EmployeeRef, APIService} from "../../services/api.service";
 import {ToastService} from "../../services/toast.service";
-import {Employee, Day, Position} from "../../objects";
+import {Employee, Day} from "../../objects";
 
 @Component({
   selector: "date-select",
@@ -125,7 +125,9 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
   selectDay = (date: Date) => {
     const str = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-    if (date > this.today) {
+
+    if (date > this.today || 
+      date.getMonth() === (this.today.getMonth() > 1 ? this.today.getMonth() - 2 : (12 + (this.today.getMonth() % 11)) - 2)) {
       return;
     }
     this.router.navigate(["./" + str], {
