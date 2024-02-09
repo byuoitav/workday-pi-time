@@ -114,8 +114,8 @@ export class ClockComponent implements OnInit {
     data.timeEntryCode = tec;
     
     const obs = this.api.punch(data).pipe(share());
-    obs.subscribe(
-      resp => {
+    obs.subscribe({
+      next: (resp) => {
         const response = JSON.parse(resp);
         if (response.written_to_tcd === 'true') {
           this.dialog.open(ConfirmDialog, {
@@ -144,7 +144,7 @@ export class ClockComponent implements OnInit {
         }
          
       },
-      err => {
+      error: (err) => {
         console.warn("response ERROR", err);
         this.dialog.open(ErrorDialog, {
           data: {
@@ -153,7 +153,7 @@ export class ClockComponent implements OnInit {
         })
         
       }
-    );
+  });
   };
 
   toTimesheet = () => {
