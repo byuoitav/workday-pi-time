@@ -42,17 +42,6 @@ export namespace PunchType {
     }
   }
 
-  export function reverse(pt: PunchType): PunchType {
-    switch (pt) {
-      case PunchType.In:
-        return PunchType.Out;
-      case PunchType.Out:
-        return PunchType.In;
-      default:
-        return pt;
-    }
-  }
-
   export function fromString(s: string | String): PunchType {
     switch (s) {
       case "I":

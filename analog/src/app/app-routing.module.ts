@@ -2,15 +2,12 @@ import { NgModule } from "@angular/core";
 import { Routes, RouterModule } from "@angular/router";
 import { APP_BASE_HREF } from "@angular/common";
 
-import { AppComponent } from "./components/app.component";
 import { ClockComponent } from "./components/clock/clock.component";
 import { LoginComponent } from "./components/login/login.component";
 import { EmployeeResolverService } from "./services/employee-resolver.service";
-import { DateResolverService } from "./services/date-resolver.service";
 import { DateSelectComponent } from "./components/date-select/date-select.component";
 import { DayOverviewComponent } from "./components/day-overview/day-overview.component";
 import { ScreenSaverComponent } from "./components/screen-saver/screen-saver.component";
-import { ManagementComponent } from './components/management/management.component';
 
 const routes: Routes = [
   {

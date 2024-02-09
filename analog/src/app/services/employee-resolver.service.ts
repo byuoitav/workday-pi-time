@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Router, RouterStateSnapshot, ActivatedRouteSnapshot } from "@angular/router";
-import { Observable, of, EMPTY, Subject, BehaviorSubject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
 import { APIService, EmployeeRef } from "./api.service";
