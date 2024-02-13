@@ -45,6 +45,8 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     "Saturday"
   ];
 
+  calendar;
+
   private _empRef: EmployeeRef;
   get emp(): Employee {
     if (this._empRef) {
@@ -74,6 +76,9 @@ export class DateSelectComponent implements OnInit, OnDestroy {
         this.getViewDays();
       }));
     }));
+
+    this.calendar = document.getElementById("calendar") as HTMLObjectElement;
+
   }
 
   ngOnDestroy() {
@@ -103,24 +108,31 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   moveMonthBack() {
-    if (this.viewMonth === 0) {
-      this.viewMonth = 11;
-      this.viewYear--;
-    } else {
-      this.viewMonth--;
-    }
-    this.getViewDays();
+    this.slideRight();
+    setTimeout(() => {
+      if (this.viewMonth === 0) {
+        this.viewMonth = 11;
+        this.viewYear--;
+      } else {
+        this.viewMonth--;
+      }
+      this.getViewDays();
+    }, 50);
+    
   }
 
   moveMonthForward() {
-    if (this.viewMonth === 11) {
-      this.viewMonth = 0;
-      this.viewYear++;
-    } else {
-      this.viewMonth++;
-    }
-
-    this.getViewDays();
+    this.slideLeft();
+    setTimeout(() => {
+      if (this.viewMonth === 11) {
+        this.viewMonth = 0;
+        this.viewYear++;
+      } else {
+        this.viewMonth++;
+      }
+  
+      this.getViewDays();
+    }, 50);
   }
 
   selectDay = (date: Date) => {
@@ -239,4 +251,29 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   logout = () => {
     this._empRef.logout(false);
   };
+
+  slideRight() : void {
+    this.calendar.classList.add("slide-right");
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-right");
+      this.calendar.classList.add("slide-right2");
+    }, 120);
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-right2");
+    }, 300);
+  }
+
+  slideLeft() : void {
+    this.calendar.classList.add("slide-left");
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-left");
+      this.calendar.classList.add("slide-left2");
+    }, 120);
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-left2");
+    }, 300);
+  }
+
 }
+
+  

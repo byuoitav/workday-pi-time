@@ -147,3 +147,62 @@ $date-diameter: 4.5vw;
     border-color: red;
     z-index: 1;
 }
+
+.slide-right {
+    animation: slideRightAnimation .1s ease-in-out forwards;
+}
+
+.slide-right2 {
+    animation: slideRightAnimation2 .2s ease-in-out forwards;
+}
+
+
+
+@keyframes slideRightAnimation {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(150%);
+    }
+}
+
+@keyframes slideRightAnimation2 {
+    0% {
+        transform: translateX(-150%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+
+
+
+.slide-left {
+    animation: slideLeftAnimation .1s ease-in-out forwards;
+}
+
+.slide-left2 {
+    animation: slideLeftAnimation2 .2s ease-in-out forwards;
+}
+
+
+
+@keyframes slideLeftAnimation {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-150%);
+    }
+}
+
+@keyframes slideLeftAnimation2 {
+    0% {
+        transform: translateX(150%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
