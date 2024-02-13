@@ -136,6 +136,11 @@ export class ClockComponent implements OnInit {
           })
         } else {
           console.log(resp.written_to_tcd)
+          this.router.navigate([], {
+            queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+            this.api.theme == "default" ? "light" : "default"},
+            queryParamsHandling: "merge"
+          });
           this.dialog.open(ErrorDialog, {
             data: {
               msg: "The Punch was not Submitted Successfully"
@@ -145,6 +150,11 @@ export class ClockComponent implements OnInit {
          
       },
       error: (err) => {
+        this.router.navigate([], {
+          queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+          this.api.theme == "default" ? "light" : "default"},
+          queryParamsHandling: "merge"
+        });
         console.warn("response ERROR", err);
         this.dialog.open(ErrorDialog, {
           data: {
