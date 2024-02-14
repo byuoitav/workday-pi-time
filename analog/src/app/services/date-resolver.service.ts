@@ -1,10 +1,8 @@
 import { Injectable } from "@angular/core";
 import { Router, RouterStateSnapshot, ActivatedRouteSnapshot } from "@angular/router";
-import { Observable, of, EMPTY, Subject, BehaviorSubject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import { Observable } from "rxjs";
 
-import { APIService, EmployeeRef } from "./api.service";
-import { Employee } from "../objects";
+import { APIService } from "./api.service";
 import { ToastService } from "./toast.service";
 
 @Injectable({

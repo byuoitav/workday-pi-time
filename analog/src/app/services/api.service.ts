@@ -151,8 +151,9 @@ export class APIService {
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
     const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
-    this.http.get(endpoint).subscribe(
-      (data: JSON ) => {
+    this.http.get(endpoint).subscribe({
+      next: (data: JSON ) => {
+        try {
         const response = this.jsonConvert.deserializeObject(data, ApiResponse);
 
         //check if database and workday are synced
@@ -168,8 +169,13 @@ export class APIService {
 
         console.log("updated employee", emp);
         employee.next(emp);
+        } catch (e) {
+          console.log("error deserializing employee", e);
+          employee.error("Error Deserializing Employee");
+        }
+        
       },
-      (err: any) => {
+      error: (err: any) => {
         console.warn("unable to deserialize employee", err);
         if (err.status === 0) {
           employee.error("Unable to Connect to API");
@@ -190,7 +196,8 @@ export class APIService {
         }
         
       }
-    );
+    
+  });
 
     const empRef = new EmployeeRef(employee, (timeout: Boolean) => {
       if (timeout) {
@@ -333,6 +340,7 @@ export class APIService {
           }
         }
       }
+      
     pos.days = days;
     }
   }

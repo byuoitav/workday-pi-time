@@ -17,6 +17,11 @@
     position: absolute;
     right: 0;
   }
+
+  .middle {
+    position: absolute;
+    top: 40%;
+  }
   
   .button {
     min-height: 100px;
@@ -24,6 +29,47 @@
     z-index: 5000;
   
     pointer-events: all;
+  }
+
+  .cosmo {
+    border: none;
+    background-color: transparent; 
+    color: transparent;  
+    cursor: default;
+    outline: none;
+    opacity: 0; 
+  }
+
+  @keyframes slideIn {
+    0% {
+      transform: translateX(20%) rotate(0deg);
+    }
+    30% {
+      transform: translateX(120%) rotate(0deg);
+    }
+    50% {
+      transform: translateX(0%) rotate(60deg);
+    }
+    100% {
+      transform: translateX(-100%) rotate(0deg);
+    }
+  }
+
+  .cosmo-container {
+    position: fixed;
+    top: 0;
+    left: -50%;
+    z-index: 6000;
+  }
+
+  .cosmo-hide {
+    visibility: hidden;
+  }
+
+  .cosmo-slide {
+    visibility: visible;
+    animation: slideIn 5s forwards;
+    z-index: 7000;
   }
   
   /* TODO(mdc-migration): The following rule targets internal classes of button that may no longer apply for the MDC version. */

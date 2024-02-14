@@ -7,10 +7,6 @@ $card-width: 95%;
   min-inline-size: 100%;
 }
 
-.sidenav-container {
-  height: 100%;
-}
-
 .tecSelect {
   background-color: white;
   border-radius: 20px;
@@ -94,16 +90,10 @@ $card-width: 95%;
         bottom: 29%;
         height: 3%;
         width: $width;
-        margin-left: (100% - $width) / 2;
+        margin-left: calc((100% - $width) / 2);
         background-color: #c5c5c5;
         content: "";
       }
-    }
-    .work-order {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-evenly;
-      align-items: center;
     }
   }
 }

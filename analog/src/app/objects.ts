@@ -42,17 +42,6 @@ export namespace PunchType {
     }
   }
 
-  export function reverse(pt: PunchType): PunchType {
-    switch (pt) {
-      case PunchType.In:
-        return PunchType.Out;
-      case PunchType.Out:
-        return PunchType.In;
-      default:
-        return pt;
-    }
-  }
-
   export function fromString(s: string | String): PunchType {
     switch (s) {
       case "I":
@@ -458,7 +447,7 @@ export class Employee {
   periodPunches: Punch[] = undefined;
   
   @JsonProperty("period_blocks", [PeriodBlock], false)
-  periodBlocks: PeriodBlock[] = undefined;
+  periodBlocks: PeriodBlock[] = null;
 
   showTEC = (): boolean => {
     if (this.timeEntryCodes) {
@@ -476,8 +465,8 @@ export class ApiResponse {
   @JsonProperty("employee", Employee, true)
   employee: Employee = undefined;
 
-  @JsonProperty("error", String, true)
-  error: string = undefined;
+  @JsonProperty("error", [String])
+  error: string[] = undefined;
 
   @JsonProperty("unprocessed_punches_in_tcd", Number, true)
   unprocessedPunches: string = undefined;

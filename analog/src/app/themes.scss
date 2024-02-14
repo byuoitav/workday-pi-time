@@ -113,7 +113,6 @@ $default-theme: mat.define-light-theme((
  density: 0,
 ));
 @include mat.all-component-themes($default-theme);
-
 // dark theme :)
 $dark: mat.define-dark-theme((
  color: (
@@ -130,7 +129,7 @@ $dark: mat.define-dark-theme((
   .container, .base {
     background-color: rgba(255, 255, 255, .1);
   }
-  .mat-mdc-card-outlined, .mat-mdc-card, .mat-mdc-card, .clock-group[_ngcontent-ng-c825893131] .clock-button[_ngcontent-ng-c825893131] {
+  .mat-mdc-card-outlined, .jobBlock, .mat-mdc-card, .mat-mdc-card, .clock-group[_ngcontent-ng-c825893131] .clock-button[_ngcontent-ng-c825893131] {
     border-color: #c1272d !important;
     border-width: 2px !important;
     border-style: solid !important;

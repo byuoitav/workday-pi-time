@@ -1,10 +1,10 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, BehaviorSubject, Subscription} from "rxjs";
+import {Subscription} from "rxjs";
 
 import {EmployeeRef, APIService} from "../../services/api.service";
 import {ToastService} from "../../services/toast.service";
-import {Employee, Day, Position} from "../../objects";
+import {Employee, Day} from "../../objects";
 
 @Component({
   selector: "date-select",
@@ -45,6 +45,9 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     "Saturday"
   ];
 
+  calendar;
+  calendarTitle;
+
   private _empRef: EmployeeRef;
   get emp(): Employee {
     if (this._empRef) {
@@ -74,6 +77,9 @@ export class DateSelectComponent implements OnInit, OnDestroy {
         this.getViewDays();
       }));
     }));
+
+    this.calendar = document.getElementById("calendar") as HTMLObjectElement;
+    this.calendarTitle = document.getElementById("monthName") as HTMLObjectElement;
   }
 
   ngOnDestroy() {
@@ -103,29 +109,38 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   moveMonthBack() {
-    if (this.viewMonth === 0) {
-      this.viewMonth = 11;
-      this.viewYear--;
-    } else {
-      this.viewMonth--;
-    }
-    this.getViewDays();
+    this.slideRight();
+    setTimeout(() => {
+      if (this.viewMonth === 0) {
+        this.viewMonth = 11;
+        this.viewYear--;
+      } else {
+        this.viewMonth--;
+      }
+      this.getViewDays();
+    }, 50);
+    
   }
 
   moveMonthForward() {
-    if (this.viewMonth === 11) {
-      this.viewMonth = 0;
-      this.viewYear++;
-    } else {
-      this.viewMonth++;
-    }
-
-    this.getViewDays();
+    this.slideLeft();
+    setTimeout(() => {
+      if (this.viewMonth === 11) {
+        this.viewMonth = 0;
+        this.viewYear++;
+      } else {
+        this.viewMonth++;
+      }
+  
+      this.getViewDays();
+    }, 50);
   }
 
   selectDay = (date: Date) => {
     const str = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-    if (date > this.today) {
+
+    if (date > this.today || 
+      date.getMonth() === (this.today.getMonth() > 1 ? this.today.getMonth() - 2 : (12 + (this.today.getMonth() % 11)) - 2)) {
       return;
     }
     this.router.navigate(["./" + str], {
@@ -144,15 +159,24 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     if (!this._empRef) {
       return;
     }
+    // console.log(this._empRef?.selectedDate.getMonth());
 
     if (!this.viewMonth && this.viewMonth !== 0) {
         this.viewMonth = this.today.getMonth();
         this.viewYear = this.today.getFullYear();
+        if (this._empRef.selectedDate) {
+          this.viewMonth = this._empRef.selectedDate.getMonth();
+          this.viewYear = this._empRef.selectedDate.getFullYear();
+        } 
     }
 
     if (!this.viewYear) {
       this.viewMonth = this.today.getMonth();
       this.viewYear = this.today.getFullYear();
+      if (this._empRef.selectedDate) {
+        this.viewYear = this._empRef.selectedDate.getFullYear();
+        this.viewMonth = this._empRef.selectedDate.getMonth();
+      } 
     }
 
     this.viewDays = [];
@@ -228,4 +252,33 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   logout = () => {
     this._empRef.logout(false);
   };
+
+  slideRight() : void {
+    this.calendar.classList.add("slide-right");
+    this.calendarTitle.classList.add("slide-name-right");
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-right");
+      this.calendar.classList.add("slide-right2");
+    }, 120);
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-right2");
+      this.calendarTitle.classList.remove("slide-name-right");
+    }, 300);
+  }
+
+  slideLeft() : void {
+    this.calendar.classList.add("slide-left");
+    this.calendarTitle.classList.add("slide-name-left");
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-left");
+      this.calendar.classList.add("slide-left2");
+    }, 120);
+    setTimeout(() => {
+      this.calendar.classList.remove("slide-left2");
+      this.calendarTitle.classList.remove("slide-name-left");
+    }, 300);
+  }
+
 }
+
+  

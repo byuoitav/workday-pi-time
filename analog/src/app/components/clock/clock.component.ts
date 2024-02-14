@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { MatDialog } from "@angular/material/dialog";
 
-import { Observable, BehaviorSubject } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 import { share } from "rxjs/operators";
 
 import { APIService, EmployeeRef } from "../../services/api.service";
@@ -56,20 +56,20 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    const weekHours = this.emp.totalWeekHours.length === 5 ? Number((this.emp.totalWeekHours).substring(0, 2)) : Number((this.emp.totalWeekHours).substring(0, 1));
-    if (this.emp.internationalStatus && weekHours >= 15 && this.api.showAlert) {
+    if (this.emp?.positions.length <= 0 || this.api.workdayAPI_online === false) {
+      const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
+      rvwTimesheet.className = "hidden";
+    }
+
+    const weekHours = this.emp?.totalWeekHours.length === 5 ? Number((this.emp?.totalWeekHours).substring(0, 2)) : Number((this.emp?.totalWeekHours).substring(0, 1));
+    if (this.emp?.internationalStatus && weekHours >= 15 && this.api.showAlert) {
       this.api.showAlert = false;
       this.dialog.open(InternationalDialog, {
         data: {
           msg: "You have worked more than 15 hours this week."
         }
       })
-    }
-    
-    if (this.emp.positions.length <= 0 ) {
-      const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
-      rvwTimesheet.className = "hidden";
-    }
+    }   
   }
 
   jobRef(jobID: string): BehaviorSubject<Position> {
@@ -114,8 +114,8 @@ export class ClockComponent implements OnInit {
     data.timeEntryCode = tec;
     
     const obs = this.api.punch(data).pipe(share());
-    obs.subscribe(
-      resp => {
+    obs.subscribe({
+      next: (resp) => {
         const response = JSON.parse(resp);
         if (response.written_to_tcd === 'true') {
           this.dialog.open(ConfirmDialog, {
@@ -136,6 +136,11 @@ export class ClockComponent implements OnInit {
           })
         } else {
           console.log(resp.written_to_tcd)
+          this.router.navigate([], {
+            queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+            this.api.theme == "default" ? "light" : "default"},
+            queryParamsHandling: "merge"
+          });
           this.dialog.open(ErrorDialog, {
             data: {
               msg: "The Punch was not Submitted Successfully"
@@ -144,7 +149,12 @@ export class ClockComponent implements OnInit {
         }
          
       },
-      err => {
+      error: (err) => {
+        this.router.navigate([], {
+          queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+          this.api.theme == "default" ? "light" : "default"},
+          queryParamsHandling: "merge"
+        });
         console.warn("response ERROR", err);
         this.dialog.open(ErrorDialog, {
           data: {
@@ -153,10 +163,11 @@ export class ClockComponent implements OnInit {
         })
         
       }
-    );
+  });
   };
 
   toTimesheet = () => {
+    this._empRef.selectedDate = new Date();
     this.router.navigate(["./date/"], { 
       relativeTo: this.route,
       queryParamsHandling: "preserve" });
