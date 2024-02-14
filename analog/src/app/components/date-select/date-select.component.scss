@@ -156,6 +156,10 @@ $date-diameter: 4.5vw;
     animation: slideRightAnimation2 .2s ease-in-out forwards;
 }
 
+.slide-name-right {
+    animation: monthNameRight .4s ease-in-out forwards;
+}
+
 
 
 @keyframes slideRightAnimation {
@@ -187,6 +191,10 @@ $date-diameter: 4.5vw;
     animation: slideLeftAnimation2 .2s ease-in-out forwards;
 }
 
+.slide-name-left {
+    animation: monthNameLeft .4s ease-in-out forwards;
+}
+
 
 
 @keyframes slideLeftAnimation {
@@ -201,6 +209,24 @@ $date-diameter: 4.5vw;
 @keyframes slideLeftAnimation2 {
     0% {
         transform: translateX(150%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes monthNameRight {
+    0% {
+        transform: translatex(-30px);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+@keyframes monthNameLeft {
+    0%  {
+        transform: translatex(30px);
     }
     100% {
         transform: translateX(0);

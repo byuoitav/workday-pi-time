@@ -46,6 +46,7 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   ];
 
   calendar;
+  calendarTitle;
 
   private _empRef: EmployeeRef;
   get emp(): Employee {
@@ -78,7 +79,7 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     }));
 
     this.calendar = document.getElementById("calendar") as HTMLObjectElement;
-
+    this.calendarTitle = document.getElementById("monthName") as HTMLObjectElement;
   }
 
   ngOnDestroy() {
@@ -254,23 +255,27 @@ export class DateSelectComponent implements OnInit, OnDestroy {
 
   slideRight() : void {
     this.calendar.classList.add("slide-right");
+    this.calendarTitle.classList.add("slide-name-right");
     setTimeout(() => {
       this.calendar.classList.remove("slide-right");
       this.calendar.classList.add("slide-right2");
     }, 120);
     setTimeout(() => {
       this.calendar.classList.remove("slide-right2");
+      this.calendarTitle.classList.remove("slide-name-right");
     }, 300);
   }
 
   slideLeft() : void {
     this.calendar.classList.add("slide-left");
+    this.calendarTitle.classList.add("slide-name-left");
     setTimeout(() => {
       this.calendar.classList.remove("slide-left");
       this.calendar.classList.add("slide-left2");
     }, 120);
     setTimeout(() => {
       this.calendar.classList.remove("slide-left2");
+      this.calendarTitle.classList.remove("slide-name-left");
     }, 300);
   }
 
