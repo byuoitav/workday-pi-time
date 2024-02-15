@@ -120,6 +120,9 @@ export class TimeFormatConverter implements JsonCustomConvert<String> {
   }
 
   deserialize(numString: any): String {
+    if (numString === null) {
+      numString = "";
+    }
     // Extract numeric part from the string (e.g., "2.41 H" -> "2.41")
     const numericPart = numString.match(/[\d.]+/);
 
