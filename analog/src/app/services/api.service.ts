@@ -294,45 +294,41 @@ export class APIService {
       }
 
       //add punches to the days
-      if (emp.periodPunches !== undefined && emp.periodPunches !== null) {
-        if (emp.periodPunches[0] !== null ) {
-          for (const punch of emp.periodPunches) {
-            if (String(pos.positionNumber) === String(punch.positionNumber)) {
-              for (const day of days) {
-                if (punch.time.getDate() === day.time.getDate() 
-                && punch.time.getMonth() === day.time.getMonth() 
-              && punch.time.getFullYear() === day.time.getFullYear()) {
-                  day.punches.push(punch);
-                }
+      if (emp.periodPunches !== undefined && emp.periodPunches !== null && emp.periodPunches[0] !== null ) {
+        for (const punch of emp.periodPunches) {
+          if (String(pos.positionNumber) === String(punch.positionNumber)) {
+            for (const day of days) {
+              if (punch.time.getDate() === day.time.getDate() 
+              && punch.time.getMonth() === day.time.getMonth() 
+            && punch.time.getFullYear() === day.time.getFullYear()) {
+                day.punches.push(punch);
               }
             }
           }
-        } 
+        }
       }
 
       // add time blocks to days
-      if (emp.periodBlocks !== undefined && emp.periodBlocks !== null) {
-        if (emp.periodBlocks[0] !== null ) {
-          for (const block of emp.periodBlocks) {
-            if (String(pos.positionNumber) === String(block.positionNumber)) {
-              for (const day of days) {
-                if (block.startDate === undefined && block.endDate === undefined) {
-                  continue;
-                } 
-                else {
-                  if (block.startDate !== undefined) {
-                    if (block.startDate.getDate() === day.time.getDate() 
-                    && block.startDate.getMonth() === day.time.getMonth() 
-                    && block.startDate.getFullYear() === day.time.getFullYear()) {
-                      day.periodBlocks.push(block);
-                    }
+      if (emp.periodBlocks !== undefined && emp.periodBlocks !== null && emp.periodBlocks[0] !== null) {
+        for (const block of emp.periodBlocks) {
+          if (String(pos.positionNumber) === String(block.positionNumber)) {
+            for (const day of days) {
+              if (block.startDate === undefined && block.endDate === undefined) {
+                continue;
+              } 
+              else {
+                if (block.startDate !== undefined) {
+                  if (block.startDate.getDate() === day.time.getDate() 
+                  && block.startDate.getMonth() === day.time.getMonth() 
+                  && block.startDate.getFullYear() === day.time.getFullYear()) {
+                    day.periodBlocks.push(block);
                   }
-                  else {
-                    if (block.endDate.getDate() === day.time.getDate()
-                    && block.endDate.getMonth() === day.time.getMonth() 
-                    && block.endDate.getFullYear() === day.time.getFullYear()) {
-                      day.periodBlocks.push(block);
-                    }
+                }
+                else {
+                  if (block.endDate.getDate() === day.time.getDate()
+                  && block.endDate.getMonth() === day.time.getMonth() 
+                  && block.endDate.getFullYear() === day.time.getFullYear()) {
+                    day.periodBlocks.push(block);
                   }
                 }
               }

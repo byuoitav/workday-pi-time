@@ -253,6 +253,7 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     this._empRef.logout(false);
   };
 
+  //animations for month change
   slideRight() : void {
     this.calendar.classList.add("slide-right");
     this.calendarTitle.classList.add("slide-name-right");
