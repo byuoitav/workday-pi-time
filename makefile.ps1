@@ -71,8 +71,8 @@ function Build {
     New-Item -Path dist -ItemType Directory
     $location = Get-Location
     Write-Output $location\deps
-    Write-Output "$location\redirect.html"
-    Copy-Item "$location\redirect.html" -Destination "$location\dist\"
+    # Write-Output "$location\redirect.html"
+    # Copy-Item "$location\redirect.html" -Destination "$location\dist\"
     Copy-Item "$location\version.txt" -Destination "$location\dist\"
 
     Write-Output "*****************************************"
@@ -94,7 +94,7 @@ function Build {
     Set-Item -Path env:CGO_ENABLED -Value 0
     Set-Item -Path env:GOOS -Value "windows"
     Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-windows"
+    Invoke-Expression "go build -v -o dist/${NAME}-windows.exe"
 
     Write-Output "*****************************************"
     Write-Output "Building Frontend"
@@ -103,7 +103,7 @@ function Build {
         Write-Output "Entering \analog"
         New-Item -Path dist -ItemType Directory
         #Invoke-Expression "npm run-script build"
-        Invoke-Expression "npm run ng build --aot --optimization --base-href='./'"
+        Invoke-Expression "npm run ng build --aot --optimization --base-href='/analog/'"
         Invoke-Expression "cd .."
         Write-Output "Exiting \analog and moving files to \dist"
         Move-Item "$location\analog\dist\" -Destination "$location\dist\"

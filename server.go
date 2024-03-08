@@ -168,15 +168,7 @@ func main() {
 			// Only redirect if we are already in the angular sitePath
 			context.File(webRoot + "/index.html")
 		}
-
-		if sitePath != "/" {
-			// If someone navigates to the site root exactly, redirect to the angular site at /app
-			// router.GET("/", func(c *gin.Context) {
-			// 	location := url.URL{Path: sitePath}
-			//context.Redirect(http.StatusFound, location.RequestURI())
-			context.Redirect(http.StatusFound, sitePath)
-			// })
-		}
+		context.Redirect(http.StatusFound, sitePath)
 	})
 
 	listeningPort := ":" + *port
