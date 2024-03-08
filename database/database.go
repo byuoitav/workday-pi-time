@@ -143,7 +143,8 @@ func init() {
 		slog.Info("error getting environment variables, exiting")
 		os.Exit(1)
 	}
-	slog.Info("got environment variables:", "host:", host, "port:", port, "user:", user, "password:", password, "dbname:", dbname)
+	slog.Info("got environment variables:")
+	//slog.Info("got environment variables:", "host:", host, "port:", port, "user:", user, "password:", password, "dbname:", dbname)
 	//setup database connection
 	slog.Info("setting up database connection")
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
