@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -172,10 +171,11 @@ func main() {
 
 		if sitePath != "/" {
 			// If someone navigates to the site root exactly, redirect to the angular site at /app
-			router.GET("/", func(c *gin.Context) {
-				location := url.URL{Path: sitePath}
-				c.Redirect(http.StatusFound, location.RequestURI())
-			})
+			// router.GET("/", func(c *gin.Context) {
+			// 	location := url.URL{Path: sitePath}
+			//context.Redirect(http.StatusFound, location.RequestURI())
+			context.Redirect(http.StatusFound, sitePath)
+			// })
 		}
 	})
 
