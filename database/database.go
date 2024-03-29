@@ -93,11 +93,10 @@ type WorkdayWorkerTimeData struct {
 }
 
 type WorkdayTimeEvents struct {
-	Clock_Event_Time string `json:"clock_event_time"`
-	Clock_Event_Type string `json:"clock_event_type"`
-	Position_Ref_ID  string `json:"position_ref_id"`
-	Position_Descr   string `json:"position_descr"`
-	Timeblock_Ref_ID string `json:"timeblock_ref_id"`
+	Clock_Event_Time string `json:"time"`             //`json:"clock_event_time"`
+	Clock_Event_Type string `json:"event_type"`       //`json:"clock_event_type"`
+	Position_Ref_ID  string `json:"tce_position"`     //`json:"position_ref_id"`
+	Timeblock_Ref_ID string `json:"timeblock_ref_id"` //`json:"timeblock_ref_id"`
 }
 
 type WorkdayTimeBlocks struct {
@@ -143,9 +142,8 @@ func init() {
 		slog.Info("error getting environment variables, exiting")
 		os.Exit(1)
 	}
-	slog.Info("got environment variables:", "host:", host, "port:", port, "user:", user, "password:", password, "dbname:", dbname)
-	//setup database connection
-	slog.Info("setting up database connection")
+
+	// setup database connection
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable connect_timeout=%s",
 		host, port, user, password, dbname, database_timeout)
@@ -165,6 +163,8 @@ func init() {
 		slog.Error(err.Error())
 		panic(err)
 	}
+	slog.Info("Started database.go with database variables:", "host", host, "port", port, "user", user, "password", "********", "dbname", dbname)
+	slog.Info("Started database.go with global variables:", "tokenRefreshURL", tokenRefreshURL, "apiURL", apiURL, "apiUser", apiUser, "apiPassword", "********", "apiTenant", apiTenant)
 }
 
 func getGlobalVars() {
@@ -406,6 +406,7 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 	var err error
 
 	today := time.Now()
+	today = today.AddDate(0, 0, 1)
 	lastMonth := today.AddDate(0, -1, 0)
 
 	url := apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timekeeping_System?employee_id=" + byuID + "&start_date=" +
@@ -491,13 +492,16 @@ func ReturnCurrentWeek() (time.Time, time.Time) {
 	return start, end
 }
 
-func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) error {
+func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err error) {
 	//don't do anything if there is no data for the worker from the Workday API
-	if len(worker.Time_Clock_Events) < 1 {
-		return fmt.Errorf("no time events found")
-	}
 
+	block_positionNumber := make(map[string]string)
+	block_businessTitle := make(map[string]string)
+	block_timeIn := make(map[string]string)
+	block_timeOut := make(map[string]string)
 	positionTDtoName := make(map[string]string)
+
+	//build positions table
 	for _, v := range employee.Positions {
 		positionTDtoName[v.Position_Number] = v.Business_Title
 		if v.Business_Title == "" {
@@ -507,13 +511,6 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 
 	//build period_puhcnes
 	var periodPunch PeriodPunches
-
-	block_positionNumber := make(map[string]string)
-	block_businessTitle := make(map[string]string)
-	block_timeIn := make(map[string]string)
-	block_timeOut := make(map[string]string)
-
-	//add time events not related to a time block
 	for _, v := range worker.Time_Clock_Events {
 		if v.Timeblock_Ref_ID == "" { //add to peroid_punches slice if not associated with a time block
 			periodPunch.Clock_Event_Type = v.Clock_Event_Type
@@ -528,13 +525,11 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 			if periodPunch.Business_Title == "" {
 				periodPunch.Business_Title = "none"
 			}
-
 			employee.Period_Punches = append(employee.Period_Punches, periodPunch)
 
 		} else { //get the data to use later for time block in/out
 			if v.Clock_Event_Type == "Check-in" {
 				block_positionNumber[v.Timeblock_Ref_ID] = v.Position_Ref_ID
-				block_businessTitle[v.Timeblock_Ref_ID] = v.Position_Descr
 				block_timeIn[v.Timeblock_Ref_ID] = v.Clock_Event_Time
 			} else if v.Clock_Event_Type == "Check-out" {
 				block_timeOut[v.Timeblock_Ref_ID] = v.Clock_Event_Time
@@ -542,11 +537,9 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) erro
 			}
 		}
 	}
-
 	//associate time events to time block
 	var periodBlock PeriodBlocks
 
-	//get time period and weekly info
 	currentPeriodStart, currentPeriodEnd := ReturnCurrentPayPeriod()
 	currentWeekStart, currentWeekEnd := ReturnCurrentWeek()
 

@@ -71,8 +71,8 @@ function Build {
     New-Item -Path dist -ItemType Directory
     $location = Get-Location
     Write-Output $location\deps
-    Write-Output "$location\redirect.html"
-    Copy-Item "$location\redirect.html" -Destination "$location\dist\"
+    # Write-Output "$location\redirect.html"
+    # Copy-Item "$location\redirect.html" -Destination "$location\dist\"
     Copy-Item "$location\version.txt" -Destination "$location\dist\"
 
     Write-Output "*****************************************"
@@ -94,7 +94,7 @@ function Build {
     Set-Item -Path env:CGO_ENABLED -Value 0
     Set-Item -Path env:GOOS -Value "windows"
     Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-windows"
+    Invoke-Expression "go build -v -o dist/${NAME}-windows.exe"
 
     Write-Output "*****************************************"
     Write-Output "Building Frontend"
@@ -103,7 +103,7 @@ function Build {
         Write-Output "Entering \analog"
         New-Item -Path dist -ItemType Directory
         #Invoke-Expression "npm run-script build"
-        Invoke-Expression "npm run ng build --aot --optimization --base-href='./'"
+        Invoke-Expression "npm run ng build --aot --optimization --base-href='/analog/'"
         Invoke-Expression "cd .."
         Write-Output "Exiting \analog and moving files to \dist"
         Move-Item "$location\analog\dist\" -Destination "$location\dist\"
@@ -133,17 +133,17 @@ function DockerFunc {   #can not just be docker because it creates an infinite l
         Write-Output "Building dev containers with tag $COMMIT_HASH"
 
         Write-Output "Building container $DOCKER_PKG/$NAME-dev:$COMMIT_HASH"
-        Invoke-Expression "docker build -f dockerfile --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$COMMIT_HASH dist"
+        Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$COMMIT_HASH dist"
     } elseif ($TAG -match $DEV_TAG_REGEX) {
         Write-Output "Building dev containers with tag $TAG"
 
     	Write-Output "Building container $DOCKER_PKG/$NAME-dev:$TAG"
-    	Invoke-Expression "docker build -f dockerfile --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$TAG dist"
+    	Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$TAG dist"
     } elseif ($TAG -match $PRD_TAG_REGEX) {
         Write-Output "Building prd containers with tag $TAG"
 
     	Write-Output "Building container $DOCKER_PKG/${NAME}:$TAG"
-    	Invoke-Expression "docker build -f dockerfile --build-arg NAME=$NAME-arm -t $DOCKER_PKG/${NAME}:$TAG dist"
+    	Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/${NAME}:$TAG dist"
     } else {
         Write-Output "Docker function quit unexpectedly. Commit Hash: $COMMIT_HASH     Tag: $TAG"
     }

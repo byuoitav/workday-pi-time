@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -19,23 +18,30 @@ import (
 var logger *slog.Logger
 
 func main() {
+	var err error
+
+	port := flag.String("p", "8463", "port for microservice to av-api communication")
+	logLevelFlag := flag.String("l", "info", "slog log level")
+	flag.Parse()
+
 	//setup logger
 	var logLevel = new(slog.LevelVar)
-	var err error
+
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
 
 	logLevel.Set(slog.LevelInfo)
 	if runtime.GOOS == "windows" {
-		logLevel.Set(slog.LevelDebug)
+		*logLevelFlag = "debug"
 		logger.Info("running from Windows, logging set to debug")
 	}
 
-	//start up a server to serve the angular site and set up the handlers for the UI to use
-	port := flag.String("p", "8463", "port for microservice to av-api communication")
-	flag.Parse()
-	listeningPort := ":" + *port
+	err = setLogLevel(*logLevelFlag, logLevel)
+	if err != nil {
+		logger.Error("can not set log level", "error", err)
+	}
 
+	//start up a server to serve the angular site and set up the handlers for the UI to use
 	router := gin.Default()
 
 	router.Use(corsMiddleware())
@@ -156,25 +162,16 @@ func main() {
 	webRoot := "./dist/analog"
 	fmt.Println("http.Dir(webRoot)", http.Dir(webRoot))
 	router.StaticFS(sitePath, http.Dir(webRoot))
-	//router.Static(sitePath, webRoot)
-	//router.Static("/assets", "./frontend/analog/assets")
-	//router.StaticFile("/favicon.ico", "./frontend/analog/favicon.ico")
 
 	router.NoRoute(func(context *gin.Context) {
 		if strings.HasPrefix(context.Request.RequestURI, sitePath) {
 			// Only redirect if we are already in the angular sitePath
 			context.File(webRoot + "/index.html")
 		}
-
-		if sitePath != "/" {
-			// If someone navigates to the site root exactly, redirect to the angular site at /app
-			router.GET("/", func(c *gin.Context) {
-				location := url.URL{Path: sitePath}
-				c.Redirect(http.StatusFound, location.RequestURI())
-			})
-		}
+		context.Redirect(http.StatusFound, sitePath)
 	})
 
+	listeningPort := ":" + *port
 	server := &http.Server{
 		Addr:           listeningPort,
 		MaxHeaderBytes: 1024 * 10,
