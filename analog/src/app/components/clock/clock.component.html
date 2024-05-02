@@ -16,7 +16,7 @@
   <mat-card appearance="outlined" class="jobs card mat-elevation-z2">
     <mat-grid-list
       class="grid"
-      cols="{{ emp?.showTEC() ? 6 : 5 }}"
+      cols="{{ emp.timeEntryCodes != null ? (emp?.showTEC() ? 6 : 5) : 3  }}"
       rowHeight="12vh"
       gutterSize=".2vh"
     >
@@ -38,7 +38,7 @@
       >
         <b>TEC</b>
       </mat-grid-tile>
-      <mat-grid-tile colspan="2" rowspan="1" class="header"
+      <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1" class="header"
         ><b>Clock</b></mat-grid-tile
       >
       <!-- Primary Job -->
@@ -73,7 +73,7 @@
           </mat-grid-tile>
 
           <!-- clock in/out -->
-          <mat-grid-tile colspan="2" rowspan="1">
+          <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
             <mat-radio-group
               class="clock-group"
               (change)="
@@ -84,14 +84,14 @@
                 class="clock-button in"
                 color="accent"
                 [value]="punchType.In"
-                [checked]="Position.inStatus === 'true'"
+                [checked]="Position.inStatus"
                 >IN</mat-radio-button
               >
               <mat-radio-button
                 color = "warn"
                 class="clock-button out"
                 [value]="punchType.Out"
-                [checked]="Position.inStatus === 'false'"
+                [checked]="!Position.inStatus"
                 >OUT</mat-radio-button
               >
             </mat-radio-group>
@@ -131,7 +131,7 @@
           </mat-grid-tile>
 
           <!-- clock in/out -->
-          <mat-grid-tile colspan="2" rowspan="1">
+          <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
             <mat-radio-group
               class="clock-group"
               (change)="
@@ -142,14 +142,14 @@
               class="clock-button in"
               color="accent"
               [value]="punchType.In"
-              [checked]="Position.inStatus === 'true'"
+              [checked]="Position.inStatus"
               >IN</mat-radio-button
             >
             <mat-radio-button
               color = "warn"
               class="clock-button out"
               [value]="punchType.Out"
-              [checked]="Position.inStatus === 'false'"
+              [checked]="!Position.inStatus"
               >OUT</mat-radio-button
             >
             </mat-radio-group>
@@ -164,7 +164,7 @@
     id = "rvwTimesheet"
     class="view-timesheet"
     color="accent"
-    (click)="this.emp?.positions.length > 0 && this.api.workdayAPI_online ? toTimesheet() : null"
+    (click)="this.emp.timeEntryCodes != null && this.emp?.positions.length > 0 && this.api.workdayAPI_online ? toTimesheet() : null"
   >
     Review Time Entry
   </button>

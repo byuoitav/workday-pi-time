@@ -56,7 +56,8 @@ export class ClockComponent implements OnInit {
       );
     }
 
-    if (this.emp?.positions.length <= 0 || this.api.workdayAPI_online === false) {
+    //greys out the "to time sheet" button
+    if (this.emp?.positions.length <= 0 || this.api.workdayAPI_online === false || this.emp.timeEntryCodes == null) {
       const rvwTimesheet = document.getElementById("rvwTimesheet") as HTMLButtonElement;
       rvwTimesheet.className = "hidden";
     }
@@ -88,7 +89,7 @@ export class ClockComponent implements OnInit {
 
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
-    
+  
     //Get the Time Entry Code
     var tec: string = null;
     if (this.emp.timeEntryCodes !== null) {
@@ -102,6 +103,31 @@ export class ClockComponent implements OnInit {
             tec = key;
             break;
           }
+        }
+      }
+    }
+
+    //If this.emp.timeEntryCodes is null, then the employee is not eligible to track time
+    else {
+      this.dialog.open(ErrorDialog, {
+        data: {
+          msg: "Employee Not Eligible for Time Tracking"
+        }
+      })
+      return
+    }
+
+    //Check that jobs are not already clocked in
+    if (state === "I") {
+      for (var i = 0; i < this.emp.positions.length; i++) {
+        if (this.emp.positions[i].inStatus) {
+          this.dialog.open(ErrorDialog, {
+            data: {
+              msg: "A Job is Already Clocked In"
+            }
+          })
+          this.refreshPage();
+          return
         }
       }
     }
@@ -127,20 +153,12 @@ export class ClockComponent implements OnInit {
               this.logout();
             }
             else if (confirmed === "confirmed") {
-              this.router.navigate([], {
-                queryParams: {theme: this.api.theme == "dark" ? "dark" : 
-                this.api.theme == "default" ? "light" : "default"},
-                queryParamsHandling: "merge"
-              });
+              this.refreshPage();
             }
           })
         } else {
           console.log(resp.written_to_tcd)
-          this.router.navigate([], {
-            queryParams: {theme: this.api.theme == "dark" ? "dark" : 
-            this.api.theme == "default" ? "light" : "default"},
-            queryParamsHandling: "merge"
-          });
+          this.refreshPage();
           this.dialog.open(ErrorDialog, {
             data: {
               msg: "The Punch was not Submitted Successfully"
@@ -150,11 +168,7 @@ export class ClockComponent implements OnInit {
          
       },
       error: (err) => {
-        this.router.navigate([], {
-          queryParams: {theme: this.api.theme == "dark" ? "dark" : 
-          this.api.theme == "default" ? "light" : "default"},
-          queryParamsHandling: "merge"
-        });
+        this.refreshPage();
         console.warn("response ERROR", err);
         this.dialog.open(ErrorDialog, {
           data: {
@@ -176,6 +190,14 @@ export class ClockComponent implements OnInit {
   logout = () => {
     this._empRef.logout(false);
   };
+
+  refreshPage = () => {
+    this.router.navigate([], {
+      queryParams: {theme: this.api.theme == "dark" ? "dark" : 
+      this.api.theme == "default" ? "light" : "default"},
+      queryParamsHandling: "merge"
+    });
+  }
 
 }
 
