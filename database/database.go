@@ -55,6 +55,7 @@ type Position struct {
 	Position_Number             string `json:"position_number"`
 	Primary_Position            string `json:"primary_position"`
 	Business_Title              string `json:"business_title"`
+	Supervisory_Org             string `json:"supervisory_org"`
 	Position_Total_Week_Hours   string `json:"position_total_week_hours"`
 	Position_Total_Period_Hours string `json:"position_total_period_hours"`
 	Clocked_In                  string `json:"clocked_in"`
@@ -376,6 +377,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		Primary_Position   bool   `json:"primary_position"`
 		Is_Active_Position bool   `json:"is_active_position"`
 		Business_Title     string `json:"business_title"`
+		Supervisory_Org    string `json:"supervisory_org"`
 	}
 	var databasePositions []databasePosition
 	err = json.Unmarshal([]byte(emp.Positions), &databasePositions)
@@ -387,6 +389,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		if v.Is_Active_Position {
 			var position Position
 			position.Business_Title = v.Business_Title
+			position.Supervisory_Org = v.Supervisory_Org
 			position.Position_Number = v.Position_Number
 			position.Primary_Position = strconv.FormatBool(v.Primary_Position)
 
