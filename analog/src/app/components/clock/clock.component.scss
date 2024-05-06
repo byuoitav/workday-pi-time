@@ -44,6 +44,27 @@ $card-width: 95%;
   }
 }
 
+.grey-out {
+  color: rgb(177, 177, 177) !important;
+  border-color: rgb(177, 177, 177) !important;   
+  ::ng-deep .mdc-label {
+    color: rgb(177, 177, 177) !important;
+  }
+  --mdc-radio-disabled-selected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-disabled-unselected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-hover-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-pressed-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-focus-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-hover-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-pressed-icon-color: rgb(177,177,177) !important;
+  --mat-radio-ripple-color: rgb(177,177,177) !important;
+  --mat-radio-checked-ripple-color: rgb(177,177,177) !important;
+  --mat-radio-disabled-label-color: rgb(177,177,177) !important;
+    
+}
+
 .totals {
   display: flex;
   flex-direction: row;

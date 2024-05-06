@@ -1,0 +1,13 @@
+<div mat-dialog-content>
+  <span class="mat-h3">{{data?.msg}}</span>
+</div>
+
+<div mat-dialog-actions>
+  <button color="warn" (click)="close()" (press)="close()" mat-flat-button>
+    Cancel
+  </button>
+
+  <button color="accent" mat-flat-button (click)="confirmed()" cdkFocusInitial>
+    Continue
+  </button>
+</div>

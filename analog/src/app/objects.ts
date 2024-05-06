@@ -458,6 +458,15 @@ export class Employee {
     }
     return false;
   }
+
+  clockedIn = (): boolean => {
+    for (const position of this.positions) {
+      if (position.inStatus) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 @JsonObject("ApiResponse")

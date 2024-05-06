@@ -76,15 +76,16 @@
           <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
             <mat-radio-group
               class="clock-group"
-              (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value)
-              "
             >
               <mat-radio-button
                 class="clock-button in"
                 color="accent"
                 [value]="punchType.In"
                 [checked]="Position.inStatus"
+                [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                (click)="
+                clockInOut(jobRef(Position.positionNumber), punchType.In)
+              "
                 >IN</mat-radio-button
               >
               <mat-radio-button
@@ -92,6 +93,10 @@
                 class="clock-button out"
                 [value]="punchType.Out"
                 [checked]="!Position.inStatus"
+                [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                (click)="
+                clockInOut(jobRef(Position.positionNumber), punchType.Out)
+              "
                 >OUT</mat-radio-button
               >
             </mat-radio-group>
@@ -134,15 +139,16 @@
           <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
             <mat-radio-group
               class="clock-group"
-              (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value)
-              "
             >
               <mat-radio-button
               class="clock-button in"
               color="accent"
               [value]="punchType.In"
               [checked]="Position.inStatus"
+              [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+              (click)="
+                clockInOut(jobRef(Position.positionNumber), punchType.In)
+              "
               >IN</mat-radio-button
             >
             <mat-radio-button
@@ -150,6 +156,10 @@
               class="clock-button out"
               [value]="punchType.Out"
               [checked]="!Position.inStatus"
+              [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+              (click)="
+                clockInOut(jobRef(Position.positionNumber), punchType.Out)
+              "
               >OUT</mat-radio-button
             >
             </mat-radio-group>
