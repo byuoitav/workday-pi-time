@@ -11,10 +11,13 @@ $card-width: 95%;
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
+  min-width: 100%;
 }
 
 .job-title {
   text-align: left;
+  min-width: 100%;
+
 }
 
 .supervisory-org {
@@ -22,6 +25,8 @@ $card-width: 95%;
   text-decoration: bold;
   font-size: .7em;
   text-align: left;
+  min-width: 100%;
+
 }
 
 .tecSelect {
