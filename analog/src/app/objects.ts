@@ -83,6 +83,22 @@ export class NumberConverter implements JsonCustomConvert<Number> {
 }
 
 @JsonConverter
+export class OrgConverter implements JsonCustomConvert<String> {
+  serialize(org: String): any {
+    return org;
+  }
+
+  deserialize(org: any): String {
+    if (org.length > 24) {
+      const firstTen = org.substring(0, 15);
+        const lastTen = org.substring(org.length - 15);
+        return `${firstTen}... ${lastTen}`;
+    } 
+    return org;
+  }
+}
+
+@JsonConverter
 export class TECConverter implements JsonCustomConvert<any> {
   serialize(tec: String): any {
     if (tec === null) {
@@ -408,6 +424,9 @@ export class Position {
 
  @JsonProperty('business_title')
  businessTitle: string = undefined;
+
+ @JsonProperty('supervisory_org', OrgConverter)
+ supervisoryOrg: string = undefined;
 
  @JsonProperty('position_total_week_hours', TimeFormatConverter)
  totalWeekHours: String = undefined;

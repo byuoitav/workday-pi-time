@@ -32,14 +32,14 @@ export class AppComponent implements OnInit {
       const isLogin = this.router.url.startsWith("/login");
       const isScreensaver = this.router.url.startsWith("/screensaver");
       // Change this for timeout - needs to be 60 seconds in production
-      if (count >= 6000 && isLogin) {
+      if (count >= 60 && isLogin) {
         count = 0;
 
         this.router.navigate(["/screensaver"]);
         this.dialog.closeAll();
         this.snackbar.dismiss();
         // Change this for timeout - needs to be 30 seconds in production
-      } else if (count >= 6000 && !isLogin && !isScreensaver) {
+      } else if (count >= 30 && !isLogin && !isScreensaver) {
         count = 0;
 
         this.router.navigate(["/login"]);

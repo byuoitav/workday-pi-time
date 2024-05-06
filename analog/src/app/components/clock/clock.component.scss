@@ -7,6 +7,23 @@ $card-width: 95%;
   min-inline-size: 100%;
 }
 
+.title-org {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+
+.job-title {
+  text-align: left;
+}
+
+.supervisory-org {
+  color: #1b65bf;
+  text-decoration: bold;
+  font-size: .7em;
+  text-align: left;
+}
+
 .tecSelect {
   background-color: white;
   border-radius: 20px;
