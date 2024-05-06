@@ -139,6 +139,17 @@ $card-width: 95%;
         content: "";
       }
     }
+    &.job-header {
+      &:after {
+        $width: 70%;
+        position: absolute;
+        bottom: 29%;
+        height: 3%;
+        width: $width;
+        background-color: #c5c5c5;
+        content: "";
+      }
+    }
   }
 }
 
@@ -185,7 +196,3 @@ $card-width: 95%;
   }
 }
 
-.title {
-  display: flex;
-  justify-content: flex-start;
-}

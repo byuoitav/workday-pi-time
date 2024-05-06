@@ -22,8 +22,10 @@
         gutterSize=".4vh"
       >
         <!-- headers -->
-        <mat-grid-tile (click)="api?.hiddenDarkMode()" colspan="1" rowspan="1" class="header title" >
-          <b>Job Title</b>
+        <mat-grid-tile (click)="api?.hiddenDarkMode()" colspan="1" rowspan="1" class="job-header" >
+          <div class="title-org">
+            <div class="job-title"><b>Job Title</b></div>
+          </div>
         </mat-grid-tile>
         <mat-grid-tile colspan="1" rowspan="1" class="header">
           <b>Week</b>
