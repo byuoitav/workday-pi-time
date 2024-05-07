@@ -11,8 +11,7 @@ export const PORTAL_DATA = new InjectionToken<{}>("PORTAL_DATA");
 
 export enum PunchType {
   In = "I",
-  Out = "O",
-  Transfer = "T"
+  Out = "O"
 }
 
 export namespace PunchType {
@@ -22,8 +21,6 @@ export namespace PunchType {
         return "IN";
       case PunchType.Out:
         return "OUT";
-      case PunchType.Transfer:
-        return "TRANSFER";
       default:
         return pt.toString();
     }
@@ -35,8 +32,6 @@ export namespace PunchType {
         return "In";
       case PunchType.Out:
         return "Out";
-      case PunchType.Transfer:
-        return "Transfer";
       default:
         return pt.toString();
     }
@@ -48,8 +43,6 @@ export namespace PunchType {
         return PunchType.In;
       case "O":
         return PunchType.Out;
-      case "T":
-        return PunchType.Transfer;
       default:
         return;
     }
@@ -79,6 +72,22 @@ export class NumberConverter implements JsonCustomConvert<Number> {
 
     // Return undefined if no numeric part is found
     return undefined;
+  }
+}
+
+@JsonConverter
+export class OrgConverter implements JsonCustomConvert<String> {
+  serialize(org: String): any {
+    return org;
+  }
+
+  deserialize(org: any): String {
+    if (org.length > 29) {
+      const first = org.substring(0, 15);
+        const last = org.substring(org.length - 15);
+        return `${first}... ${last}`;
+    } 
+    return org;
   }
 }
 
@@ -409,6 +418,9 @@ export class Position {
  @JsonProperty('business_title')
  businessTitle: string = undefined;
 
+ @JsonProperty('supervisory_org', OrgConverter)
+ supervisoryOrg: string = undefined;
+
  @JsonProperty('position_total_week_hours', TimeFormatConverter)
  totalWeekHours: String = undefined;
 
@@ -455,6 +467,15 @@ export class Employee {
   showTEC = (): boolean => {
     if (this.timeEntryCodes) {
       return Object.keys(this.timeEntryCodes).length > 1;
+    }
+    return false;
+  }
+
+  clockedIn = (): boolean => {
+    for (const position of this.positions) {
+      if (position.inStatus) {
+        return true;
+      }
     }
     return false;
   }

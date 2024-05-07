@@ -14,77 +14,160 @@
   </mat-card>
 
   <mat-card appearance="outlined" class="jobs card mat-elevation-z2">
-    <mat-grid-list
-      class="grid"
-      cols="{{ emp.timeEntryCodes != null ? (emp?.showTEC() ? 6 : 5) : 3  }}"
-      rowHeight="12vh"
-      gutterSize=".2vh"
-    >
-      <!-- headers -->
-      <mat-grid-tile (click)="api?.hiddenDarkMode()" colspan="1" rowspan="1" class="header title" >
-        <b>Job Title</b>
-      </mat-grid-tile>
-      <mat-grid-tile colspan="1" rowspan="1" class="header">
-        <b>Week</b>
-      </mat-grid-tile>
-      <mat-grid-tile colspan="1" rowspan="1" class="header">
-        <b>Pay Period</b>
-      </mat-grid-tile>
-      <mat-grid-tile
-        *ngIf="emp?.showTEC()"
-        colspan="1"
-        rowspan="1"
-        class="tile header"
+    <div class="grid-container">
+      <mat-grid-list
+        class="grid"
+        cols="{{ emp.timeEntryCodes != null ? (emp?.showTEC() ? 6 : 5) : 3  }}"
+        rowHeight="10vh"
+        gutterSize=".4vh"
       >
-        <b>TEC</b>
-      </mat-grid-tile>
-      <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1" class="header"
-        ><b>Clock</b></mat-grid-tile
+        <!-- headers -->
+        <mat-grid-tile (click)="api?.hiddenDarkMode()" colspan="1" rowspan="1" class="job-header" >
+          <div class="title-org">
+            <div class="job-title"><b>Job Title</b></div>
+          </div>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="1" rowspan="1" class="header">
+          <b>Week</b>
+        </mat-grid-tile>
+        <mat-grid-tile colspan="1" rowspan="1" class="header">
+          <b>Pay Period</b>
+        </mat-grid-tile>
+        <mat-grid-tile
+          *ngIf="emp?.showTEC()"
+          colspan="1"
+          rowspan="1"
+          class="tile header"
+        >
+          <b>TEC</b>
+        </mat-grid-tile>
+        <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1" class="header"
+          ><b>Clock</b></mat-grid-tile
+        >
+      </mat-grid-list>
+    </div>
+    
+    <div class="grid-container">
+      <mat-grid-list
+        class="grid"
+        cols="{{ emp.timeEntryCodes != null ? (emp?.showTEC() ? 6 : 5) : 3  }}"
+        rowHeight="15vh"
+        gutterSize=".4vh"
       >
-      <!-- Primary Job -->
-      <ng-container *ngFor="let Position of emp?.positions">
-        <ng-container *ngIf="Position?.primaryPosition == 'true'">
-          <!-- name -->
-          <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
-            {{ Position?.businessTitle }}
-          </mat-grid-tile>
-      
+        <!-- Primary Job -->
+        <ng-container *ngFor="let Position of emp?.positions">
+          <ng-container *ngIf="Position?.primaryPosition == 'true'">
+            <!-- name -->
+            <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
+              <div class="title-org">
+                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
+                <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
+              </div>
+            </mat-grid-tile>
+        
 
-          <!-- week total -->
-          <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
-          </mat-grid-tile>
+            <!-- week total -->
+            <mat-grid-tile colspan="1" rowspan="1">
+              {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
+            </mat-grid-tile>
 
-          <!-- pay period total -->
-          <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
-          </mat-grid-tile>
+            <!-- pay period total -->
+            <mat-grid-tile colspan="1" rowspan="1">
+              {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
+            </mat-grid-tile>
 
-          <!-- TEC -->
-          <mat-grid-tile *ngIf="emp?.showTEC()" colspan="1" rowspan="1">
-            <select id="{{Position.positionNumber}}" class="tecSelect" name="TEC">
-              <ng-container *ngFor="let entry of emp.timeEntryCodes">
-                <option *ngIf="entry.sortOrder === 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
-              </ng-container>
-              <ng-container *ngFor="let entry of emp.timeEntryCodes">
-                <option *ngIf="entry.sortOrder !== 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
-              </ng-container>
-            </select>
-          </mat-grid-tile>
+            <!-- TEC -->
+            <mat-grid-tile *ngIf="emp?.showTEC()" colspan="1" rowspan="1">
+              <select id="{{Position.positionNumber}}" class="tecSelect" name="TEC">
+                <ng-container *ngFor="let entry of emp.timeEntryCodes">
+                  <option *ngIf="entry.sortOrder === 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
+                </ng-container>
+                <ng-container *ngFor="let entry of emp.timeEntryCodes">
+                  <option *ngIf="entry.sortOrder !== 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
+                </ng-container>
+              </select>
+            </mat-grid-tile>
 
-          <!-- clock in/out -->
-          <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
-            <mat-radio-group
-              class="clock-group"
-              (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value)
-              "
-            >
-              <mat-radio-button
+            <!-- clock in/out -->
+            <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
+              <mat-radio-group
+                class="clock-group"
+              >
+                <mat-radio-button
+                  class="clock-button in"
+                  color="accent"
+                  [value]="punchType.In"
+                  [checked]="Position.inStatus"
+                  [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                  (click)="
+                  clockInOut(jobRef(Position.positionNumber), punchType.In)
+                "
+                  >IN</mat-radio-button
+                >
+                <mat-radio-button
+                  color = "warn"
+                  class="clock-button out"
+                  [value]="punchType.Out"
+                  [checked]="!Position.inStatus"
+                  [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                  (click)="
+                  clockInOut(jobRef(Position.positionNumber), punchType.Out)
+                "
+                  >OUT</mat-radio-button
+                >
+              </mat-radio-group>
+            </mat-grid-tile>
+          </ng-container>
+        </ng-container>
+
+        <!-- Non-Primary Jobs -->
+        <ng-container *ngFor="let Position of emp?.positions">
+          <ng-container *ngIf="Position?.primaryPosition == 'false'">
+            <!-- name -->
+            <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
+              <div class="title-org">
+                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
+                <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
+              </div>
+            </mat-grid-tile>
+        
+
+            <!-- week total -->
+            <mat-grid-tile colspan="1" rowspan="1">
+              {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
+            </mat-grid-tile>
+
+            <!-- pay period total -->
+            <mat-grid-tile colspan="1" rowspan="1">
+              {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
+            </mat-grid-tile>
+
+            <!-- TEC -->
+            <mat-grid-tile *ngIf="emp?.showTEC()" colspan="1" rowspan="1">
+              <select id="{{Position.positionNumber}}" class="tecSelect" name="TEC">
+                <ng-container *ngFor="let entry of emp.timeEntryCodes">
+                  <option *ngIf="entry.sortOrder === 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
+                </ng-container>
+                <ng-container *ngFor="let entry of emp.timeEntryCodes">
+                  <option *ngIf="entry.sortOrder !== 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
+                </ng-container>
+              </select>
+            </mat-grid-tile>
+
+            <!-- clock in/out -->
+            <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
+              <mat-radio-group
+                class="clock-group"
+              >
+                <mat-radio-button
                 class="clock-button in"
                 color="accent"
                 [value]="punchType.In"
                 [checked]="Position.inStatus"
+                [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                (click)="
+                  clockInOut(jobRef(Position.positionNumber), punchType.In)
+                "
                 >IN</mat-radio-button
               >
               <mat-radio-button
@@ -92,72 +175,19 @@
                 class="clock-button out"
                 [value]="punchType.Out"
                 [checked]="!Position.inStatus"
+                [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
+                (click)="
+                  clockInOut(jobRef(Position.positionNumber), punchType.Out)
+                "
                 >OUT</mat-radio-button
               >
-            </mat-radio-group>
-          </mat-grid-tile>
+              </mat-radio-group>
+            </mat-grid-tile>
+          </ng-container>
         </ng-container>
-      </ng-container>
 
-      <!-- Non-Primary Jobs -->
-      <ng-container *ngFor="let Position of emp?.positions">
-        <ng-container *ngIf="Position?.primaryPosition == 'false'">
-          <!-- name -->
-          <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
-            {{ Position?.businessTitle }}
-          </mat-grid-tile>
-      
-
-          <!-- week total -->
-          <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalWeekHours ? Position?.totalWeekHours : "⌀" }}
-          </mat-grid-tile>
-
-          <!-- pay period total -->
-          <mat-grid-tile colspan="1" rowspan="1">
-            {{ Position?.totalPeriodHours ? Position?.totalPeriodHours : "⌀" }}
-          </mat-grid-tile>
-
-          <!-- TEC -->
-          <mat-grid-tile *ngIf="emp?.showTEC()" colspan="1" rowspan="1">
-            <select id="{{Position.positionNumber}}" class="tecSelect" name="TEC">
-              <ng-container *ngFor="let entry of emp.timeEntryCodes">
-                <option *ngIf="entry.sortOrder === 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
-              </ng-container>
-              <ng-container *ngFor="let entry of emp.timeEntryCodes">
-                <option *ngIf="entry.sortOrder !== 1" value="{{ entry.id }}">{{ entry.frontendName }}</option>
-              </ng-container>
-            </select>
-          </mat-grid-tile>
-
-          <!-- clock in/out -->
-          <mat-grid-tile *ngIf="emp.timeEntryCodes != null" colspan="2" rowspan="1">
-            <mat-radio-group
-              class="clock-group"
-              (change)="
-                clockInOut(jobRef(Position.positionNumber), $event.value)
-              "
-            >
-              <mat-radio-button
-              class="clock-button in"
-              color="accent"
-              [value]="punchType.In"
-              [checked]="Position.inStatus"
-              >IN</mat-radio-button
-            >
-            <mat-radio-button
-              color = "warn"
-              class="clock-button out"
-              [value]="punchType.Out"
-              [checked]="!Position.inStatus"
-              >OUT</mat-radio-button
-            >
-            </mat-radio-group>
-          </mat-grid-tile>
-        </ng-container>
-      </ng-container>
-
-    </mat-grid-list>
+      </mat-grid-list>
+    </div>
   </mat-card>
 
   <button

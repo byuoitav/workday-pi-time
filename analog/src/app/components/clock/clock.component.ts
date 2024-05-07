@@ -17,6 +17,7 @@ import { ToastService } from "src/app/services/toast.service";
 import { ConfirmDialog } from "src/app/dialogs/confirm/confirm.dialog";
 import {ErrorDialog} from "src/app/dialogs/error/error.dialog";
 import { InternationalDialog } from "src/app/dialogs/international/international.dialog";
+import { DoubleDialog } from "src/app/dialogs/double/double.dialog";
 
 @Component({
   selector: "clock",
@@ -87,6 +88,14 @@ export class ClockComponent implements OnInit {
     return ref;
   }
 
+  trimTitle = (title: string) => {
+    if (title.length > 23) {
+      const first = title.substring(0, 23);
+        return `${first}...`;
+    } 
+    return title;
+  }
+
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
   
@@ -117,68 +126,105 @@ export class ClockComponent implements OnInit {
       return
     }
 
-    //Check that jobs are not already clocked in
-    if (state === "I") {
-      for (var i = 0; i < this.emp.positions.length; i++) {
-        if (this.emp.positions[i].inStatus) {
-          this.dialog.open(ErrorDialog, {
-            data: {
-              msg: "A Job is Already Clocked In"
-            }
-          })
-          this.refreshPage();
-          return
-        }
+    //Check that other jobs are not already clocked in
+    for (var i = 0; i < this.emp.positions.length; i++) {
+      if (this.emp.positions[i].inStatus && this.emp.positions[i].positionNumber !== jobRef.value.positionNumber) {
+        this.dialog.open(ErrorDialog, {
+          data: {
+            msg: "A Different Job is Already Clocked In"
+          }
+        })
+        this.refreshPage();
+        return
       }
     }
 
-    //Construct and Send Punch Request
-    const data = new PunchRequest();
-    data.id = this.emp.id;
-    data.positionNumber = String(jobRef.value.positionNumber);
-    data.clockEventType = state === "I" ? "IN" : "OUT";
-    data.timeEntryCode = tec;
-    
-    const obs = this.api.punch(data).pipe(share());
-    obs.subscribe({
-      next: (resp) => {
-        const response = JSON.parse(resp);
-        if (response.written_to_tcd === 'true') {
-          this.dialog.open(ConfirmDialog, {
-            data: {state: data.clockEventType}
-          })
-          .afterClosed()
-          .subscribe(confirmed => {
-            if (confirmed === "logout") {
-              this.logout();
-            }
-            else if (confirmed === "confirmed") {
-              this.refreshPage();
-            }
-          })
-        } else {
-          console.log(resp.written_to_tcd)
-          this.refreshPage();
-          this.dialog.open(ErrorDialog, {
-            data: {
-              msg: "The Punch was not Submitted Successfully"
-            }
-          })
+
+    //Check to see if they are double clocking
+    if (state === "I" && jobRef.value.inStatus) {
+      this.dialog.open(DoubleDialog, {
+        data: {
+          msg: "Are you sure you want to clock in again?"
         }
-         
-      },
-      error: (err) => {
+      }).afterClosed()
+      .subscribe(confirmed => {
+        if (confirmed === "cancel") {
+          return
+        }
+        else if (confirmed === "continue") {
+          this.sendPunch(jobRef, state, tec)
+        }
+      })
+    } else if (state === "O" && !jobRef.value.inStatus) {
+      this.dialog.open(DoubleDialog, {
+        data: {
+          msg: "Are you sure you want to clock out again?"
+        }
+      }).afterClosed()
+      .subscribe(confirmed => {
+        if (confirmed === "cancel") {
+          return
+        }
+        else if (confirmed === "continue") {
+          this.sendPunch(jobRef, state, tec)
+        }
+      })
+    } 
+    // If it is a normal punch, send it
+    else {
+      this.sendPunch(jobRef, state, tec)
+    }
+  };
+
+  
+sendPunch = (jobRef: BehaviorSubject<Position>, state: PunchType, tec: String) => {
+  //Construct and Send Punch Request
+  const data = new PunchRequest();
+  data.id = this.emp.id;
+  data.positionNumber = String(jobRef.value.positionNumber);
+  data.clockEventType = state === "I" ? "IN" : "OUT";
+  data.timeEntryCode = tec;
+
+  const obs = this.api.punch(data).pipe(share());
+  obs.subscribe({
+    next: (resp) => {
+      const response = JSON.parse(resp);
+      if (response.written_to_tcd === 'true') {
+        this.dialog.open(ConfirmDialog, {
+          data: {state: data.clockEventType}
+        })
+        .afterClosed()
+        .subscribe(confirmed => {
+          if (confirmed === "logout") {
+            this.logout();
+          }
+          else if (confirmed === "confirmed") {
+            this.refreshPage();
+          }
+        })
+      } else {
+        console.log(resp.written_to_tcd)
         this.refreshPage();
-        console.warn("response ERROR", err);
         this.dialog.open(ErrorDialog, {
           data: {
             msg: "The Punch was not Submitted Successfully"
           }
         })
-        
       }
+      
+    },
+    error: (err) => {
+      this.refreshPage();
+      console.warn("response ERROR", err);
+      this.dialog.open(ErrorDialog, {
+        data: {
+          msg: "The Punch was not Submitted Successfully"
+        }
+      })
+      
+    }
   });
-  };
+};
 
   toTimesheet = () => {
     this._empRef.selectedDate = new Date();

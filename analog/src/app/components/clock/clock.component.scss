@@ -7,6 +7,28 @@ $card-width: 95%;
   min-inline-size: 100%;
 }
 
+.title-org {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+.job-title {
+  text-align: left;
+  min-width: 100%;
+  font-size: .93em;
+}
+
+.supervisory-org {
+  color: #1b65bf;
+  text-decoration: bold;
+  font-size: .7em;
+  text-align: left;
+  min-width: 100%;
+
+}
+
 .tecSelect {
   background-color: white;
   border-radius: 20px;
@@ -42,6 +64,27 @@ $card-width: 95%;
     margin: 0 0 0.5em;
     break-inside: avoid;
   }
+}
+
+.grey-out {
+  color: rgb(177, 177, 177) !important;
+  border-color: rgb(177, 177, 177) !important;   
+  ::ng-deep .mdc-label {
+    color: rgb(177, 177, 177) !important;
+  }
+  --mdc-radio-disabled-selected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-disabled-unselected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-hover-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-unselected-pressed-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-focus-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-hover-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-icon-color: rgb(177,177,177) !important;
+  --mdc-radio-selected-pressed-icon-color: rgb(177,177,177) !important;
+  --mat-radio-ripple-color: rgb(177,177,177) !important;
+  --mat-radio-checked-ripple-color: rgb(177,177,177) !important;
+  --mat-radio-disabled-label-color: rgb(177,177,177) !important;
+    
 }
 
 .totals {
@@ -96,6 +139,17 @@ $card-width: 95%;
         content: "";
       }
     }
+    &.job-header {
+      &:after {
+        $width: 70%;
+        position: absolute;
+        bottom: 29%;
+        height: 3%;
+        width: $width;
+        background-color: #c5c5c5;
+        content: "";
+      }
+    }
   }
 }
 
@@ -142,7 +196,3 @@ $card-width: 95%;
   }
 }
 
-.title {
-  display: flex;
-  justify-content: flex-start;
-}
