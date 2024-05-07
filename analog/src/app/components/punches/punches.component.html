@@ -5,7 +5,7 @@
 <div *ngIf="dayHasPunch(day.time) || dayHasPeriod(day.time)" class="contents">
 	
 	<div class="jobBlock" *ngFor="let pos of emp.positions">
-		<span class="businessTitle"> {{ pos.businessTitle }} </span>
+		<span class="businessTitle"> {{ pos.businessTitle }} ({{pos.supervisoryOrg}}) </span>
 		<hr class="divider">
 		<div class="container">
 			<div class="col1">

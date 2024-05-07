@@ -43,6 +43,7 @@ import { PunchesComponent } from "./components/punches/punches.component";
 import { ScreenSaverComponent } from "./components/screen-saver/screen-saver.component";
 import { ToastService } from "./services/toast.service";
 import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
+import { DoubleDialog } from './dialogs/double/double.dialog';
 @NgModule({
     declarations: [
         AppComponent,
@@ -57,6 +58,7 @@ import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
         PunchesComponent,
         ScreenSaverComponent,
         ConfirmDialog,
+        DoubleDialog,
         ManagementComponent,
     ],
     imports: [
