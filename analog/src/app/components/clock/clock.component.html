@@ -60,7 +60,7 @@
             <!-- name -->
             <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
               <div class="title-org">
-                <div class="job-title">{{ Position?.businessTitle }}</div>
+                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
                 <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
               </div>
             </mat-grid-tile>
@@ -126,7 +126,7 @@
             <!-- name -->
             <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
               <div class="title-org">
-                <div class="job-title">{{ Position?.businessTitle }}</div>
+                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
                 <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
               </div>
             </mat-grid-tile>

@@ -82,10 +82,10 @@ export class OrgConverter implements JsonCustomConvert<String> {
   }
 
   deserialize(org: any): String {
-    if (org.length > 24) {
-      const firstTen = org.substring(0, 15);
-        const lastTen = org.substring(org.length - 15);
-        return `${firstTen}... ${lastTen}`;
+    if (org.length > 29) {
+      const first = org.substring(0, 15);
+        const last = org.substring(org.length - 15);
+        return `${first}... ${last}`;
     } 
     return org;
   }

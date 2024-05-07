@@ -88,6 +88,14 @@ export class ClockComponent implements OnInit {
     return ref;
   }
 
+  trimTitle = (title: string) => {
+    if (title.length > 23) {
+      const first = title.substring(0, 23);
+        return `${first}...`;
+    } 
+    return title;
+  }
+
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
   
