@@ -1,5 +1,5 @@
 <mat-toolbar color="primary">
-  <object type="image/svg+xml" data="./assets/byu_logo.svg"></object>
+  <div class="byu-logo" [innerHTML]="svgPreloadService.byuLogo"></div>
   <span>Y-Time</span> <span class="header-spacer"></span>
   <span (click)="logout()">{{ emp?.name }} </span>
   <button (click)="logout()" mat-icon-button>

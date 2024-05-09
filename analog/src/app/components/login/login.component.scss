@@ -2,6 +2,25 @@
   flex: 1 1 auto;
 }
 
+.input {
+  max-width: 50%;
+}
+
+.byu-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.byu-medallion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 70%;
+  width: 70%;
+}
+
 .login {
   height: 90%;
   width: 100%;
@@ -22,6 +41,8 @@
   .id {
     height: 19vh;
     font-size: 8vh;
+    display: flex;
+    align-items: flex-end;
   }
 
   .logo {

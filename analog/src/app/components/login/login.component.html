@@ -1,5 +1,5 @@
 <mat-toolbar color="primary">
-	<object type="image/svg+xml" data="./assets/byu_logo.svg"></object>
+	<div class="byu-logo" [innerHTML]="svgPreloadService.byuLogo"></div>
 	<span>Y-Time</span> <span class="header-spacer"></span>
 </mat-toolbar>
 <div class="management">
@@ -9,8 +9,7 @@
 	<div class="input">
 		<span *ngIf="id?.length > 0" class="id">{{ id | byuID }}</span>
 		<span *ngIf="id?.length == 0" class="id">Enter BYU ID</span>
-
-		<object id="medallion"  type="image/svg+xml" data="./assets/byu_medallion.svg" class="logo "></object>
+		<div class="byu-medallion"  id="medallion" [innerHTML]="svgPreloadService.byuMedallion"></div>
 	</div>
 
 	<div class="num-pad">
