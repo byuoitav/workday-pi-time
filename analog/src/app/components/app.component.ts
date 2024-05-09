@@ -1,7 +1,12 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, Injectable} from "@angular/core";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import {Router} from "@angular/router";
 import {MatDialog} from "@angular/material/dialog";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {SvgPreloadService} from "../services/svg-preload.service";
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Observable } from 'rxjs';
+
 
 @Component({
   selector: "analog",
@@ -9,10 +14,40 @@ import {MatSnackBar} from "@angular/material/snack-bar";
   styleUrls: ["./app.component.scss"]
 })
 export class AppComponent implements OnInit {
-  constructor(private router: Router, private dialog: MatDialog, private snackbar: MatSnackBar) {}
+
+
+  constructor(
+    private router: Router, 
+    private dialog: MatDialog, 
+    private snackbar: MatSnackBar,
+    public svgPreloadService: SvgPreloadService,
+    private sanitizer: DomSanitizer ,
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
     let count = 0;
+
+    // Preload SVG logos
+    this.loadImages("assets/byu_logo.svg").subscribe(
+      (result) => {
+        this.svgPreloadService.byuLogo = this.sanitizer.bypassSecurityTrustHtml(result);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+
+    this.loadImages("assets/byu_medallion.svg").subscribe(
+      (result) => {
+        this.svgPreloadService.byuMedallion = this.sanitizer.bypassSecurityTrustHtml(result);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+
+
 
     window.addEventListener("click", () => {
       count = 0;
@@ -48,4 +83,18 @@ export class AppComponent implements OnInit {
       }
     }, 1000);
   }
+
+  loadImages(src: string): Observable<string> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'image/svg+xml'
+    });
+
+    return this.http.get(src, { 
+      headers: headers,
+      responseType: 'text' 
+    });
+  }
 }
+
+
+
