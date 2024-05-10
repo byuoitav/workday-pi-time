@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, Input } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { MatDialog } from "@angular/material/dialog";
 
@@ -18,6 +18,7 @@ import { ConfirmDialog } from "src/app/dialogs/confirm/confirm.dialog";
 import {ErrorDialog} from "src/app/dialogs/error/error.dialog";
 import { InternationalDialog } from "src/app/dialogs/international/international.dialog";
 import { DoubleDialog } from "src/app/dialogs/double/double.dialog";
+import { SvgPreloadService } from "src/app/services/svg-preload.service";
 
 @Component({
   selector: "clock",
@@ -41,13 +42,16 @@ export class ClockComponent implements OnInit {
     private router: Router,
     public api: APIService,
     public dialog: MatDialog,
-    private toast: ToastService
+    private toast: ToastService,
+    public svgPreloadService: SvgPreloadService
   ) {}
 
   ngOnInit() {
     this.route.data.subscribe(data => {
       this._empRef = data.empRef;
     });
+
+    console.log(this.svgPreloadService.byuLogo);
 
     if (!this.api.employee_cache || !this.api.timeevents_online || !this.api.workdayAPI_online) {
       this.toast.show(

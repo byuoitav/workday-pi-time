@@ -1,6 +1,8 @@
 import {Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
 import {APIService} from "../../services/api.service";
+import { SvgPreloadService } from "src/app/services/svg-preload.service";
+
 
 
 @Component({
@@ -11,8 +13,11 @@ import {APIService} from "../../services/api.service";
 export class LoginComponent implements OnInit {
   id = "";
 
-  constructor(public api: APIService, private router: Router) {
-  }
+  constructor(
+    public api: APIService, 
+    private router: Router,
+    public svgPreloadService: SvgPreloadService
+  ) { }
 
   ngOnInit() {}
 
@@ -36,14 +41,12 @@ export class LoginComponent implements OnInit {
   };
 
   loadAnimation = () => {
-    const logo = document.getElementById("medallion") as HTMLObjectElement;
-    const blueCircle = logo.contentDocument.getElementById("blueCircle") as HTMLElement;
+    const blueCircle = document.getElementById("blueCircle") as HTMLElement;
     blueCircle.classList.add("loader");
   }
 
   stopAnimation = () => {
-    const logo = document.getElementById("medallion") as HTMLObjectElement;
-    const blueCircle = logo.contentDocument.getElementById("blueCircle") as HTMLElement;
+    const blueCircle = document.getElementById("blueCircle") as HTMLElement;
     blueCircle.classList.remove("loader");
   }
 }

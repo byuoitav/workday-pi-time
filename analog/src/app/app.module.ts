@@ -44,6 +44,7 @@ import { ScreenSaverComponent } from "./components/screen-saver/screen-saver.com
 import { ToastService } from "./services/toast.service";
 import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
 import { DoubleDialog } from './dialogs/double/double.dialog';
+import { SvgPreloadService } from "./services/svg-preload.service";
 @NgModule({
     declarations: [
         AppComponent,
@@ -59,7 +60,7 @@ import { DoubleDialog } from './dialogs/double/double.dialog';
         ScreenSaverComponent,
         ConfirmDialog,
         DoubleDialog,
-        ManagementComponent,
+        ManagementComponent
     ],
     imports: [
         BrowserModule,
