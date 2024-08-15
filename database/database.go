@@ -478,7 +478,7 @@ func ReturnCurrentPayPeriod() (start, end time.Time) {
 	start = payPeriodAnchorDate.AddDate(0, 0, periodsSince*14)
 	end = start.AddDate(0, 0, 13)
 	end = end.Add(24*time.Hour - 1*time.Second)
-
+	slog.Info("return current pay period", "start", start, "end", end)
 	return
 }
 
@@ -491,6 +491,7 @@ func ReturnCurrentWeek() (time.Time, time.Time) {
 	start = payPeriodAnchorDate.AddDate(0, 0, weeksSince*7)
 	end = start.AddDate(0, 0, 6)
 	end = end.Add(24*time.Hour - 1*time.Second)
+	slog.Info("return current week", "start", start, "end", end)
 
 	return start, end
 }
@@ -621,13 +622,14 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err
 
 // look at reported date and determine if it is within the current date range
 func isInDateRange(periodBlock *PeriodBlocks, timeStart time.Time, timeEnd time.Time) bool {
+	loc, _ := time.LoadLocation("America/Denver")
+	blockDate, err := time.ParseInLocation("2006-01-02", periodBlock.Reported_Date, loc)
 
-	blockDate, err := time.Parse("2006-01-02", periodBlock.Reported_Date)
 	if err != nil {
 		return false
 	}
 
-	if blockDate.After(timeStart) && blockDate.Before(timeEnd) {
+	if blockDate.After(timeStart) && blockDate.Before(timeEnd) || blockDate.Equal(timeStart) {
 		return true
 	}
 	return false
