@@ -378,6 +378,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		Is_Active_Position bool   `json:"is_active_position"`
 		Business_Title     string `json:"business_title"`
 		Supervisory_Org    string `json:"supervisory_org"`
+		Manager_Name       string `json:"manager_name"`
 	}
 	var databasePositions []databasePosition
 	err = json.Unmarshal([]byte(emp.Positions), &databasePositions)
@@ -389,7 +390,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		if v.Is_Active_Position {
 			var position Position
 			position.Business_Title = v.Business_Title
-			position.Supervisory_Org = v.Supervisory_Org
+			position.Supervisory_Org = fmt.Sprintf("%s (%s)", v.Supervisory_Org, v.Manager_Name)
 			position.Position_Number = v.Position_Number
 			position.Primary_Position = strconv.FormatBool(v.Primary_Position)
 
