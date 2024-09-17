@@ -80,7 +80,24 @@ type PeriodBlocks struct {
 	Reported_Date                  string `json:"reported_date"`
 }
 
-// JSON from workday custom API
+// JSON from new workday custom API
+type WorkdayTimeBlocksReport struct {
+	Report_Entry []WorkdayTimeBlock `json:"Report_Entry"`
+}
+
+type WorkdayTimeBlock struct {
+	Worker_ID            string `json:"employee_id"`
+	Time_Code_Groups     string `json:"time_code_group"`
+	International_Status string `json:"intl_student"`
+	In_Time              string `json:"in_time,omitempty"`
+	Out_Time             string `json:"out_time,omitempty"`
+	Position             string `json:"position"`
+	Time_Type            string `json:"time_type,omitempty"`
+	Hours                string `json:"hours"`
+	Reference_ID         string `json:"reference_id,omitempty"`
+}
+
+// JSON from old workday custom API
 type WorkdayEmployeeTimeReport struct {
 	Report_Entry []WorkdayWorkerTimeData `json:"Report_Entry"`
 }
@@ -407,12 +424,14 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 func GetTimeSheet(byuID string, employeeData *Employee) error {
 	slog.Debug("start GetTimeGroups")
 	var workerTimeData WorkdayEmployeeTimeReport
+	var workerTimeBlocks WorkdayTimeBlocksReport
 	var err error
 
 	today := time.Now()
 	today = today.AddDate(0, 0, 1)
 	lastMonth := today.AddDate(0, -1, 0)
 
+	//Get First API Data
 	url := apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timekeeping_System?employee_id=" + byuID + "&start_date=" +
 		lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
 	slog.Debug("making request to", "url", url)
@@ -445,7 +464,40 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 		return fmt.Errorf("no employee_id returned")
 	}
 
-	err = MapEmployeeTimeData(employeeData, &workerTimeData.Report_Entry[0])
+	//Get Second API data
+	url = apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timeclocks?employee_id=" + byuID + "&start_date=" +
+		lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
+	slog.Debug("making request to", "url", url)
+
+	//client := &http.Client{}
+
+	req, err = http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", "Basic "+basicAuth(apiUser, apiPassword))
+
+	response, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	body, err = io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	slog.Debug("attempting to unmarshall workerTimeData")
+	err = json.Unmarshal(body, &workerTimeBlocks)
+	if err != nil {
+		slog.Error("error unmarshalling workerTimeData", "error", err)
+		return err
+	}
+	if workerTimeData.Report_Entry[0].Worker_ID == "" {
+		return fmt.Errorf("no employee_id returned")
+	}
+
+	err = MapEmployeeTimeData(employeeData, &workerTimeData.Report_Entry[0], &workerTimeBlocks)
 	if err != nil {
 		return err
 	}
@@ -497,7 +549,7 @@ func ReturnCurrentWeek() (time.Time, time.Time) {
 	return start, end
 }
 
-func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err error) {
+func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData, workerTimeBlocks *WorkdayTimeBlocksReport) (err error) {
 	//don't do anything if there is no data for the worker from the Workday API
 
 	block_positionNumber := make(map[string]string)
@@ -514,7 +566,7 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err
 		}
 	}
 
-	//build period_puhcnes
+	//build period_puhcnes - aka time events
 	var periodPunch PeriodPunches
 	for _, v := range worker.Time_Clock_Events {
 		if v.Timeblock_Ref_ID == "" { //add to peroid_punches slice if not associated with a time block
@@ -553,14 +605,23 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err
 	var totalWeekHours, totalPeriodHours float64
 
 	//loop through returned time blocks and add create the table in employee.PeriodBlocks for the JSON return
-	for _, v := range worker.Time_Blocks {
+	for _, v := range workerTimeBlocks.Report_Entry {
+		if v.In_Time == "" || v.Out_Time == "" { //if no valid time don't add the block
+			continue
+		}
+
+		//parse for time to use for reported date
+		reportedDate, err := time.Parse(time.RFC3339, block_timeIn[v.Reference_ID])
+		if err != nil {
+			slog.Debug("Error parsing date:", "error", err)
+			reportedDate = time.Now()
+		}
+
 		periodBlock.Position_Number = v.Position
 		periodBlock.Business_Title = positionTDtoName[v.Position]
 		periodBlock.Length = v.Hours
-		periodBlock.Time_Clock_Event_Date_Time_IN = block_timeIn[v.Reference_ID]
-		periodBlock.Time_Clock_Event_Date_Time_OUT = block_timeOut[v.Reference_ID]
 		periodBlock.ReferenceID = v.Reference_ID
-		periodBlock.Reported_Date = v.Reported_Date
+		periodBlock.Reported_Date = reportedDate.Format("2006-01-02")
 		periodBlock.Time_Clock_Event_Date_Time_IN = v.In_Time
 		periodBlock.Time_Clock_Event_Date_Time_OUT = v.Out_Time
 
