@@ -611,7 +611,8 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData, work
 		}
 
 		//parse for time to use for reported date
-		reportedDate, err := time.Parse(time.RFC3339, block_timeIn[v.Reference_ID])
+		//reportedDate, err := time.Parse(time.RFC3339, block_timeIn[v.Reference_ID])
+		reportedDate, err := time.Parse(time.RFC3339, v.In_Time)
 		if err != nil {
 			slog.Debug("Error parsing date:", "error", err)
 			reportedDate = time.Now()
