@@ -168,7 +168,7 @@ func init() {
 
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		slog.Error("error opening database:", err)
+		slog.Error("error opening database:", "err", err)
 		os.Exit(1)
 	}
 	getGlobalVars()
