@@ -56,11 +56,12 @@ h4 {
 
 .times {
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     justify-content: space-between;
     font-weight: bold;
     font-size: 1.2em;
-    padding: 15px;
+    padding: 8px;
     color: white;
     background-color: #002e5d;
     margin: 5px;
@@ -74,7 +75,7 @@ h4 {
     justify-content: space-between;
     font-weight: bold;
     font-size: 1.1em;
-    padding: 15px;
+    padding: 8px;
     color: #002e5d;
     background-color: white;
     margin: 5px;
@@ -99,3 +100,10 @@ h4 {
     color: #b52828;
 }
 
+.timeCodeName {
+    display: block;
+    font-size: 0.9em;
+    text-align: center;
+    width: 100%;
+    font-style: italic;
+}

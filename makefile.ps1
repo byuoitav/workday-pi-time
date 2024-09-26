@@ -59,7 +59,7 @@ function Deps {
 
     Write-Output "Downloading Frontend Dependencies"
     Set-Location "analog"
-    Invoke-Expression "npm install"
+    Invoke-Expression "npm install --legacy-peer-dep"
     Invoke-Expression "cd .."
     Write-Output "Exiting \analog"
 

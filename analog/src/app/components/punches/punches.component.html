@@ -15,9 +15,11 @@
 					<div *ngIf="d.time.getDate() === day?.time.getDate() && d.time.getMonth() === day?.time.getMonth()">
 						<div class="period" *ngFor="let period of d?.periodBlocks">
 							<div class="times" >
+								<div class="timeCodeName"> {{ period?.timeCodeName === undefined ? "!" :period?.timeCodeName }} </div>
 								<div class="start">
 									{{ period?.startDate === undefined ? "!" : getAMPMTimeFromDate(period?.startDate) }}
 								</div>
+								
 								<div class="end">
 									{{ period?.endDate === undefined ? "!" : getAMPMTimeFromDate(period?.endDate) }}
 								</div>

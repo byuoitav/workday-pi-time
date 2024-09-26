@@ -14,11 +14,28 @@ $card-width: 95%;
   min-inline-size: 100%;
 }
 
-.title-org {
+.title-org-main {
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
   min-width: 100%;
+}
+
+.title-org {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+
+
+.job-title-main {
+  text-align: left;
+  min-width: 100%;
+  font-size: .93em;
 }
 
 .job-title {
@@ -32,8 +49,33 @@ $card-width: 95%;
   text-decoration: bold;
   font-size: .7em;
   text-align: left;
-  min-width: 100%;
+  min-width: 100%; 
+}
 
+.scroll-container{
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.scroll{
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  // padding-left: 100%;
+  animation: marquee 8s linear infinite;
+}
+.scroll span{
+  display: inline-block;
+  padding-right: 25px;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 .tecSelect {
