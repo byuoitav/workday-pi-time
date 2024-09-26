@@ -217,6 +217,9 @@ elseif ($COMMAND -eq "Deploy" ) {
     DockerFunc
     Deploy
 }
+elseif ($COMMAND -eq "DeployOnly" ) {
+    Deploy
+}
 else {
     Write-Output "Please include a valid command parameter"
 }
