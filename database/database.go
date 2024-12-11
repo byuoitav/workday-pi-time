@@ -167,7 +167,7 @@ func init() {
 
 	// setup database connection
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable connect_timeout=%s",
+		"password=%s dbname=%s sslmode=require connect_timeout=%s",
 		host, port, user, password, dbname, database_timeout)
 
 	db, err = sql.Open("postgres", psqlInfo)
