@@ -119,7 +119,7 @@
                   [checked]="Position.inStatus"
                   [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
                   (click)="
-                  clockInOutEvent(jobRef(Position.positionNumber), punchType.In,$event)
+                  clockInOut(jobRef(Position.positionNumber), punchType.In)
                 "
                   >IN</mat-radio-button
                 >
@@ -130,7 +130,7 @@
                   [checked]="!Position.inStatus"
                   [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
                   (click)="
-                  clockInOutEvent(jobRef(Position.positionNumber), punchType.Out,$event)
+                  clockInOut(jobRef(Position.positionNumber), punchType.Out)
                 "
                   >OUT</mat-radio-button
                 >
