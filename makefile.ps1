@@ -3,7 +3,7 @@ $COMMAND = $args[0]
 $NAME = "workday-pi-time"
 $OWNER = "byuoitav"
 $PKG = "github.com/$OWNER/$NAME"
-$DOCKER_URL = "docker.pkg.github.com"
+$DOCKER_URL = "ghcr.io"
 $DOCKER_PKG = "$DOCKER_URL/$OWNER/$NAME"
 
 Write-Output "PKG: $PKG"
@@ -59,7 +59,7 @@ function Deps {
 
     Write-Output "Downloading Frontend Dependencies"
     Set-Location "analog"
-    Invoke-Expression "npm install"
+    Invoke-Expression "npm install --legacy-peer-dep"
     Invoke-Expression "cd .."
     Write-Output "Exiting \analog"
 
@@ -215,6 +215,9 @@ elseif ($COMMAND -eq "Deploy" ) {
     Deps
     Build
     DockerFunc
+    Deploy
+}
+elseif ($COMMAND -eq "DeployOnly" ) {
     Deploy
 }
 else {

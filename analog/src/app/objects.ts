@@ -339,6 +339,9 @@ export class PeriodBlock {
 
   @JsonProperty("reference_id", String, false)
   referenceID: string = undefined;
+
+  @JsonProperty("time_entry_code_ref_id_name", String, false)
+  timeCodeName: string = undefined;
 }
 
 @JsonObject("Day")

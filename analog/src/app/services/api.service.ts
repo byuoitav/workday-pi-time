@@ -181,18 +181,20 @@ export class APIService {
           employee.error("Unable to Connect to API");
         }
         else if (err.status === 404) {
-          employee.error("Error 404: API not Found")
+          employee.error("Error 404: This timeclock is offline")
         }
         else if (err.status === 503) {
           if (err.error.error.substring(0, 9) === "no worker") {
             employee.error("No Worker Matches ID");
           }
           else {
-            employee.error(err.error.error)
+            //employee.error(err.error.error)
+            employee.error("Unknown Error, please try again or use other methods to clock in/out")
           }
         } 
         else {
-          employee.error("Error " + err.status + ": " + err.statusText + "\r\n" + err.message);
+          // employee.error("Error " + err.status + ": " + err.statusText + "\r\n" + err.message);
+          employee.error("Unknown Error, please clock in using other methods and report this issue to your supervisor")
         }
         
       }

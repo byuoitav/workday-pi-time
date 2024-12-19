@@ -33,16 +33,17 @@ type PunchResponse struct {
 }
 
 type Employee struct {
-	Employee_Name        string           `json:"employee_name"`
-	Worker_ID            string           `json:"worker_id"`
-	International_Status string           `json:"international_status"`
-	Total_Week_Hours     string           `json:"total_week_hours"`
-	Total_Period_Hours   string           `json:"total_period_hours"`
-	PositionsList        []string         `json:"positions_list"`
-	Time_Entry_Codes     []TimeEntryCodes `json:"time_entry_codes"`
-	Positions            []Position       `json:"positions"`
-	Period_Punches       []PeriodPunches  `json:"period_punches"`
-	Period_Blocks        []PeriodBlocks   `json:"period_blocks"`
+	Employee_Name        string            `json:"employee_name"`
+	Worker_ID            string            `json:"worker_id"`
+	International_Status string            `json:"international_status"`
+	Total_Week_Hours     string            `json:"total_week_hours"`
+	Total_Period_Hours   string            `json:"total_period_hours"`
+	PositionsList        []string          `json:"positions_list"`
+	Time_Entry_Codes     []TimeEntryCodes  `json:"time_entry_codes"`
+	Positions            []Position        `json:"positions"`
+	Period_Punches       []PeriodPunches   `json:"period_punches"`
+	Period_Blocks        []PeriodBlocks    `json:"period_blocks"`
+	TimeCodeNameLookup   map[string]string `json:"-"`
 }
 
 type TimeEntryCodes struct {
@@ -71,16 +72,36 @@ type PeriodPunches struct {
 
 // time blocks - may have matched
 type PeriodBlocks struct {
-	Position_Number                string `json:"position_number"`
-	Business_Title                 string `json:"business_title"`
-	Time_Clock_Event_Date_Time_IN  string `json:"time_clock_event_date_time_in"`
-	Time_Clock_Event_Date_Time_OUT string `json:"time_clock_event_date_time_out"`
-	Length                         string `json:"length"`
-	ReferenceID                    string `json:"reference_id"`
-	Reported_Date                  string `json:"reported_date"`
+	Position_Number                    string `json:"position_number"`
+	Business_Title                     string `json:"business_title"`
+	Time_Clock_Event_Date_Time_IN      string `json:"time_clock_event_date_time_in"`
+	Time_Clock_Event_Date_Time_OUT     string `json:"time_clock_event_date_time_out"`
+	Length                             string `json:"length"`
+	ReferenceID                        string `json:"reference_id"`
+	Reported_Date                      string `json:"reported_date"`
+	Time_Entry_Code_Ref_ID_from_Source string `json:"time_entry_code_ref_id_from_source,omitempty"`
+	Time_Entry_Code_Ref_ID_Name        string `json:"time_entry_code_ref_id_name,omitempty"`
 }
 
-// JSON from workday custom API
+// JSON from new workday custom API
+type WorkdayTimeBlocksReport struct {
+	Report_Entry []WorkdayTimeBlock `json:"Report_Entry"`
+}
+
+type WorkdayTimeBlock struct {
+	Worker_ID                          string `json:"employee_id"`
+	Time_Code_Groups                   string `json:"time_code_group"`
+	International_Status               string `json:"intl_student"`
+	In_Time                            string `json:"in_time,omitempty"`
+	Out_Time                           string `json:"out_time,omitempty"`
+	Position                           string `json:"position"`
+	Time_Type                          string `json:"time_type,omitempty"`
+	Hours                              string `json:"hours"`
+	Reference_ID                       string `json:"reference_id,omitempty"`
+	Time_Entry_Code_Ref_ID_from_Source string `json:"Time_Entry_Code_Ref_ID_from_Source,omitempty"`
+}
+
+// JSON from old workday custom API
 type WorkdayEmployeeTimeReport struct {
 	Report_Entry []WorkdayWorkerTimeData `json:"Report_Entry"`
 }
@@ -146,12 +167,12 @@ func init() {
 
 	// setup database connection
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable connect_timeout=%s",
+		"password=%s dbname=%s sslmode=require connect_timeout=%s",
 		host, port, user, password, dbname, database_timeout)
 
 	db, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
-		slog.Error("error opening database:", err)
+		slog.Error("error opening database:", "err", err)
 		os.Exit(1)
 	}
 	getGlobalVars()
@@ -294,7 +315,7 @@ func WritePunch(punch Punch) (PunchResponse, error) {
 // receives list of time codes, queries the database and returns a time code struct with data from the database table
 const getTimeCodesQery = `SELECT time_code_groups, time_entry_code, entry_method, time_code_reference_id, ui_name, sort_order FROM workday.time_entry_code_map WHERE ui_name is not null ;`
 
-func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
+func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, map[string]string, error) {
 	type databaseInfo struct {
 		time_code_groups       string
 		time_entry_code        string
@@ -305,10 +326,11 @@ func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
 	}
 	data, err := DatabaseIO(getTimeCodesQery)
 	var toReturn []TimeEntryCodes
+	lookupMap := make(map[string]string)
 
 	var fromDatabase []databaseInfo
 	if err != nil {
-		return toReturn, fmt.Errorf("error calling DatabaseQuery function %w", err)
+		return toReturn, nil, fmt.Errorf("error calling DatabaseQuery function %w", err)
 	}
 	defer data.Close()
 
@@ -316,26 +338,38 @@ func MapTimeCodes(timeCodes []string) ([]TimeEntryCodes, error) {
 		var row databaseInfo
 		err := data.Scan(&row.time_code_groups, &row.time_entry_code, &row.entry_method, &row.time_code_reference_id, &row.ui_name, &row.sort_order)
 		if err != nil {
-			return toReturn, err
+			return toReturn, nil, err
 		}
 		fromDatabase = append(fromDatabase, row)
 	}
 
 	//loop and organize fromDatabase as a map of: "time_code_groups : ui_name" AND "time_code_groups : time_code_reference_id"
 	for _, v := range fromDatabase {
-		if slices.Contains(timeCodes, v.time_code_groups) {
+		lookupMap[v.time_code_reference_id] = v.ui_name
+		if slices.Contains(timeCodes, v.time_code_groups) && v.ui_name != "" {
+			//if slices.Contains(timeCodes, v.time_code_groups) {
 			var timeEntryCode TimeEntryCodes
 			timeEntryCode.Backend_ID = v.time_code_reference_id
 			timeEntryCode.Display_Name = v.ui_name
 			timeEntryCode.Sort_Order = v.sort_order
-			toReturn = append(toReturn, timeEntryCode)
+
+			//make sure only one time code is in the list with the same frontend_name and add to return slice if it doesn't already exist
+			exists := false
+			for _, code := range toReturn {
+				if code.Display_Name == v.ui_name {
+					exists = true
+				}
+			}
+			if !exists {
+				toReturn = append(toReturn, timeEntryCode)
+			}
 		}
 	}
 
-	return toReturn, nil
+	return toReturn, lookupMap, nil
 }
 
-const getWorkerQuery = `SELECT worker_id, byu_id, last_updated, employee_name, time_code_group, positions FROM workday.employee_cache WHERE byu_id = '%s';`
+const getWorkerQuery = `SELECT worker_id, byu_id, last_updated, employee_name, time_code_group, positions FROM workday.employee_cache WHERE worker_id = '%s';`
 
 func GetWorkerInfo(byuid string, employee *Employee) error {
 	query := fmt.Sprintf(getWorkerQuery, byuid)
@@ -365,10 +399,13 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 		return fmt.Errorf("error unmarshalling emp.Time_Code_Group from employee_cache database %w", err)
 	}
 
+	//a variable of time_code_reference_id : ui_name
+	var timeCodeNameLookup map[string]string
+
 	//create time code map to put on employee.Time_Entey_Codes
-	employee.Time_Entry_Codes, err = MapTimeCodes(timeCodeGroupList)
+	employee.Time_Entry_Codes, timeCodeNameLookup, err = MapTimeCodes(timeCodeGroupList)
 	if err != nil {
-		return fmt.Errorf("could not get the time_entry_code_map  from employee_cache database. error: %w", err)
+		return fmt.Errorf("could not get the time_entry_code_map from employee_cache database. error: %w", err)
 	}
 
 	//TCD_Employee.Positions
@@ -398,6 +435,7 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 			employee.PositionsList = append(employee.PositionsList, v.Position_Number)
 		}
 	}
+	employee.TimeCodeNameLookup = timeCodeNameLookup
 
 	return nil
 }
@@ -407,12 +445,14 @@ func GetWorkerInfo(byuid string, employee *Employee) error {
 func GetTimeSheet(byuID string, employeeData *Employee) error {
 	slog.Debug("start GetTimeGroups")
 	var workerTimeData WorkdayEmployeeTimeReport
+	var workerTimeBlocks WorkdayTimeBlocksReport
 	var err error
 
 	today := time.Now()
 	today = today.AddDate(0, 0, 1)
 	lastMonth := today.AddDate(0, -1, 0)
 
+	//Get First API Data - used to get time events and international status
 	url := apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timekeeping_System?employee_id=" + byuID + "&start_date=" +
 		lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
 	slog.Debug("making request to", "url", url)
@@ -441,11 +481,47 @@ func GetTimeSheet(byuID string, employeeData *Employee) error {
 		slog.Error("error unmarshalling workerTimeData", "error", err)
 		return err
 	}
+	if len(workerTimeData.Report_Entry) < 1 {
+		return fmt.Errorf("employee not found in workday, empty slice")
+	}
 	if workerTimeData.Report_Entry[0].Worker_ID == "" {
 		return fmt.Errorf("no employee_id returned")
 	}
 
-	err = MapEmployeeTimeData(employeeData, &workerTimeData.Report_Entry[0])
+	//Get Second API data - used to get time blocks
+	url = apiURL + "/ccx/service/customreport2/" + apiTenant + "/ISU_INT265/INT265_Timeclocks?employee_id=" + byuID + "&start_date=" +
+		lastMonth.Format(time.DateOnly) + "-00%3A00&end_date=" + today.Format(time.DateOnly) + "-00%3A00&format=json"
+	slog.Debug("making request to", "url", url)
+
+	//client := &http.Client{}
+
+	req, err = http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Authorization", "Basic "+basicAuth(apiUser, apiPassword))
+
+	response, err = client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	body, err = io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	slog.Debug("attempting to unmarshall workerTimeData")
+	err = json.Unmarshal(body, &workerTimeBlocks)
+	if err != nil {
+		slog.Error("error unmarshalling workerTimeData", "error", err)
+		return err
+	}
+	if workerTimeData.Report_Entry[0].Worker_ID == "" {
+		return fmt.Errorf("no employee_id returned")
+	}
+
+	err = MapEmployeeTimeData(employeeData, &workerTimeData.Report_Entry[0], &workerTimeBlocks)
 	if err != nil {
 		return err
 	}
@@ -497,7 +573,7 @@ func ReturnCurrentWeek() (time.Time, time.Time) {
 	return start, end
 }
 
-func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err error) {
+func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData, workerTimeBlocks *WorkdayTimeBlocksReport) (err error) {
 	//don't do anything if there is no data for the worker from the Workday API
 
 	block_positionNumber := make(map[string]string)
@@ -514,7 +590,7 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err
 		}
 	}
 
-	//build period_puhcnes
+	//build period_puhcnes - aka time events
 	var periodPunch PeriodPunches
 	for _, v := range worker.Time_Clock_Events {
 		if v.Timeblock_Ref_ID == "" { //add to peroid_punches slice if not associated with a time block
@@ -553,16 +629,28 @@ func MapEmployeeTimeData(employee *Employee, worker *WorkdayWorkerTimeData) (err
 	var totalWeekHours, totalPeriodHours float64
 
 	//loop through returned time blocks and add create the table in employee.PeriodBlocks for the JSON return
-	for _, v := range worker.Time_Blocks {
+	for _, v := range workerTimeBlocks.Report_Entry {
+		if v.In_Time == "" || v.Out_Time == "" { //if no valid time don't add the block
+			continue
+		}
+
+		//parse for time to use for reported date
+		//reportedDate, err := time.Parse(time.RFC3339, block_timeIn[v.Reference_ID])
+		reportedDate, err := time.Parse(time.RFC3339, v.In_Time)
+		if err != nil {
+			slog.Debug("Error parsing date:", "error", err)
+			reportedDate = time.Now()
+		}
+
 		periodBlock.Position_Number = v.Position
 		periodBlock.Business_Title = positionTDtoName[v.Position]
 		periodBlock.Length = v.Hours
-		periodBlock.Time_Clock_Event_Date_Time_IN = block_timeIn[v.Reference_ID]
-		periodBlock.Time_Clock_Event_Date_Time_OUT = block_timeOut[v.Reference_ID]
 		periodBlock.ReferenceID = v.Reference_ID
-		periodBlock.Reported_Date = v.Reported_Date
+		periodBlock.Reported_Date = reportedDate.Format("2006-01-02")
 		periodBlock.Time_Clock_Event_Date_Time_IN = v.In_Time
 		periodBlock.Time_Clock_Event_Date_Time_OUT = v.Out_Time
+		periodBlock.Time_Entry_Code_Ref_ID_from_Source = v.Time_Entry_Code_Ref_ID_from_Source
+		periodBlock.Time_Entry_Code_Ref_ID_Name = employee.TimeCodeNameLookup[v.Time_Entry_Code_Ref_ID_from_Source]
 
 		//calculate timeBlock period and weekly hours per position and total
 		lengthValue, err := strconv.ParseFloat(periodBlock.Length, 64)

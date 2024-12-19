@@ -23,8 +23,8 @@
       >
         <!-- headers -->
         <mat-grid-tile (click)="api?.hiddenDarkMode()" colspan="1" rowspan="1" class="job-header" >
-          <div class="title-org">
-            <div class="job-title"><b>Job Title</b></div>
+          <div class="title-org-main">
+            <div class="job-title-main"><b>Job Title</b></div>
           </div>
         </mat-grid-tile>
         <mat-grid-tile colspan="1" rowspan="1" class="header">
@@ -60,8 +60,27 @@
             <!-- name -->
             <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
               <div class="title-org">
-                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
-                <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
+                <div class="scroll-container">
+                  <div class="scroll">
+                    <span>
+                      <div class="job-title">
+                        <span>{{ Position?.businessTitle }}</span>
+                      </div>
+                      <div class="supervisory-org">
+                        <span>{{ Position?.supervisoryOrg }}</span>
+                      </div>
+                    </span>
+                    <span>
+                      <div class="job-title">
+                        <span>{{ Position?.businessTitle }}</span>
+                      </div>
+                      <div class="supervisory-org">
+                        <span>{{ Position?.supervisoryOrg }}</span>
+                      </div>
+                    </span>
+
+                  </div>
+                </div>
               </div>
             </mat-grid-tile>
         
@@ -100,7 +119,7 @@
                   [checked]="Position.inStatus"
                   [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
                   (click)="
-                  clockInOut(jobRef(Position.positionNumber), punchType.In)
+                  clockInOutEvent(jobRef(Position.positionNumber), punchType.In,$event)
                 "
                   >IN</mat-radio-button
                 >
@@ -111,7 +130,7 @@
                   [checked]="!Position.inStatus"
                   [class.grey-out]="emp?.clockedIn() && !Position.inStatus"
                   (click)="
-                  clockInOut(jobRef(Position.positionNumber), punchType.Out)
+                  clockInOutEvent(jobRef(Position.positionNumber), punchType.Out,$event)
                 "
                   >OUT</mat-radio-button
                 >
@@ -126,8 +145,27 @@
             <!-- name -->
             <mat-grid-tile colspan="1" rowspan="1" style="text-align: center;">
               <div class="title-org">
-                <div class="job-title">{{ trimTitle(Position?.businessTitle) }}</div>
-                <div class="supervisory-org">{{ Position?.supervisoryOrg }}</div>
+                <div class="scroll-container">
+                  <div class="scroll">
+                    <span>
+                      <div class="job-title">
+                        <span>{{ Position?.businessTitle }}</span>
+                      </div>
+                      <div class="supervisory-org">
+                        <span>{{ Position?.supervisoryOrg }}</span>
+                      </div>
+                    </span>
+                    <span>
+                      <div class="job-title">
+                        <span>{{ Position?.businessTitle }}</span>
+                      </div>
+                      <div class="supervisory-org">
+                        <span>{{ Position?.supervisoryOrg }}</span>
+                      </div>
+                    </span>
+
+                  </div>
+                </div>
               </div>
             </mat-grid-tile>
         

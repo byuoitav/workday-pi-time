@@ -29,5 +29,10 @@
 		"target": "http://localhost:8463",
 		"secure": false,
 		"logLevel": "debug"
+	},
+	"/get_employee_data": {
+		"target": "http://localhost:8463",
+		"secure": false,
+		"logLevel": "debug"
 	}
 }
