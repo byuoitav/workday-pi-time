@@ -100,6 +100,11 @@ export class ClockComponent implements OnInit {
     return title;
   }
 
+  clockInOutEvent(jobRef: any, state: PunchType, event: MouseEvent) {
+    event.stopPropagation();  // Prevents the event from bubbling up and firing twice
+    this.clockInOut(jobRef, state);  // Your existing clockInOut logic
+  }
+
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
     console.log("clocking job", jobRef.value.businessTitle, "to state", state);
   
