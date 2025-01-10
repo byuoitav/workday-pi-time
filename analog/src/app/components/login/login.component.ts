@@ -42,12 +42,12 @@ export class LoginComponent implements OnInit {
   logLogInClick = async () => {
     console.log("Logging login button clicked by " + this.id);
     var log = new Log();
-    log.button = "login_button";
-    log.message = "Login_Button_Clicked";
+    log.button = "enter";
+    log.message = "Clicked login button";
     log.byuID = this.id;
     log.time = new Date();
     log.notify = false;
-    await this.api.sendLog(log).toPromise();
+    this.api.sendLog(log).toPromise();
   }
 
   login = async () => {

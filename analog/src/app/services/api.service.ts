@@ -1,12 +1,12 @@
-import {Injectable} from "@angular/core";
-import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {Router, NavigationEnd} from "@angular/router";
-import {MatDialog} from "@angular/material/dialog";
-import {JsonConvert} from "json2typescript";
-import {BehaviorSubject, Observable, throwError, Subscription} from "rxjs";
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Router, NavigationEnd } from "@angular/router";
+import { MatDialog } from "@angular/material/dialog";
+import { JsonConvert } from "json2typescript";
+import { BehaviorSubject, Observable, throwError, Subscription } from "rxjs";
 
-import {ErrorDialog} from "../dialogs/error/error.dialog";
-import {ToastService} from "./toast.service";
+import { ErrorDialog } from "../dialogs/error/error.dialog";
+import { ToastService } from "./toast.service";
 import {
   Employee,
   Day,
@@ -61,7 +61,7 @@ export class EmployeeRef {
   };
 }
 
-@Injectable({providedIn: "root"})
+@Injectable({ providedIn: "root" })
 export class APIService {
   public theme = "default";
 
@@ -96,7 +96,7 @@ export class APIService {
           } else {
             // remove the error param
             this.router.navigate([], {
-              queryParams: {error: null},
+              queryParams: { error: null },
               queryParamsHandling: "merge",
               preserveFragment: true
             });
@@ -119,9 +119,7 @@ export class APIService {
     console.log("Sending Log", log);
     try {
       const jsonLog = this.jsonConvert.serialize(log, Log);
-      //TODO: FIX THIS
-      //      return this.http.post("http://"+window.location.host+"/log-entry/level/debug/message/" + log.message, jsonLog, {
-      return this.http.post("http://localhost:8463/log-entry/level/debug/message/" + log.message, jsonLog, {
+      return this.http.post("http://" + window.location.host + "/log-entry/level/debug/message/" + log.message, jsonLog, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"
@@ -135,7 +133,7 @@ export class APIService {
 
   public switchTheme(name: string) {
     this.router.navigate([], {
-      queryParams: {theme: name},
+      queryParams: { theme: name },
       queryParamsHandling: "merge"
     });
   }
@@ -157,32 +155,30 @@ export class APIService {
 
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
-    // TODO: revert    const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
-
-    const endpoint = "http://localhost:8000/get_employee_data/" + id;
+    const endpoint = "http://" + window.location.host + "/get_employee_data/" + id;
     this.http.get(endpoint).subscribe({
-      next: (data: JSON ) => {
+      next: (data: JSON) => {
         try {
-        const response = this.jsonConvert.deserializeObject(data, ApiResponse);
+          const response = this.jsonConvert.deserializeObject(data, ApiResponse);
 
-        //check if database and workday are synced
-        const statuses = Object.keys(response.statuses);
-        this.unsynced = response.statuses["unprocessed_punches_in_tcd"];
-        this.employee_cache = response.statuses["TCD_employee_cache_online"];
-        this.timeevents_online = response.statuses["TCD_timeevents_online"];
-        this.workdayAPI_online = response.statuses["workdayAPI_online"];
-        this.unsyncedPunches = response.unprocessedPunches;
-        const emp = response.employee;
-        emp.id = String(id);
-        this.loadDays(emp);
+          //check if database and workday are synced
+          const statuses = Object.keys(response.statuses);
+          this.unsynced = response.statuses["unprocessed_punches_in_tcd"];
+          this.employee_cache = response.statuses["TCD_employee_cache_online"];
+          this.timeevents_online = response.statuses["TCD_timeevents_online"];
+          this.workdayAPI_online = response.statuses["workdayAPI_online"];
+          this.unsyncedPunches = response.unprocessedPunches;
+          const emp = response.employee;
+          emp.id = String(id);
+          this.loadDays(emp);
 
-        console.log("updated employee", emp);
-        employee.next(emp);
+          console.log("updated employee", emp);
+          employee.next(emp);
         } catch (e) {
           console.log("error deserializing employee", e);
           employee.error("Error Deserializing Employee");
         }
-        
+
       },
       error: (err: any) => {
         console.warn("unable to deserialize employee", err);
@@ -200,15 +196,15 @@ export class APIService {
             //employee.error(err.error.error)
             employee.error("Unknown Error, please try again or use other methods to clock in/out")
           }
-        } 
+        }
         else {
           // employee.error("Error " + err.status + ": " + err.statusText + "\r\n" + err.message);
           employee.error("Unknown Error, please clock in using other methods and report this issue to your supervisor")
         }
-        
+
       }
-    
-  });
+
+    });
 
     const empRef = new EmployeeRef(employee, (timeout: Boolean) => {
       if (timeout) {
@@ -227,7 +223,7 @@ export class APIService {
       this.switchTheme("");
 
       // route to login page
-      this.router.navigate(["/login"], {replaceUrl: true});
+      this.router.navigate(["/login"], { replaceUrl: true });
       this.showAlert = true;
     }, this.router);
 
@@ -251,7 +247,7 @@ export class APIService {
 
       ref.afterClosed().subscribe(result => {
         this.router.navigate([], {
-          queryParams: {error: null},
+          queryParams: { error: null },
           queryParamsHandling: "merge",
           preserveFragment: true
         });
@@ -261,9 +257,9 @@ export class APIService {
 
   punch = (data: PunchRequest): Observable<any> => {
     try {
-      const json = this.jsonConvert.serialize(data, PunchRequest); 
+      const json = this.jsonConvert.serialize(data, PunchRequest);
       console.log(json);
-      return this.http.post("http://"+window.location.host+"/punch/" + data.id, json, {
+      return this.http.post("http://" + window.location.host + "/punch/" + data.id, json, {
         responseType: "text",
         headers: new HttpHeaders({
           "content-type": "application/json"
@@ -274,7 +270,7 @@ export class APIService {
       return throwError(e);
     }
   };
-  
+
 
   getOtherHours = (byuID: string, jobID: number, date: string) => {
     try {
@@ -291,7 +287,7 @@ export class APIService {
 
   loadDays(emp: Employee) {
     const today = Date.now();
-    
+
     //for each position
     for (const pos of emp.positions) {
 
@@ -305,13 +301,13 @@ export class APIService {
       }
 
       //add punches to the days
-      if (emp.periodPunches !== undefined && emp.periodPunches !== null && emp.periodPunches[0] !== null ) {
+      if (emp.periodPunches !== undefined && emp.periodPunches !== null && emp.periodPunches[0] !== null) {
         for (const punch of emp.periodPunches) {
           if (String(pos.positionNumber) === String(punch.positionNumber)) {
             for (const day of days) {
-              if (punch.time.getDate() === day.time.getDate() 
-              && punch.time.getMonth() === day.time.getMonth() 
-            && punch.time.getFullYear() === day.time.getFullYear()) {
+              if (punch.time.getDate() === day.time.getDate()
+                && punch.time.getMonth() === day.time.getMonth()
+                && punch.time.getFullYear() === day.time.getFullYear()) {
                 day.punches.push(punch);
               }
             }
@@ -326,19 +322,19 @@ export class APIService {
             for (const day of days) {
               if (block.startDate === undefined && block.endDate === undefined) {
                 continue;
-              } 
+              }
               else {
                 if (block.startDate !== undefined) {
-                  if (block.startDate.getDate() === day.time.getDate() 
-                  && block.startDate.getMonth() === day.time.getMonth() 
-                  && block.startDate.getFullYear() === day.time.getFullYear()) {
+                  if (block.startDate.getDate() === day.time.getDate()
+                    && block.startDate.getMonth() === day.time.getMonth()
+                    && block.startDate.getFullYear() === day.time.getFullYear()) {
                     day.periodBlocks.push(block);
                   }
                 }
                 else {
                   if (block.endDate.getDate() === day.time.getDate()
-                  && block.endDate.getMonth() === day.time.getMonth() 
-                  && block.endDate.getFullYear() === day.time.getFullYear()) {
+                    && block.endDate.getMonth() === day.time.getMonth()
+                    && block.endDate.getFullYear() === day.time.getFullYear()) {
                     day.periodBlocks.push(block);
                   }
                 }
@@ -347,8 +343,8 @@ export class APIService {
           }
         }
       }
-      
-    pos.days = days;
+
+      pos.days = days;
     }
   }
 }

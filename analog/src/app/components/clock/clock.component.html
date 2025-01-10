@@ -1,9 +1,8 @@
 <mat-toolbar color="primary">
   <div class="byu-logo" [innerHTML]="svgPreloadService.byuLogo"></div>
   <span>Y-Time</span> <span class="header-spacer"></span>
-  <!-- TODO: Add Logging -->
-  <span (click)="logout()">{{ emp?.name }} </span>
-  <button (click)="logout()" mat-icon-button>
+  <span (click)="clickLogout()">{{ emp?.name }} </span>
+  <button (click)="clickLogout()" mat-icon-button>
     <mat-icon>exit_to_app</mat-icon>
   </button>
 </mat-toolbar>
@@ -113,7 +112,6 @@
               <mat-radio-group
                 class="clock-group"
               >
-              <!-- TODO: Add Logging -->
                 <mat-radio-button
                   class="clock-button in"
                   color="accent"
@@ -125,7 +123,6 @@
                 "
                   >IN</mat-radio-button
                 >
-                <!-- TODO: Add Logging -->
                 <mat-radio-button
                   color = "warn"
                   class="clock-button out"
@@ -229,7 +226,6 @@
       </mat-grid-list>
     </div>
   </mat-card>
-  <!-- TODO: Add Logging (Button to Calendar) -->
   <button
     id = "rvwTimesheet"
     class="view-timesheet"

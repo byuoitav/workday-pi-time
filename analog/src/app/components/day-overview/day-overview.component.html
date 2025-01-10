@@ -2,7 +2,6 @@
 	<button mat-button (click)="goBack()">
 		<mat-icon style="transform: scale(2)">keyboard_arrow_left </mat-icon>
 	</button>
-	<!-- TODO: Add Logging -->
 	<span (click)="goBack()">
 		{{ day?.time | date: "EEE. MMM d, y" }}
 	</span>
@@ -11,7 +10,6 @@
 	<span class="do-header-spacer"></span>
 
 	<span (click)="logout()">{{ emp?.name }} </span>
-	<!-- TODO: Add Logging -->
 	<button (click)="logout()" mat-icon-button>
 		<mat-icon>exit_to_app</mat-icon>
 	</button>

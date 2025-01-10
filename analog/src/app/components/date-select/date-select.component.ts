@@ -4,7 +4,7 @@ import {Subscription} from "rxjs";
 
 import {EmployeeRef, APIService} from "../../services/api.service";
 import {ToastService} from "../../services/toast.service";
-import {Employee, Day} from "../../objects";
+import {Employee, Day, Log} from "../../objects";
 
 @Component({
   selector: "date-select",
@@ -108,7 +108,24 @@ export class DateSelectComponent implements OnInit, OnDestroy {
     return this.viewMonth < this.today.getMonth() || this.viewYear < this.today.getFullYear();
   }
 
+  logClick = (button: string) => {
+    var log = new Log();
+    if (button === "move_month_back") {
+      log.button = "move_month_back";
+      log.message = "Clicked Back a Month";
+    }
+    else if (button === "move_month_forward") {
+      log.button = "move_month_forward";
+      log.message = "Clicked Forward a Month";
+    }
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+  };
+
   moveMonthBack() {
+    this.logClick("move_month_back");
     this.slideRight();
     setTimeout(() => {
       if (this.viewMonth === 0) {
@@ -123,6 +140,7 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   moveMonthForward() {
+    this.logClick("move_month_forward");
     this.slideLeft();
     setTimeout(() => {
       if (this.viewMonth === 11) {
@@ -147,6 +165,15 @@ export class DateSelectComponent implements OnInit, OnDestroy {
       relativeTo: this.route,
       queryParamsHandling: "preserve"
     });
+
+    //log click on day
+    var log = new Log();
+    log.button = "select_day";
+    log.message = "Clicked Day: " + str;
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
 
     //add cookie to know what current date they are looking at
     if (this._empRef) {
@@ -250,6 +277,14 @@ export class DateSelectComponent implements OnInit, OnDestroy {
   }
 
   logout = () => {
+    console.log("Logging log out button click")
+    var log = new Log();
+    log.button = "logout_calendar";
+    log.message = "Clicked Log Out Button";
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
     this._empRef.logout(false);
   };
 

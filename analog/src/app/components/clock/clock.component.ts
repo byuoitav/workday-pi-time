@@ -11,7 +11,8 @@ import {
   PunchType,
   TEC,
   Position,
-  PunchRequest
+  PunchRequest,
+  Log
 } from "../../objects";
 import { ToastService } from "src/app/services/toast.service";
 import { ConfirmDialog } from "src/app/dialogs/confirm/confirm.dialog";
@@ -70,11 +71,18 @@ export class ClockComponent implements OnInit {
     const weekHours = this.emp?.totalWeekHours.length === 5 ? Number((this.emp?.totalWeekHours).substring(0, 2)) : Number((this.emp?.totalWeekHours).substring(0, 1));
     if (this.emp?.internationalStatus && weekHours >= 15 && this.api.showAlert) {
       this.api.showAlert = false;
+      this.logDialogBoxClicks("", "International Dialog Box Opening");
       this.dialog.open(InternationalDialog, {
         data: {
           msg: "You have worked more than 15 hours this week."
         }
-      })
+      }).afterClosed()
+      .subscribe(confirmed => {
+        if (confirmed === "close") {
+          this.logDialogBoxClicks("close_dialog", "Clicked Close Button International Dialog Box");
+          return;
+        }
+      });
     }
   }
 
@@ -99,7 +107,38 @@ export class ClockComponent implements OnInit {
     }
     return title;
   }
+
+  logClockClick = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
+    console.log("Logging clock in/out button clicked by " + this.emp.id);
+    var log = new Log();
+    if (state === "I") {
+      log.button = "clock_in";
+      log.message = "Clicked In for " + jobRef.value.businessTitle;
+    }
+    else {
+      log.button = "clock_out";
+      log.message = "Clicked Out for " + jobRef.value.businessTitle;
+    }
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+  }
+
+  logDialogBoxClicks = (button: string, message: string) => {
+    console.log("Logging dialog box button clicked by " + this.emp.id);
+    var log = new Log();
+    log.button = button;
+    log.message = message;
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+  }
+
   clockInOut = (jobRef: BehaviorSubject<Position>, state: PunchType) => {
+    this.logClockClick(jobRef, state);
+
     if (this.clockingInProgress) {
       console.warn("Clocking already in progress");
       return;
@@ -126,6 +165,7 @@ export class ClockComponent implements OnInit {
         }
       }
     } else {
+      this.logDialogBoxClicks("", "Error Employee Not Eligible Dialog Box Opening");
       this.dialog.open(ErrorDialog, {
         data: {
           msg: "Employee Not Eligible for Time Tracking"
@@ -151,6 +191,7 @@ export class ClockComponent implements OnInit {
 
     // Handle double clocking
     if (state === "I" && jobRef.value.inStatus) {
+      this.logDialogBoxClicks("none", "Double Clock In Dialog Box Opening");
       this.dialog.open(DoubleDialog, {
         data: {
           msg: "Are you sure you want to clock in again?"
@@ -159,13 +200,16 @@ export class ClockComponent implements OnInit {
         .afterClosed()
         .subscribe(confirmed => {
           if (confirmed === "cancel") {
+            this.logDialogBoxClicks("cancel_double_clock", "Clicked Cancel Button");
             this.clockingInProgress = false; 
             return;
           } else if (confirmed === "continue") {
+            this.logDialogBoxClicks("continue_double_clock", "Clicked Continue Button");
             this.sendPunch(jobRef, state, tec);
           }
         });
     } else if (state === "O" && !jobRef.value.inStatus) {
+      this.logDialogBoxClicks("none", "Double Clock In Dialog Box Opening");
       this.dialog.open(DoubleDialog, {
         data: {
           msg: "Are you sure you want to clock out again?"
@@ -174,9 +218,11 @@ export class ClockComponent implements OnInit {
         .afterClosed()
         .subscribe(confirmed => {
           if (confirmed === "cancel") {
+            this.logDialogBoxClicks("cancel_double_clock", "Clicked Cancel Button");
             this.clockingInProgress = false; 
             return;
           } else if (confirmed === "continue") {
+            this.logDialogBoxClicks("continue_double_clock", "Clicked Continue Button");
             this.sendPunch(jobRef, state, tec);
           }
         });
@@ -195,16 +241,19 @@ export class ClockComponent implements OnInit {
     const obs = this.api.punch(data).pipe(share());
     obs.subscribe({
       next: (resp) => {
-        const response = JSON.parse(resp);
+        const response = JSON.parse(resp); 
         if (response.written_to_tcd === 'true') {
+          this.logDialogBoxClicks("", "Punch Confirmation Dialog Box Opening");
           this.dialog.open(ConfirmDialog, {
             data: { state: data.clockEventType }
           })
             .afterClosed()
             .subscribe(confirmed => {
               if (confirmed === "logout") {
+                this.logDialogBoxClicks("logout_clock_dialog", "Clicked Logout after Punch Button");
                 this.logout();
               } else if (confirmed === "confirmed") {
+                this.logDialogBoxClicks("confirmed_clock_dialog", "Clicked Return after Punch Button");
                 this.refreshPage();
               }
             });
@@ -221,11 +270,19 @@ export class ClockComponent implements OnInit {
       error: (err) => {
         this.refreshPage();
         console.warn("response ERROR", err);
+        this.logDialogBoxClicks("", "Punch Error Dialog Box Opening");
         this.dialog.open(ErrorDialog, {
           data: {
             msg: "The Punch was not Submitted Successfully"
           }
+        }).afterClosed()
+        .subscribe(confirmed => {
+          if (confirmed === "close") {
+            this.logDialogBoxClicks("close_dialog", "Clicked Dismiss Button Error Dialog Box");
+            return;
+          }
         });
+
       },
       complete: () => {
         this.clockingInProgress = false; 
@@ -233,8 +290,19 @@ export class ClockComponent implements OnInit {
     });
   };
 
+  logTimesheetClick = () => {
+    console.log("Logging to timesheet button clicked by " + this.emp.id);
+    var log = new Log();
+    log.button = "to_timesheet";
+    log.message = "Clicked To Timesheet Button";
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+  }
 
   toTimesheet = () => {
+    this.logTimesheetClick();
     this._empRef.selectedDate = new Date();
     this.router.navigate(["./date/"], {
       relativeTo: this.route,
@@ -242,7 +310,19 @@ export class ClockComponent implements OnInit {
     });
   };
 
-  logout = () => {
+  clickLogout = async () => {
+    console.log("Logout button clicked by " + this.emp.id);
+    var log = new Log();
+    log.button = "logout_clock_screen";
+    log.message = "Clicked Logout Button";
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+    this.logout();
+  }
+  
+  logout = async () => {
     this._empRef.logout(false);
   };
 

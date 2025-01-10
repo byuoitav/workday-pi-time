@@ -94,7 +94,6 @@ func main() {
 		})
 	})
 
-	//TODO: Implement this endpoint
 	router.POST("/log-entry/level/:level/message/:message", func(context *gin.Context) {
 		level := context.Param("level")
 		message := context.Param("message")
