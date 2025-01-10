@@ -2,6 +2,7 @@ import {Component, OnInit} from "@angular/core";
 import {Router} from "@angular/router";
 import {APIService} from "../../services/api.service";
 import { SvgPreloadService } from "src/app/services/svg-preload.service";
+import { Log } from "src/app/objects";
 
 
 
@@ -31,6 +32,22 @@ export class LoginComponent implements OnInit {
     if (this.id.length > 0) {
       this.id = this.id.slice(0, -1);
     }
+  }
+
+  clickLogin = async () => {
+    this.logLogInClick();
+    this.login()
+  }
+
+  logLogInClick = async () => {
+    console.log("Logging login button clicked by " + this.id);
+    var log = new Log();
+    log.button = "login_button";
+    log.message = "Login_Button_Clicked";
+    log.byuID = this.id;
+    log.time = new Date();
+    log.notify = false;
+    await this.api.sendLog(log).toPromise();
   }
 
   login = async () => {

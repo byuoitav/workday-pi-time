@@ -6,15 +6,16 @@
    Calendar
   </span>  
   <span class="header-spacer"></span>  
+  <!-- TODO: Add Logging -->
   <span (click)="logout()">{{ emp?.name }} </span>
   <button (click)="logout()" mat-icon-button>
     <mat-icon>exit_to_app</mat-icon>
   </button>
 </mat-toolbar>
 
-<!-- <button mat-raised-button (click)="selectRandomDay()">Select Random Day</button> -->
 <div class="container">
   <mat-card appearance="outlined" class="month card mat-elevation-z3">
+    <!-- TODO: Add Logging (monthBack) -->
     <button
       mat-stroked-button
       class="month-nav"
@@ -24,6 +25,7 @@
       <b>< Prev</b>
     </button>
     <span class="monthName" id="monthName"> <b>{{ MonthNames[viewMonth] }} {{ viewYear }} </b></span>
+    <!-- TODO: Add Logging (monthForward) -->
     <button
       mat-stroked-button
       class="month-nav"
@@ -44,6 +46,7 @@
 
       <ng-container *ngFor="let day of viewDays">
         <mat-grid-tile colspan="1" rowspan="1">
+          <!-- TODO: Add Logging (Clicking on Individual Days) -->
           <div
             (click)="selectDay(day)"
             class="date"

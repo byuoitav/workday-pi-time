@@ -50,7 +50,8 @@
 		<button mat-raised-button color="accent" class="num" (click)="addToID('0')" (press)="addToID('0')">
 			0
 		</button>
-		<button mat-raised-button color="accent" [disabled]="id?.length !== 9" (click)="login()" (press)="login()">
+		<!-- TODO: Add Logging -->
+		<button mat-raised-button color="accent" [disabled]="id?.length !== 9" (click)="clickLogin()" (press)="clickLogin()">
 			Enter
 		</button>
 	</div>

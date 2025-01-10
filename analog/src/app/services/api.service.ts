@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {Router, ActivationEnd, NavigationEnd} from "@angular/router";
+import {Router, NavigationEnd} from "@angular/router";
 import {MatDialog} from "@angular/material/dialog";
 import {JsonConvert} from "json2typescript";
 import {BehaviorSubject, Observable, throwError, Subscription} from "rxjs";
@@ -11,20 +11,9 @@ import {
   Employee,
   Day,
   PunchRequest,
-  Punch,
-  DateConverter,
   ApiResponse,
-  PeriodBlock
+  Log,
 } from "../objects";
-import {
-  JsonObject,
-  JsonProperty,
-  Any,
-  JsonCustomConvert,
-  JsonConverter
-} from "json2typescript";
-import {stringify} from 'querystring';
-
 export class EmployeeRef {
   private _employee: BehaviorSubject<Employee>;
   private _logout: Function;
@@ -126,6 +115,24 @@ export class APIService {
     });
   }
 
+  public sendLog = (log: Log) => {
+    console.log("Sending Log", log);
+    try {
+      const jsonLog = this.jsonConvert.serialize(log, Log);
+      //TODO: FIX THIS
+      //      return this.http.post("http://"+window.location.host+"/log-entry/level/debug/message/" + log.message, jsonLog, {
+      return this.http.post("http://localhost:8463/log-entry/level/debug/message/" + log.message, jsonLog, {
+        responseType: "text",
+        headers: new HttpHeaders({
+          "content-type": "application/json"
+        })
+      });
+    } catch (e) {
+      console.log("error sending log", e);
+      return throwError(e);
+    }
+  }
+
   public switchTheme(name: string) {
     this.router.navigate([], {
       queryParams: {theme: name},
@@ -150,7 +157,9 @@ export class APIService {
 
   getEmployee = (id: string | number): EmployeeRef => {
     const employee = new BehaviorSubject<Employee>(undefined);
-    const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
+    // TODO: revert    const endpoint = "http://"+window.location.host+"/get_employee_data/" + id;
+
+    const endpoint = "http://localhost:8000/get_employee_data/" + id;
     this.http.get(endpoint).subscribe({
       next: (data: JSON ) => {
         try {

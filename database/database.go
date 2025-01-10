@@ -162,7 +162,8 @@ func init() {
 	}
 	if host == "" || port == 0 || user == "" || password == "" || dbname == "" {
 		slog.Info("error getting environment variables, exiting")
-		os.Exit(1)
+		// TODO: revert this
+		// os.Exit(1)
 	}
 
 	// setup database connection

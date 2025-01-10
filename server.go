@@ -13,6 +13,7 @@ import (
 
 	"github.com/byuoitav/workday-pi-time/database"
 	"github.com/byuoitav/workday-pi-time/handlers"
+	"github.com/byuoitav/workday-pi-time/workday"
 )
 
 var logger *slog.Logger
@@ -26,6 +27,10 @@ func main() {
 
 	//setup logger
 	var logLevel = new(slog.LevelVar)
+	if err != nil {
+		fmt.Println("error creating syslog writer", err)
+		os.Exit(1)
+	}
 
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
@@ -80,6 +85,34 @@ func main() {
 	router.GET("/logLevel", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
 			"current logLevel": logLevel.Level(),
+		})
+	})
+
+	//TODO: Implement this endpoint
+	router.POST("/log-entry/level/:level/message/:message", func(context *gin.Context) {
+		level := context.Param("level")
+		message := context.Param("message")
+		fmt.Println("level: ", level)
+		fmt.Println("message: ", message)
+
+		var log workday.Log
+		err := context.BindJSON(&log)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{
+				"message": "error unmarshalling the request body",
+			})
+			return
+		}
+
+		logger.LogAttrs(nil, slog.LevelDebug, log.Message,
+			slog.String("frontend_time", log.Time),
+			slog.String("byuID", log.ByuID),
+			slog.String("button", log.Button),
+			slog.String("notify", log.Notify),
+		)
+
+		context.JSON(http.StatusOK, gin.H{
+			"message": "log entry created",
 		})
 	})
 

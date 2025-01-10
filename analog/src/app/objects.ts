@@ -514,6 +514,26 @@ export class PunchRequest {
   timeEntryCode: any = null;
 }
 
+@JsonObject("Log")
+export class Log {
+  @JsonProperty("time", DateConverter)
+  time: Date = undefined;
+
+  @JsonProperty("message", String)
+  message: string = undefined;
+
+  @JsonProperty("byuID", String)
+  byuID: string = undefined;
+
+  @JsonProperty("button", String)
+  button: string = undefined;
+
+  @JsonProperty("notify", BoolConverter)
+  notify: boolean = false;
+}
+
+
+
 
 
 
