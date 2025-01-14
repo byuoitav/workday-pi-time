@@ -43,7 +43,7 @@ export class LoginComponent implements OnInit {
     console.log("Logging login button clicked by " + this.id);
     var log = new Log();
     log.button = "enter";
-    log.message = "Clicked login button";
+    log.message = "Clicked Login Button";
     log.byuID = this.id;
     log.time = new Date();
     log.notify = false;

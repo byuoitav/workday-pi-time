@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"log/syslog"
 	"net/http"
 	"os"
 	"runtime"
@@ -18,7 +17,6 @@ import (
 )
 
 var logger *slog.Logger
-var sysLogger *slog.Logger
 
 func main() {
 	var err error
@@ -29,15 +27,7 @@ func main() {
 
 	//setup loggers
 	var logLevel = new(slog.LevelVar)
-	syslogWriter, err := syslog.New(syslog.LOG_DEBUG, "workday-pi-time")
-	if err != nil {
-		fmt.Println("error creating syslog writer", err)
-		os.Exit(1)
-	}
 
-	syslogHandler := slog.NewJSONHandler(syslogWriter, &slog.HandlerOptions{Level: logLevel})
-
-	sysLogger = slog.New(syslogHandler)
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 	slog.SetDefault(logger)
 
@@ -109,7 +99,7 @@ func main() {
 			return
 		}
 
-		sysLogger.LogAttrs(context, slog.LevelDebug, log.Message,
+		logger.Debug(log.Message,
 			slog.String("byuID", log.ByuID),
 			slog.String("button", log.Button),
 			slog.String("notify", log.Notify),
