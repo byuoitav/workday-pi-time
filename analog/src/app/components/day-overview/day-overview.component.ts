@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {EmployeeRef, APIService} from "../../services/api.service";
-import {Employee, Day, JobType, Position, Punch} from "../../objects";
+import {Employee, Day, JobType, Position, Punch, Log} from "../../objects";
 import {Subscription} from 'rxjs';
 
 @Component({
@@ -68,6 +68,15 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
   }
 
   goBack() {
+    console.log("Logging going back")
+    var log = new Log();
+    log.button = "day_overview_back";
+    log.message = "Clicked Back Button";
+    log.byuID = this.emp.id;
+    log.time = new Date();
+    log.notify = false;
+    this.api.sendLog(log).toPromise();
+
     this.router.navigate(
       ["/employee/" + this.emp.id + "/date"],
       {
@@ -104,6 +113,14 @@ export class DayOverviewComponent implements OnInit, OnDestroy {
   }
 
   logout = () => {
+      console.log("Logging log out button click")
+      var log = new Log();
+      log.button = "logout_day_overview";
+      log.message = "Clicked Log Out Button";
+      log.byuID = this.emp.id;
+      log.time = new Date();
+      log.notify = false;
+      this.api.sendLog(log).toPromise();
     this._empRef.logout(false);
   };
 

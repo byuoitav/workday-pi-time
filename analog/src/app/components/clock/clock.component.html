@@ -1,8 +1,8 @@
 <mat-toolbar color="primary">
   <div class="byu-logo" [innerHTML]="svgPreloadService.byuLogo"></div>
   <span>Y-Time</span> <span class="header-spacer"></span>
-  <span (click)="logout()">{{ emp?.name }} </span>
-  <button (click)="logout()" mat-icon-button>
+  <span (click)="clickLogout()">{{ emp?.name }} </span>
+  <button (click)="clickLogout()" mat-icon-button>
     <mat-icon>exit_to_app</mat-icon>
   </button>
 </mat-toolbar>
@@ -223,11 +223,9 @@
             </mat-grid-tile>
           </ng-container>
         </ng-container>
-
       </mat-grid-list>
     </div>
   </mat-card>
-
   <button
     id = "rvwTimesheet"
     class="view-timesheet"
