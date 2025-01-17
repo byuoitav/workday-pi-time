@@ -13,6 +13,7 @@ import (
 
 	"github.com/byuoitav/workday-pi-time/database"
 	"github.com/byuoitav/workday-pi-time/handlers"
+	"github.com/byuoitav/workday-pi-time/workday"
 )
 
 var logger *slog.Logger
@@ -24,7 +25,7 @@ func main() {
 	logLevelFlag := flag.String("l", "info", "slog log level")
 	flag.Parse()
 
-	//setup logger
+	//setup loggers
 	var logLevel = new(slog.LevelVar)
 
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
@@ -80,6 +81,32 @@ func main() {
 	router.GET("/logLevel", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
 			"current logLevel": logLevel.Level(),
+		})
+	})
+
+	router.POST("/log-entry/level/:level/message/:message", func(context *gin.Context) {
+		// level := context.Param("level")
+		// message := context.Param("message")
+		// fmt.Println("level: ", level)
+		// fmt.Println("message: ", message)
+
+		var log workday.Log
+		err := context.BindJSON(&log)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{
+				"message": "error unmarshalling the request body",
+			})
+			return
+		}
+
+		logger.Debug(log.Message,
+			slog.String("byuID", log.ByuID),
+			slog.String("button", log.Button),
+			slog.String("notify", log.Notify),
+		)
+
+		context.JSON(http.StatusOK, gin.H{
+			"message": "log entry created",
 		})
 	})
 

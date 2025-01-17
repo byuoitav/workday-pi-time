@@ -1,6 +1,10 @@
 # pi-time
 
-This is the source code deployed on the raspberry-pi based timeclocks around BYU. Hourly employees use these clocks to clock in/out of their jobs, to review/correct their punches, etc.
+This is the source code deployed on the raspberry-pi based timeclocks around BYU. Hourly employees use these clocks to clock in/out of their jobs, to review/correct their punches, etc. 
+
+#### Logging
+`Debug` must be the current loglevel for complete logs of user interactions with the timeclock to be displayed.
+(GET 127.0.0.1:8463/logLevel/level)
 
 
 ## Environment vars required:
@@ -18,7 +22,7 @@ This is the source code deployed on the raspberry-pi based timeclocks around BYU
 ## pflags
   * -p -port --TCP port to listen defaults to 8643
 
-## endpoints:
+## Endpoints:
   * GET 127.0.0.1:8463/status
   * GET 127.0.0.1:8463/ping
   * GET 127.0.0.1:8463/healthz
@@ -26,5 +30,6 @@ This is the source code deployed on the raspberry-pi based timeclocks around BYU
   * GET 127.0.0.1:8463/logLevel/level - sets log level and returns current level
   * GET 127.0.0.1:8463/logLevel - returns current level
   * POST 127.0.0.1:8463/punch/byuID - records a punch (comment is set to os.hostname, punch time is current device time)
+
 
 

@@ -21,6 +21,6 @@ export class InternationalDialog implements OnInit {
   ngOnInit() {}
 
   close = () => {
-    this.ref.close();
+    this.ref.close("close");
   };
 }
