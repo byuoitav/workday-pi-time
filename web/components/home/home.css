@@ -1,0 +1,32 @@
+.home-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: calc(100vh - 80px);
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.left-container,
+.right-container {
+    gap: 20px;
+    box-sizing: border-box;
+    width: 50%;
+    height: 100%;
+    padding: 20 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.id-entry {
+    font-size: 3em;
+    margin: 0;
+    font-weight: normal;
+}
+
+.medallion {
+    width: 350px;
+    height: 350px;
+}
