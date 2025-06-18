@@ -50,12 +50,58 @@
     text-align: center;
 }
 
-.job-title,
+
 .week-time,
 .pay-period {
     margin: 0;
     text-align: center;
     font-size: 1.1em;
+}
+
+.job-title {
+    font-weight: normal;
+    font-size: 1.2em;
+    margin: 0;
+}
+
+.job-department {
+    font-size: .8em;
+    color: #296fc3;
+    margin: 0;
+}
+
+.job-title-container {
+  height: 50px;
+  overflow: hidden;
+  position: relative;
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+  width: 100%;
+}
+
+.scrolling-container .scroll-block {
+  display: flex;
+  flex-direction: row;
+  animation: scroll-left 8s linear infinite;
+  white-space: nowrap;
+  gap: 25px; /* space between repeats */
+}
+
+.scroll-block > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .clock-buttons {
@@ -180,7 +226,6 @@ button {
     margin-top: 10px;
     color: white;
     font-size: 1.7em;
-    font-weight: bold;
     transition: transform 0.05s, box-shadow 0.05s, background-color 0.05s;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }

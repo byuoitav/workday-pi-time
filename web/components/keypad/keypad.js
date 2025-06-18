@@ -44,7 +44,7 @@ window.components.keypad = {
             }
 
             if (this.idEntry.textContent.length >= 11) {
-                console.warn('ID entry is full, cannot append more characters.');
+                // console.warn('ID entry is full, cannot append more characters.');
                 return;
             }
 
