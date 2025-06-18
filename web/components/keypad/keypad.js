@@ -31,7 +31,7 @@ window.components.keypad = {
         if (this.backspaceBtn) this.backspaceBtn.addEventListener('click', () => this.backspaceIdEntry());
         if (this.enterBtn) this.enterBtn.addEventListener('click', () => {
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
-            window.apiService.login(byuId);
+            window.loadComponent('clock');
             this.clearIdEntry()
         });
         this.updateButtonStates();

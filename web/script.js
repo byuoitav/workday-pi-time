@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    currentComponent = 'home'; // default component
+    currentComponent = 'login'; // default component
     loadComponent(currentComponent);
     // window.apiService = await new APIService();
 
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadComponent(componentName, divQuerySelector = `.component-container`) {
 
     // Only call cleanup if the primary component, won't call cleanup on smaller components
-    // like the keypad, which is a child component of the home component
+    // like the keypad, which is a child component of the login component
     if (window.components?.[currentComponent]?.cleanup && divQuerySelector === `.component-container`) {
         window.components[currentComponent].cleanup();
     }
@@ -73,7 +73,11 @@ async function loadComponent(componentName, divQuerySelector = `.component-conta
         const module = window.components?.[componentName];
         if (module?.loadPage) {
             module.loadPage();
-            currentComponent = componentName;
+            if (divQuerySelector === `.component-container`) {
+                // If it's the main component, track the current component
+                currentComponent = componentName;
+            }
+            
         }
         componentContainer.classList.remove('loading'); // finally show it
     };
@@ -84,6 +88,7 @@ async function loadComponent(componentName, divQuerySelector = `.component-conta
 window.showScreensaver = function() {
     // Remove any existing screensaver first
     window.hideScreensaver();
+    loadComponent('login');
 
     // reset id-entry
     window.components.keypad.clearIdEntry();

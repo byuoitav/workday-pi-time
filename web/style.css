@@ -1,24 +1,55 @@
-body,
-html {
+
+html, body {
     font-family: 'HCo Ringside Narrow SSm', 'Open Sans', Helvetica, Arial, sans-serif !important;
-    height: 100%;
+    height: 100vh;
     padding: 0;
     margin: 0;
-    width: 100%;
+    width: 100vw;
     background-color: #dde5f3;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .header {
-    padding-left: 25px;
     height: 80px;
     width: 100vw;
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     color: white;
     background-color: #002e5d;
     align-items: center;
-    gap: 10px;
 }
 
+.header-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-right: 20px;
+    width: 50%;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 20px;
+    width: 50%;
+    justify-content: flex-end;
+    padding-right: 30px;
+    gap: 20px;
+    font-size: 1.4em;
+}
+
+.header-right img {
+    width: 35px;
+    height: 35px;
+}
+
+.header-right img:active {
+    cursor: pointer;
+    transform: scale(1.2);
+}
 
 .screensaver {
     position: fixed;
@@ -43,4 +74,18 @@ html {
 
 .screensaver h1 {
     margin: 10px;
+}
+
+.component-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.component-container.loading {
+    visibility: hidden;
+    pointer-events: none;
 }
