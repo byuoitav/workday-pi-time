@@ -1,8 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    window.apiService = await new ApiService();
+    window.employee = undefined;
+    
     currentComponent = 'login'; // default component
+    await loadHeader('header');
     loadComponent(currentComponent);
-    // window.apiService = await new APIService();
 
+    
     // after 30 seconds of inactivity, show the screensaver
     let inactivityTimeout;
     function resetInactivityTimeout() {
@@ -10,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearTimeout(inactivityTimeout);
         inactivityTimeout = setTimeout(() => {
             window.showScreensaver();
-        }, 30000); // 30 seconds
+        }, 300000); // 30 seconds
     }
 
     // Reset inactivity timeout on user interaction
@@ -77,7 +81,7 @@ async function loadComponent(componentName, divQuerySelector = `.component-conta
                 // If it's the main component, track the current component
                 currentComponent = componentName;
             }
-            
+
         }
         componentContainer.classList.remove('loading'); // finally show it
     };
@@ -85,7 +89,37 @@ async function loadComponent(componentName, divQuerySelector = `.component-conta
     document.body.appendChild(script);
 }
 
-window.showScreensaver = function() {
+loadHeader = async function (componentName) {
+    const header = document.querySelector('.header');
+    // clear existing header children
+    header.innerHTML = '';
+
+    const htmlPath = `./components/${componentName}/${componentName}.html`;
+    const jsPath = `./components/${componentName}/${componentName}.js`;
+
+    // load the html
+    await fetch(htmlPath)
+        .then(response => response.text())
+        .then(html => {
+            header.innerHTML = html;
+            document.body.insertBefore(header, document.body.firstChild);
+        })
+        .catch(error => console.error('Error loading header:', error));
+
+    // load the js
+    const script = document.createElement('script');
+    script.src = jsPath;
+    script.onload = () => {
+        const module = window.components?.[componentName];
+        if (module?.initialize) {
+            module.initialize();
+        }
+    };
+
+    document.body.appendChild(script);
+}
+
+window.showScreensaver = function () {
     // Remove any existing screensaver first
     window.hideScreensaver();
     loadComponent('login');
@@ -118,7 +152,7 @@ window.showScreensaver = function() {
 };
 
 // Clear the interval when hiding the screensaver
-window.hideScreensaver = function() {
+window.hideScreensaver = function () {
     const screensaver = document.getElementById('screensaver');
     if (screensaver) {
         screensaver.remove();
@@ -128,3 +162,8 @@ window.hideScreensaver = function() {
         window.screensaverTimeInterval = null;
     }
 };
+
+window.loadDayOverview = function (day) {
+    window.dayOverviewDay = day; // Store the day for the overvie
+    loadComponent('dayOverview', `.component-container`);
+}

@@ -8,7 +8,7 @@ window.components.keypad = {
         this.idEntry = null;
     },
 
-    loadKeypad: function () {
+    loadKeypad: async function () {
         this.idEntry = document.querySelector('.id-entry');
         this.backspaceBtn = document.querySelector('.del');
         this.enterBtn = document.querySelector('.enter');
@@ -29,8 +29,9 @@ window.components.keypad = {
             if (btn) btn.addEventListener('click', () => this.appendIdEntry(key.value));
         });
         if (this.backspaceBtn) this.backspaceBtn.addEventListener('click', () => this.backspaceIdEntry());
-        if (this.enterBtn) this.enterBtn.addEventListener('click', () => {
+        if (this.enterBtn) this.enterBtn.addEventListener('click', async () => {
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
+            await window.apiService.getEmployee(byuId);
             window.loadComponent('clock');
             this.clearIdEntry()
         });

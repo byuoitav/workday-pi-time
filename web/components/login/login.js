@@ -3,6 +3,7 @@ window.components = window.components || {};
 window.components.login = {
     loadPage: function () {
         window.loadComponent('keypad', '.right-container');
+        window.components.header.updateHeader(true, '', "Y-Time", false, false);
     },
 
     cleanup: function () {

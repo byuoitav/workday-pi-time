@@ -48,28 +48,29 @@
 
 .calendar-container {
     margin: auto;
-    padding: 1rem;
+    /* padding: 1rem; */
     background-color: white;
     margin-top: 10px;
     border-radius: 20px;
     width: 89%;
-    height: 350px;
+    height: 390px;
 }
 
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(7, 1fr);
-    /* 1 row for weekdays + 6 weeks */
-    gap: 0.5rem;
 }
 
 .day-name {
     text-align: center;
     font-weight: bold;
-    padding: 0.5rem;
+    /* padding: 0.5rem; */
     border-radius: 5px;
-    font-size: 1.1em;
+    font-size: 1.21em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .day-cell {
@@ -77,4 +78,5 @@
     padding: 1rem;
     border-radius: 5px;
     font-weight: bold;
+    font-size: 1.2em;
 }
