@@ -40,19 +40,34 @@ class TimeEntryCode {
     this.sortOrder = data.sort_order;
   }
 }
-
+class ErrorResponse {
+    constructor(data) {
+        this.error = data.error || "Unknown error occurred";
+    }
+    toString() {
+        return `Error: ${this.error}`;
+    }
+}
 class Employee {
   constructor(data) {
-    this.name = data.employee_name.trim();
-    this.workerId = data.worker_id;
+    this.name = (data.employee_name || "").trim();
+    this.workerId = data.worker_id ?? null;
     this.international = data.international_status === "true";
-    this.totalWeekHours = data.total_week_hours;
-    this.totalPeriodHours = data.total_period_hours;
-    this.positionsList = data.positions_list;
-    this.timeEntryCodes = data.time_entry_codes.map(code => new TimeEntryCode(code));
-    this.positions = data.positions.map(pos => new Position(pos));
-    this.periodPunches = data.period_punches.map(p => new Punch(p));
-    this.periodBlocks = data.period_blocks.map(b => new TimeBlock(b));
+    this.totalWeekHours = data.total_week_hours ?? 0;
+    this.totalPeriodHours = data.total_period_hours ?? 0;
+    this.positionsList = data.positions_list ?? [];
+    this.timeEntryCodes = Array.isArray(data.time_entry_codes)
+      ? data.time_entry_codes.map(code => new TimeEntryCode(code))
+      : [];
+    this.positions = Array.isArray(data.positions)
+      ? data.positions.map(pos => new Position(pos))
+      : [];
+    this.periodPunches = Array.isArray(data.period_punches)
+      ? data.period_punches.map(p => new Punch(p))
+      : [];
+    this.periodBlocks = Array.isArray(data.period_blocks)
+      ? data.period_blocks.map(b => new TimeBlock(b))
+      : [];
   }
 
   get primaryPosition() {

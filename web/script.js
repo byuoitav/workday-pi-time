@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
     window.apiService = await new ApiService();
     window.employee = undefined;
-    
+    window.curYear = null;
+    window.curMonth = null;
+
     currentComponent = 'login'; // default component
     await loadHeader('header');
     loadComponent(currentComponent);
 
-    
     // after 30 seconds of inactivity, show the screensaver
     let inactivityTimeout;
     function resetInactivityTimeout() {
@@ -122,7 +123,7 @@ loadHeader = async function (componentName) {
 window.showScreensaver = function () {
     // Remove any existing screensaver first
     window.hideScreensaver();
-    loadComponent('login');
+    window.signOut();
 
     // reset id-entry
     window.components.keypad.clearIdEntry();
@@ -166,4 +167,15 @@ window.hideScreensaver = function () {
 window.loadDayOverview = function (day) {
     window.dayOverviewDay = day; // Store the day for the overvie
     loadComponent('dayOverview', `.component-container`);
+}
+
+window.signOut = function () {
+    // Clear the window objects
+    window.employee = undefined;
+    window.curYear = null;
+    window.curMonth = null;
+    // Reset the current component to login
+    currentComponent = 'login';
+    // Load the login component
+    loadComponent(currentComponent);
 }

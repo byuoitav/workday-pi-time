@@ -31,9 +31,17 @@ window.components.keypad = {
         if (this.backspaceBtn) this.backspaceBtn.addEventListener('click', () => this.backspaceIdEntry());
         if (this.enterBtn) this.enterBtn.addEventListener('click', async () => {
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
+            // start loading animation
+            this.loadAnimation();
             await window.apiService.getEmployee(byuId);
-            window.loadComponent('clock');
-            this.clearIdEntry()
+            this.stopAnimation();
+
+            if (!window.employee) {
+                this.clearIdEntry();
+                return;
+            }
+            await window.loadComponent('clock');
+            this.clearIdEntry();
         });
         this.updateButtonStates();
     },
@@ -106,5 +114,15 @@ window.components.keypad = {
                 this.enterBtn.classList.add('unclickable');
             }
         }
+    },
+
+    loadAnimation: function () {
+        const blueCircle = document.getElementById("blueCircle");
+        blueCircle.classList.add("loader");
+    },
+
+    stopAnimation: function () {
+        const blueCircle = document.getElementById("blueCircle");
+        blueCircle.classList.remove("loader");
     }
 }

@@ -4,6 +4,7 @@ window.components.login = {
     loadPage: function () {
         window.loadComponent('keypad', '.right-container');
         window.components.header.updateHeader(true, '', "Y-Time", false, false);
+        this.loadMedallion();
     },
 
     cleanup: function () {
@@ -12,5 +13,14 @@ window.components.login = {
         if (keypadStylesheet) {
             keypadStylesheet.remove();
         }
+    },
+
+    loadMedallion: async function () {
+        await fetch('assets/byu_medallion.svg')
+            .then(response => response.text())
+            .then(svgText => {
+                const container = document.getElementById('byu-medallion');
+                container.innerHTML = svgText;
+            });
     }
 }

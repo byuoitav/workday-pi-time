@@ -26,7 +26,8 @@
     font-weight: normal;
 }
 
-.medallion {
+.medallion svg {
     width: 350px;
     height: 350px;
+    display: block;
 }

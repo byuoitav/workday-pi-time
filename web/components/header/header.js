@@ -96,7 +96,7 @@ window.components.header = {
         if (this.showSignOut) {
             this.signOutBtn.style.display = 'block';
             this.signOutBtn.onclick = () => {
-                window.loadComponent('login');
+                window.signOut();
             };
         } else {
             this.signOutBtn.style.display = 'none';
