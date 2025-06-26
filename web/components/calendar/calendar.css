@@ -93,7 +93,7 @@
   position: absolute;
   bottom: 3px; /* distance from bottom */
   left: 50%;
-  transform: translateX(-70%);
+  transform: translateX(-50%);
   width: 8px;
   height: 8px;
   background-color: red;
@@ -104,7 +104,7 @@
   position: absolute;
   bottom: 3px; /* distance from bottom */
   left: 50%;
-  transform: translateX(-70%);
+  transform: translateX(-50%);
   width: 8px;
   height: 8px;
   background-color: rgb(0, 0, 0);

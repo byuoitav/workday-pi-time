@@ -23,8 +23,8 @@ window.components.calendar = {
         const dayButtons = document.querySelectorAll('.day-cell');
         dayButtons.forEach((dayButton) => {
             dayButton.addEventListener('click', () => {
-                console.log(`Clicked on day: ${dayButton.textContent}`);
-                window.loadDayOverview(dayButton.textContent);
+                console.log(`Clicked on day: ${dayButton.id}`);
+                window.loadDayOverview(dayButton.id);
             });
         });
     },
@@ -46,45 +46,53 @@ window.components.calendar = {
 
     populateCalendar: function (year, month) {
         const calendar = document.querySelector('.calendar-grid');
-
-        // Remove previous day cells (if any)
         [...calendar.querySelectorAll('.day-cell')].forEach(el => el.remove());
 
-        const firstDay = new Date(year, month, 1); // 1st day of the month
-        const lastDay = new Date(year, month + 1, 0); // Last day of current month
-
+        const firstDay = new Date(year, month, 1);
         const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
-        const daysInMonth = lastDay.getDate();
-
-        const prevMonthLastDay = new Date(year, month, 0).getDate(); // Last day of previous month
-
         const totalCells = 42;
+
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
             cell.className = 'day-cell';
 
-            if (i < startDayOfWeek) {
-                // Days from previous month
-                cell.textContent = prevMonthLastDay - startDayOfWeek + 1 + i;
-                cell.classList.add('not-cur-month');
-            } else if (i < startDayOfWeek + daysInMonth) {
-                // Current month
-                cell.textContent = i - startDayOfWeek + 1;
-                // current day highlight
-                if (i - startDayOfWeek + 1 === new Date().getDate() && year === new Date().getFullYear() && month === new Date().getMonth()) {
-                    cell.classList.add('cur-day');
-                }
-            } else {
-                // Next month
-                cell.textContent = i - (startDayOfWeek + daysInMonth) + 1;
+            // Calculate the date this cell represents
+            const date = new Date(year, month, 1 - startDayOfWeek + i);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            cell.id = dateStr;
+            cell.textContent = date.getDate();
+
+            // grey out days from the previous or next month
+            if (date.getMonth() !== month) {
                 cell.classList.add('not-cur-month');
             }
 
+            // Highlight today
+            if (dateStr === todayStr) {
+                cell.classList.add('cur-day');
+            }
+
             calendar.appendChild(cell);
+
+            // Add dots if day has period blocks or period punches
+            const dayData = window.timeService.getDayData(dateStr);
+            if (dayData && dayData.hasPeriodBlocks && !dayData.hasPeriodPunches) {
+                const blackDot = document.createElement('div');
+                blackDot.className = 'black-dot';
+                cell.appendChild(blackDot);
+            } else if (dayData && dayData.hasPeriodPunches) {
+                const redDot = document.createElement('div');
+                redDot.className = 'red-dot';
+                cell.appendChild(redDot);
+            }
         }
+
         this.addDayListeners();
     },
+
 
     dePopulateCalendar: function () {
         const calendar = document.querySelector('.calendar-grid');

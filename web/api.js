@@ -11,6 +11,7 @@ class ApiService {
                 }
                 try {
                     employee = new Employee(json.employee);
+                    console.log("Employee data received:", employee);
                 }
                 catch (error) {
                     console.error("Error parsing employee data:", error);
@@ -18,11 +19,8 @@ class ApiService {
                     return;
                 }
                 window.employee = employee; // Store the employee object globally
+                window.timeService = new TimeService(employee);
                 return;
             });
-
-
     }
-
-
 }

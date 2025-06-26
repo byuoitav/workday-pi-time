@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     window.apiService = await new ApiService();
+    window.timeService = undefined;
     window.employee = undefined;
     window.curYear = null;
     window.curMonth = null;
@@ -82,11 +83,9 @@ async function loadComponent(componentName, divQuerySelector = `.component-conta
                 // If it's the main component, track the current component
                 currentComponent = componentName;
             }
-
         }
         componentContainer.classList.remove('loading'); // finally show it
     };
-
     document.body.appendChild(script);
 }
 
@@ -106,7 +105,7 @@ loadHeader = async function (componentName) {
             document.body.insertBefore(header, document.body.firstChild);
         })
         .catch(error => console.error('Error loading header:', error));
-
+    
     // load the js
     const script = document.createElement('script');
     script.src = jsPath;
@@ -116,7 +115,6 @@ loadHeader = async function (componentName) {
             module.initialize();
         }
     };
-
     document.body.appendChild(script);
 }
 
@@ -127,7 +125,7 @@ window.showScreensaver = function () {
 
     // reset id-entry
     window.components.keypad.clearIdEntry();
-
+    
     const screensaver = document.createElement('div');
     screensaver.id = 'screensaver';
     screensaver.className = 'screensaver';

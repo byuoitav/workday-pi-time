@@ -86,3 +86,4 @@ class Employee {
     return this.periodBlocks.reduce((sum, b) => sum + b.length, 0);
   }
 }
+
