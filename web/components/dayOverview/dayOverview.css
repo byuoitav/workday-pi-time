@@ -89,10 +89,6 @@ hr {
 }
 
 .time-block {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
     width: 90%;
     padding: 20px;
     border-radius: 20px;
@@ -101,6 +97,20 @@ hr {
     font-size: 1.2em;
     font-weight: bold;
     margin-top: 10px;
+    text-align: center;
+}
+
+
+.time-range {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+}
+
+.time-range > p {
+    margin: 0;
 }
 
 .time-block > p {

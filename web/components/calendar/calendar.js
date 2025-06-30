@@ -23,7 +23,7 @@ window.components.calendar = {
         const dayButtons = document.querySelectorAll('.day-cell');
         dayButtons.forEach((dayButton) => {
             dayButton.addEventListener('click', () => {
-                console.log(`Clicked on day: ${dayButton.id}`);
+                window.curDay = dayButton.id;
                 window.loadDayOverview(dayButton.id);
             });
         });
@@ -42,8 +42,9 @@ window.components.calendar = {
         // Update the calendar display
         this.dePopulateCalendar();
         this.populateCalendar(year, month);
+        this.updateNextPrevButtons();
     },
-
+    
     populateCalendar: function (year, month) {
         const calendar = document.querySelector('.calendar-grid');
         [...calendar.querySelectorAll('.day-cell')].forEach(el => el.remove());
@@ -55,6 +56,7 @@ window.components.calendar = {
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+        // i = 0 to 41, representing the 42 cells in the calendar grid
         for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
             cell.className = 'day-cell';
@@ -79,20 +81,20 @@ window.components.calendar = {
 
             // Add dots if day has period blocks or period punches
             const dayData = window.timeService.getDayData(dateStr);
+                // black dots v
             if (dayData && dayData.hasPeriodBlocks && !dayData.hasPeriodPunches) {
                 const blackDot = document.createElement('div');
                 blackDot.className = 'black-dot';
                 cell.appendChild(blackDot);
+                // red dots v
             } else if (dayData && dayData.hasPeriodPunches) {
                 const redDot = document.createElement('div');
                 redDot.className = 'red-dot';
                 cell.appendChild(redDot);
             }
         }
-
         this.addDayListeners();
     },
-
 
     dePopulateCalendar: function () {
         const calendar = document.querySelector('.calendar-grid');
@@ -148,6 +150,28 @@ window.components.calendar = {
             this.calendar.classList.remove("slide-left2");
             this.calendarTitle.classList.remove("slide-name-left");
         }, 300);
-    }
+    },
 
+    // hide the next button if current month is this month, 
+    // else show it and hide the previous button if it is the current month - 1
+    updateNextPrevButtons: function () {
+        const today = new Date();
+        const isCurrentMonth = (window.curYear === today.getFullYear() && window.curMonth === today.getMonth());
+        const isPrevMonth = (window.curYear === today.getFullYear() && window.curMonth === today.getMonth() - 1);
+
+        const calendarLeftBtn = document.querySelector('.calendar-left');
+        const calendarRightBtn = document.querySelector('.calendar-right');
+
+        if (isCurrentMonth) {
+            calendarRightBtn.style.visibility = 'hidden';
+        } else {
+            calendarRightBtn.style.visibility = 'visible';
+        }
+
+        if (isPrevMonth) {
+            calendarLeftBtn.style.visibility = 'hidden';
+        } else {
+            calendarLeftBtn.style.visibility = 'visible';
+        }
+    }
 }

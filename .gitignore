@@ -20,3 +20,5 @@ analog-dist
 
 dist/
 _testing/
+
+.vscode/

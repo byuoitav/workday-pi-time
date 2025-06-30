@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.employee = undefined;
     window.curYear = null;
     window.curMonth = null;
+    window.curDay = null;
 
     currentComponent = 'login'; // default component
     await loadHeader('header');

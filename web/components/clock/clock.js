@@ -26,14 +26,14 @@ window.components.clock = {
     setWeeklyTotal: function () {
         const weeklyTotal = document.querySelector('.weekly-total');
         if (weeklyTotal) {
-            weeklyTotal.textContent = `Week Total: ${window.employee.totalWeekHours}`;
+            weeklyTotal.textContent = `Week Total: ${this.convertToTimeFormat(window.employee.totalWeekHours)}`;
         }
     },
 
     setDailyTotal: function () {
         const dailyTotal = document.querySelector('.daily-total');
         if (dailyTotal) {
-            dailyTotal.textContent = `Pay Period Total: ${window.employee.totalPeriodHours}`;
+            dailyTotal.textContent = `Pay Period Total: ${this.convertToTimeFormat(window.employee.totalPeriodHours)}`;
         }
     },
 
@@ -51,13 +51,21 @@ window.components.clock = {
         secondaryPositions.forEach(position => {
             this.createJobRow(position);
         });
-        
+
     },
 
     createJobRow: function (position) {
         const clockGridContainer = document.querySelector('.clock-grid');
         jobTitleContainer = document.createElement('div');
-        jobTitleContainer.className = 'job-title-container scrolling-container';
+        jobTitleContainer.className = 'job-title-container';
+
+        // Check if jobTitle or supervisoryOrg text is longer than 25 characters
+        const isLongText = (position.title && position.title.length > 25) ||
+            (position.org && position.org.length > 25);
+
+        if (isLongText) {
+            jobTitleContainer.classList.add('scrolling-container');
+        }
 
         scrollBlock = document.createElement('div');
         scrollBlock.className = 'scroll-block';
@@ -80,12 +88,12 @@ window.components.clock = {
 
         const weekTime = document.createElement('p');
         weekTime.className = 'week-time';
-        weekTime.textContent = position.weekHours;
+        weekTime.textContent = this.convertToTimeFormat(position.weekHours);
         clockGridContainer.appendChild(weekTime);
 
         const periodTime = document.createElement('p');
         periodTime.className = 'pay-period';
-        periodTime.textContent = position.periodHours;
+        periodTime.textContent = this.convertToTimeFormat(position.periodHours);
         clockGridContainer.appendChild(periodTime);
 
         const customRadioContainer = document.createElement('div');
@@ -136,5 +144,17 @@ window.components.clock = {
         else {
             outInput.checked = true;
         }
+    },
+
+    convertToTimeFormat: function (timeString) {
+        // Remove the "H" and trim any whitespace
+        const numericPart = parseFloat(timeString.replace('H', '').trim());
+
+        // Extract hours and minutes
+        const hours = Math.floor(numericPart);
+        const minutes = Math.round((numericPart - hours) * 60);
+
+        // Format as hh:mm
+        return `${hours}:${minutes.toString().padStart(2, '0')}`;
     }
 };

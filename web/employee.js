@@ -74,14 +74,6 @@ class Employee {
     return this.positions.find(pos => pos.primary);
   }
 
-  get isClockedIn() {
-    return this.primaryPosition?.clockedIn ?? false;
-  }
-
-  get latestPunch() {
-    return this.periodPunches.at(-1) ?? null;
-  }
-
   get totalHoursWorked() {
     return this.periodBlocks.reduce((sum, b) => sum + b.length, 0);
   }
