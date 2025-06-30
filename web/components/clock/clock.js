@@ -1,8 +1,25 @@
 window.components = window.components || {};
 
 window.components.clock = {
+    hourlySingle: false,
+    hourlyMultiple: false,
+    notHourly: false,
+
     loadPage: function () {
         window.components.header.updateHeader(true, '', "Y-Time", true, true);
+        if (window.employee.timeEntryCodes.length === 0) {
+            this.notHourly = true;
+        }
+
+        else if (window.employee.timeEntryCodes.length === 1) {
+            this.hourlySingle = true;
+        }
+        else if (window.employee.timeEntryCodes.length > 1) {
+            this.hourlyMultiple = true;
+        } else {
+            console.error("Unexpected time entry codes length:", window.employee.timeEntryCodes.length);
+        }
+
         //.review-time-entry listener
         const reviewTimeEntry = document.querySelector('.review-time-entry');
         if (reviewTimeEntry) {
@@ -12,6 +29,7 @@ window.components.clock = {
         }
         this.populateJobs();
         this.populateClockInfo();
+        this.hideReviewTimeEntry();
     },
 
     cleanup: function () {
@@ -40,6 +58,8 @@ window.components.clock = {
     populateJobs: function () {
         const jobs = window.employee.positions;
 
+        this.addHeaderRow();
+
         // populate primary positions first
         const primaryPositions = jobs.filter(job => job.primary);
         primaryPositions.forEach(position => {
@@ -55,8 +75,74 @@ window.components.clock = {
     },
 
     createJobRow: function (position) {
-        const clockGridContainer = document.querySelector('.clock-grid');
-        jobTitleContainer = document.createElement('div');
+        const clockGridContainer = document.querySelector('#clock-grid');
+        this.applyClockGridClass(clockGridContainer);
+
+        const jobTitleContainer = this.createJobTitleContainer(position);
+        clockGridContainer.appendChild(jobTitleContainer);
+
+        const weekTime = this.createWeekTimeElement(position.weekHours);
+        clockGridContainer.appendChild(weekTime);
+
+        const periodTime = this.createPeriodTimeElement(position.periodHours);
+        clockGridContainer.appendChild(periodTime);
+
+        if (this.hourlyMultiple) {
+            const timeEntryCodeSelect = this.createTimeEntryCodeSelector();
+            clockGridContainer.appendChild(timeEntryCodeSelect);
+        }
+
+        if (!this.notHourly) {
+            const customRadioContainer = this.createClockInOutRadioButtons(position);
+            clockGridContainer.appendChild(customRadioContainer);
+        }
+    },
+
+    addHeaderRow: function () {
+        const clockGridContainer = document.querySelector('#clock-grid');
+
+        const jobTitleHeader = document.createElement('p');
+        jobTitleHeader.className = 'clock-heading';
+        jobTitleHeader.textContent = 'Job Title';
+        clockGridContainer.appendChild(jobTitleHeader);
+
+        const weekHeader = document.createElement('p');
+        weekHeader.className = 'clock-heading';
+        weekHeader.textContent = 'Week';
+        clockGridContainer.appendChild(weekHeader);
+
+        const payPeriodHeader = document.createElement('p');
+        payPeriodHeader.className = 'clock-heading';
+        payPeriodHeader.textContent = 'Pay Period';
+        clockGridContainer.appendChild(payPeriodHeader);
+
+        if (this.hourlyMultiple) {
+            const timeEntryCodeHeader = document.createElement('p');
+            timeEntryCodeHeader.className = 'clock-heading';
+            timeEntryCodeHeader.textContent = 'TEC';
+            clockGridContainer.appendChild(timeEntryCodeHeader);
+        }
+
+        if (!this.notHourly) {
+            const clockHeader = document.createElement('p');
+            clockHeader.className = 'clock-heading';
+            clockHeader.textContent = 'Clock';
+            clockGridContainer.appendChild(clockHeader);
+        }
+    },
+
+    applyClockGridClass: function (clockGridContainer) {
+        if (this.notHourly) {
+            clockGridContainer.classList.add('clock-grid-not-hourly');
+        } else if (this.hourlySingle) {
+            clockGridContainer.classList.add('clock-grid-hourly-single');
+        } else if (this.hourlyMultiple) {
+            clockGridContainer.classList.add('clock-grid-hourly-multiple');
+        }
+    },
+
+    createJobTitleContainer: function (position) {
+        const jobTitleContainer = document.createElement('div');
         jobTitleContainer.className = 'job-title-container';
 
         // Check if jobTitle or supervisoryOrg text is longer than 25 characters
@@ -67,16 +153,16 @@ window.components.clock = {
             jobTitleContainer.classList.add('scrolling-container');
         }
 
-        scrollBlock = document.createElement('div');
+        const scrollBlock = document.createElement('div');
         scrollBlock.className = 'scroll-block';
 
-        jobContainer = document.createElement('div');
+        const jobContainer = document.createElement('div');
 
-        jobTitle = document.createElement('p');
+        const jobTitle = document.createElement('p');
         jobTitle.className = 'job-title';
         jobTitle.textContent = position.title;
 
-        supervisoryOrg = document.createElement('p');
+        const supervisoryOrg = document.createElement('p');
         supervisoryOrg.className = 'job-department';
         supervisoryOrg.textContent = position.org;
 
@@ -84,66 +170,81 @@ window.components.clock = {
         jobContainer.appendChild(supervisoryOrg);
         scrollBlock.appendChild(jobContainer);
         jobTitleContainer.appendChild(scrollBlock);
-        clockGridContainer.appendChild(jobTitleContainer);
 
+        return jobTitleContainer;
+    },
+
+    createWeekTimeElement: function (weekHours) {
         const weekTime = document.createElement('p');
         weekTime.className = 'week-time';
-        weekTime.textContent = this.convertToTimeFormat(position.weekHours);
-        clockGridContainer.appendChild(weekTime);
+        weekTime.textContent = this.convertToTimeFormat(weekHours);
+        return weekTime;
+    },
 
+    createPeriodTimeElement: function (periodHours) {
         const periodTime = document.createElement('p');
         periodTime.className = 'pay-period';
-        periodTime.textContent = this.convertToTimeFormat(position.periodHours);
-        clockGridContainer.appendChild(periodTime);
+        periodTime.textContent = this.convertToTimeFormat(periodHours);
+        return periodTime;
+    },
 
+    createTimeEntryCodeSelector: function () {
+        const timeEntryCodeSelect = document.createElement('select');
+        timeEntryCodeSelect.className = 'time-entry-code-select';
+
+        // Sort codes by sortOrder ascending
+        const sortedCodes = window.employee.timeEntryCodes.slice().sort((a, b) => a.sortOrder - b.sortOrder);
+
+        sortedCodes.forEach((code, idx) => {
+            const option = document.createElement('option');
+            option.value = code.backendId;
+            option.textContent = code.frontendName;
+            // Select the first (lowest sortOrder) by default
+            if (idx === 0) {
+                option.selected = true;
+            }
+            timeEntryCodeSelect.appendChild(option);
+        });
+        return timeEntryCodeSelect;
+    },
+
+    createClockInOutRadioButtons: function (position) {
         const customRadioContainer = document.createElement('div');
         customRadioContainer.className = 'custom-radio-container';
-        const inLabel = document.createElement('label');
-        inLabel.className = 'custom-radio';
 
-        const inInput = document.createElement('input');
-        inInput.name = position.positionNumber; // Use position number as name for radio group
-        inInput.type = 'radio';
-        inInput.className = 'in-radio';
-        inInput.value = 'in';
-
-        const inIcon = document.createElement('div');
-        inIcon.className = 'radio-icon';
-
-        const inSpan = document.createElement('span');
-        inSpan.textContent = 'IN';
-
-        inLabel.appendChild(inInput);
-        inLabel.appendChild(inIcon);
-        inLabel.appendChild(inSpan);
+        const inLabel = this.createRadioButton('in', position.positionNumber, 'IN', position.clockedIn);
         customRadioContainer.appendChild(inLabel);
 
-        const outLabel = document.createElement('label');
-        outLabel.className = 'custom-radio';
-        const outInput = document.createElement('input');
-        outInput.name = position.positionNumber; // Use position number as name for radio group
-        outInput.type = 'radio';
-        outInput.className = 'out-radio';
-        outInput.value = 'out';
-
-        const outIcon = document.createElement('div');
-        outIcon.className = 'radio-icon';
-
-        const outSpan = document.createElement('span');
-        outSpan.textContent = 'OUT';
-        outLabel.appendChild(outInput);
-        outLabel.appendChild(outIcon);
-        outLabel.appendChild(outSpan);
+        const outLabel = this.createRadioButton('out', position.positionNumber, 'OUT', !position.clockedIn);
         customRadioContainer.appendChild(outLabel);
-        clockGridContainer.appendChild(customRadioContainer);
 
-        isClockedIn = position.clockedIn;
-        if (isClockedIn) {
-            inInput.checked = true;
+        return customRadioContainer;
+    },
+
+    createRadioButton: function (value, name, labelText, isChecked) {
+        const label = document.createElement('label');
+        label.className = 'custom-radio';
+
+        const input = document.createElement('input');
+        input.name = name;
+        input.type = 'radio';
+        input.className = `${value}-radio`;
+        input.value = value;
+        if (isChecked) {
+            input.checked = true;
         }
-        else {
-            outInput.checked = true;
-        }
+
+        const icon = document.createElement('div');
+        icon.className = 'radio-icon';
+
+        const span = document.createElement('span');
+        span.textContent = labelText;
+
+        label.appendChild(input);
+        label.appendChild(icon);
+        label.appendChild(span);
+
+        return label;
     },
 
     convertToTimeFormat: function (timeString) {
@@ -156,5 +257,14 @@ window.components.clock = {
 
         // Format as hh:mm
         return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    },
+
+    hideReviewTimeEntry: function () {
+        const reviewTimeEntry = document.querySelector('.review-time-entry');
+        // An employee can't clock in or out if they have no time entry codes
+        if (reviewTimeEntry && !(window.employee.timeEntryCodes.length > 0)) {
+            reviewTimeEntry.classList.add('grey-out');
+            reviewTimeEntry.disabled = true;
+        }
     }
 };

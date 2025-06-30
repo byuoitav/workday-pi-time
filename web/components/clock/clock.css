@@ -30,7 +30,32 @@
     padding: .5rem;
 }
 
-.clock-grid {
+/* Grid with Time Entry Codes and in/out buttons */
+.clock-grid-hourly-multiple {
+    display: grid;
+    grid-template-columns: 3fr 2fr 2fr 2fr 4fr;
+    /* column widths */
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    /* row gap and column gap */
+    font-size: 1em;
+}
+
+/* Grid with no in/out */
+.clock-grid-not-hourly {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr ;
+    /* column widths */
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    /* row gap and column gap */
+    font-size: 1em;
+}
+
+/* Grid with no Time Entry Codes but has in/out buttons */
+.clock-grid-hourly-single {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 2fr;
     /* column widths */
@@ -102,6 +127,18 @@
   100% {
     transform: translateX(-50%);
   }
+}
+
+.time-entry-code-select {
+  background-color: #fff;
+  border-radius: 20px;
+  border-width: 2px !important;
+  min-height: 6vh;
+  min-width: 10vw;
+  padding: 1.8vh .8vw;
+  border-color: #b3b3b3;
+  border-style: solid;
+  font-size: 1.1em;
 }
 
 .clock-buttons {
@@ -228,4 +265,9 @@ button {
     font-size: 1.7em;
     transition: transform 0.05s, box-shadow 0.05s, background-color 0.05s;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.grey-out {
+    background-color: #b3b3b3;
+    cursor: not-allowed;
 }
