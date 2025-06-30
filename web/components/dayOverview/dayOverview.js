@@ -24,10 +24,19 @@ window.components.dayOverview = {
     populatePositions: function () {
         const positions = window.timeService.employee.positions;
 
-        positions.forEach((position) => {
+        // Separate primary and non-primary positions
+        const primaryPositions = positions.filter(position => position.primary);
+        const nonPrimaryPositions = positions.filter(position => !position.primary);
+
+        // Add primary positions first
+        primaryPositions.forEach((position) => {
             this.createPositionBlock(position);
         });
 
+        // Add non-primary positions next
+        nonPrimaryPositions.forEach((position) => {
+            this.createPositionBlock(position);
+        });
     },
 
     createPositionBlock: function (position) {
