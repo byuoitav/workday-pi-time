@@ -20,7 +20,7 @@ window.components.calendar = {
     },
 
     addDayListeners: function () {
-        const dayButtons = document.querySelectorAll('.day-cell');
+        const dayButtons = document.querySelectorAll('.day-cell:not(.disabled)');
         dayButtons.forEach((dayButton) => {
             dayButton.addEventListener('click', () => {
                 window.curDay = dayButton.id;
@@ -56,6 +56,9 @@ window.components.calendar = {
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // Previous month
+        const twoMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1); // Two months ago
+
         // i = 0 to 41, representing the 42 cells in the calendar grid
         for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
@@ -77,21 +80,24 @@ window.components.calendar = {
                 cell.classList.add('cur-day');
             }
 
-            calendar.appendChild(cell);
-
-            // Add dots if day has period blocks or period punches
-            const dayData = window.timeService.getDayData(dateStr);
-                // black dots v
-            if (dayData && dayData.hasPeriodBlocks && !dayData.hasPeriodPunches) {
-                const blackDot = document.createElement('div');
-                blackDot.className = 'black-dot';
-                cell.appendChild(blackDot);
-                // red dots v
-            } else if (dayData && dayData.hasPeriodPunches) {
-                const redDot = document.createElement('div');
-                redDot.className = 'red-dot';
-                cell.appendChild(redDot);
+            // Disable future days and days older than two months ago
+            if (date > today || date < twoMonthsAgo || (date.getMonth() !== month && date < lastMonth)) {
+                cell.classList.add('disabled');
+            } else {
+                // Add dots if day has period blocks or period punches
+                const dayData = window.timeService.getDayData(dateStr);
+                if (dayData && dayData.hasPeriodBlocks && !dayData.hasPeriodPunches) {
+                    const blackDot = document.createElement('div');
+                    blackDot.className = 'black-dot';
+                    cell.appendChild(blackDot);
+                } else if (dayData && dayData.hasPeriodPunches) {
+                    const redDot = document.createElement('div');
+                    redDot.className = 'red-dot';
+                    cell.appendChild(redDot);
+                }
             }
+
+            calendar.appendChild(cell);
         }
         this.addDayListeners();
     },
