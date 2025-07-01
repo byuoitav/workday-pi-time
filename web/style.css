@@ -89,3 +89,58 @@ html, body {
     visibility: hidden;
     pointer-events: none;
 }
+
+/* Popup styling */
+.popup-container {
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(59, 57, 57, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.popup-header {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 15px;
+}
+
+.popup-message {
+    font-size: 1.6em;
+    margin: 0;
+    margin-bottom: 25px;
+    color: #666666;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.close-error-btn {
+    font-size: 1.2em;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+}

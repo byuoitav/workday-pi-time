@@ -6,7 +6,12 @@ class ApiService {
             .then(res => res.json())
             .then(json => {
                 if (json.error) {
-                    alert("Error: " + json.error);
+                    if (json.error.includes("no worker")) {
+                        window.showErrorPopup("No Worker Matches ID");
+                    } else {
+                        window.showErrorPopup(json.error);
+
+                    }
                     return;
                 }
                 try {
@@ -15,7 +20,7 @@ class ApiService {
                 }
                 catch (error) {
                     console.error("Error parsing employee data:", error);
-                    alert("Error: Invalid employee data received.");
+                    window.showErrorPopup("Error parsing employee data. Please try again.");
                     return;
                 }
                 window.employee = employee; // Store the employee object globally

@@ -178,3 +178,39 @@ window.signOut = function () {
     // Load the login component
     loadComponent(currentComponent);
 }
+
+window.showPopup = function (title, message) {
+    const popupContainer = document.querySelector('.popup-container');
+    const popupHeader = popupContainer.querySelector('.popup-header');
+    const popupMessage = popupContainer.querySelector('.popup-message');
+
+    popupHeader.textContent = title;
+    popupMessage.textContent = message;
+
+    popupContainer.style.visibility = 'visible';
+}
+
+window.hidePopup = function () {
+    const popupContainer = document.querySelector('.popup-container');
+    // clear the popup content, title, and buttons
+    const popupHeader = popupContainer.querySelector('.popup-header');
+    const popupMessage = popupContainer.querySelector('.popup-message');
+    const popupButtons = popupContainer.querySelector('.popup-buttons');
+    popupHeader.textContent = '';
+    popupMessage.textContent = '';
+    popupButtons.innerHTML = '';
+
+    popupContainer.style.visibility = 'hidden';
+}
+
+window.showErrorPopup = function (message) {
+    window.showPopup('Error', message);
+    const popupButtons = document.querySelector('.popup-buttons');
+    const okButton = document.createElement('button');
+    okButton.textContent = 'Dismiss';
+    okButton.className = 'close-error-btn';
+    okButton.onclick = () => {
+        window.hidePopup();
+    };
+    popupButtons.appendChild(okButton);
+}
