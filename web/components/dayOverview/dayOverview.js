@@ -67,7 +67,7 @@ window.components.dayOverview = {
         timeBlockTitle.textContent = 'Time Blocks:';
         timeBlocks.appendChild(timeBlockTitle);
 
-        //create the time blocks
+        // create the time blocks
         const timeBlocksList = window.timeService.daysMap[window.curDay].periodBlocks.filter(block => block.positionNumber === position.positionNumber);
         timeBlocksList.forEach(block => {
             const timeBlock = this.createTimeBlock(block);
@@ -84,7 +84,7 @@ window.components.dayOverview = {
         unmatchedTimeTitle.textContent = 'Unmatched Time Events:';
         unmatchedTimeEvents.appendChild(unmatchedTimeTitle);
 
-        //create the unmatched time events
+        // create the unmatched time events
         const unmatchedTimeEventsList = window.timeService.daysMap[window.curDay].periodPunches.filter(event => event.positionNumber === position.positionNumber);
         unmatchedTimeEventsList.forEach(unmatchedTimeEvent => {
             const unmatchedTimeEventDiv = this.createUnmatchedTimeEvent(unmatchedTimeEvent);

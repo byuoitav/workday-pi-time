@@ -52,6 +52,10 @@ window.components.header = {
 
     },
 
+    // backArrowDestination should be the name of a component to load
+    // e.g. 'calendar', 'clock', 'dayOverview'
+    // title should be a string to display in the header
+    // the rest are booleans to show/hide elements
     updateHeader: function (showBYULogo, backArrowDestination, title, showName, showSignOut) {
         this.showBYULogo = showBYULogo;
         this.backArrowDestination = backArrowDestination;
