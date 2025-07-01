@@ -19,17 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.showScreensaver();
         }, 300000); // 30 seconds
     }
-
     // Reset inactivity timeout on user interaction
     document.addEventListener('mousemove', resetInactivityTimeout);
     document.addEventListener('keydown', resetInactivityTimeout);
     resetInactivityTimeout(); // Initialize the timeout
-
 });
 
-
 async function loadComponent(componentName, divQuerySelector = `.component-container`) {
-
     // Only call cleanup if the primary component, won't call cleanup on smaller components
     // like the keypad, which is a child component of the login component
     if (window.components?.[currentComponent]?.cleanup && divQuerySelector === `.component-container`) {
@@ -192,10 +188,12 @@ window.showPopup = function (title, message) {
 
 window.hidePopup = function () {
     const popupContainer = document.querySelector('.popup-container');
+    
     // clear the popup content, title, and buttons
     const popupHeader = popupContainer.querySelector('.popup-header');
     const popupMessage = popupContainer.querySelector('.popup-message');
     const popupButtons = popupContainer.querySelector('.popup-buttons');
+    
     popupHeader.textContent = '';
     popupMessage.textContent = '';
     popupButtons.innerHTML = '';

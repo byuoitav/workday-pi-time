@@ -5,6 +5,8 @@ window.components.login = {
         window.loadComponent('keypad', '.right-container');
         window.components.header.updateHeader(true, '', "Y-Time", false, false);
         this.loadMedallion();
+
+        makeZPattern();
     },
 
     cleanup: function () {
@@ -47,44 +49,42 @@ function createSquare(positionClass, onTap) {
     return square;
 }
 
- // v Z-Pattern Stuff Below v
-let topLeft, topRight, bottomLeft, bottomRight;
+function makeZPattern() {
+    // v Z-Pattern Stuff Below v
+    let topLeft, topRight, bottomLeft, bottomRight;
 
-topLeft = createSquare('top-left', () => {
-    if (!topRight) {
-        topRight = createSquare('top-right', () => {
-            if (!bottomLeft) {
-                bottomLeft = createSquare('bottom-left', () => {
-                    if (!bottomRight) {
-                        bottomRight = createSquare('bottom-right', () => {
-                            window.location.href = 'http://localhost:10000/dashboard/overview';
-                        });
-                    }
-                });
-            }
-        });
-    }
-});
-
-
-
-
-// Clean up all but topLeft after 20 seconds
-setTimeout(() => {
-    [topRight, bottomLeft, bottomRight].forEach(sq => {
-        if (sq && sq.parentElement) sq.remove();
+    topLeft = createSquare('top-left', () => {
+        if (!topRight) {
+            topRight = createSquare('top-right', () => {
+                if (!bottomLeft) {
+                    bottomLeft = createSquare('bottom-left', () => {
+                        if (!bottomRight) {
+                            bottomRight = createSquare('bottom-right', () => {
+                                window.location.href = 'http://localhost:10000/dashboard/overview';
+                            });
+                        }
+                    });
+                }
+            });
+        }
     });
-    topRight = bottomLeft = bottomRight = null;
-}, 20000);
 
-let cosmoSquare = createSquare('cosmo-square', () => {
-    // Cosmo square tap handler
-    console.log('Cosmo square tapped');
-    const cosmo = document.getElementById("cosmo");
-    cosmo.classList.add("cosmo-slide");
-    cosmo.classList.remove("cosmo-hide");
+    // Clean up all but topLeft after 20 seconds
     setTimeout(() => {
-      cosmo.classList.remove("cosmo-slide");
-      cosmo.classList.add("cosmo-hide");
-    }, 4000);
-});
+        [topRight, bottomLeft, bottomRight].forEach(sq => {
+            if (sq && sq.parentElement) sq.remove();
+        });
+        topRight = bottomLeft = bottomRight = null;
+    }, 20000);
+
+    let cosmoSquare = createSquare('cosmo-square', () => {
+        console.log('Cosmo square tapped');
+        const cosmo = document.getElementById("cosmo");
+        cosmo.classList.add("cosmo-slide");
+        cosmo.classList.remove("cosmo-hide");
+        setTimeout(() => {
+        cosmo.classList.remove("cosmo-slide");
+        cosmo.classList.add("cosmo-hide");
+        }, 4000);
+    });
+}

@@ -267,6 +267,12 @@ button {
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
+button:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.10);
+    background-color: #4f9bd98e; /* lighter shade */
+}
+
 .grey-out {
     background-color: #b3b3b3;
     cursor: not-allowed;

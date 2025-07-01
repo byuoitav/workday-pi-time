@@ -7,6 +7,14 @@ window.components.dayOverview = {
         console.log(window.timeService);
         this.populatePositions();
         this.setDayHeader();
+        
+        const totalHours = this.calculateTotalHoursForDay();
+        const totalHoursElement = document.querySelector('.total-hours');
+        if (totalHoursElement) {
+            totalHoursElement.textContent = `Total Hours: ${totalHours.toFixed(2)}`;
+        } else {
+            console.warn('Total hours element not found');
+        }
     },
 
     cleanup: function () {
@@ -37,6 +45,21 @@ window.components.dayOverview = {
         nonPrimaryPositions.forEach((position) => {
             this.createPositionBlock(position);
         });
+    },
+
+    calculateTotalHoursForDay: function () {
+        // find every time block for the current day
+        const timeBlocks = window.timeService.daysMap[window.curDay].periodBlocks;
+        let totalHours = 0;
+        timeBlocks.forEach(block => {
+            if (block.clockIn && block.clockOut) {
+                const start = new Date(block.clockIn);
+                const end = new Date(block.clockOut);
+                const hours = (end - start) / (1000 * 60 * 60); // convert milliseconds to hours
+                totalHours += hours;
+            }
+        });
+        return totalHours;
     },
 
     createPositionBlock: function (position) {
