@@ -38,8 +38,6 @@ class ApiService {
     async punch(data) {
         try {
             const json = JSON.stringify(data); // Serialize the data
-            console.log(json);
-
             const response = await fetch("http://localhost:8463/punch/" + data.worker_id, {
                 method: "POST",
                 headers: {
@@ -51,6 +49,7 @@ class ApiService {
             if (!response.ok) {
                 throw new Error(`Error punching: ${response.statusText}`);
             }
+            
             return response;
         } catch (e) {
             console.error("Error punching", e);

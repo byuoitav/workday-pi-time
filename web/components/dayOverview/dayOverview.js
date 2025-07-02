@@ -3,8 +3,6 @@ window.components = window.components || {};
 window.components.dayOverview = {
     loadPage: function () {
         window.components.header.updateHeader(false, 'calendar', "Day Overview", true, true);
-        console.log(window.curDay);
-        console.log(window.timeService);
         this.populatePositions();
         this.setDayHeader();
         
@@ -59,7 +57,7 @@ window.components.dayOverview = {
                 totalHours += hours;
             }
         });
-        
+
         return totalHours;
     },
 

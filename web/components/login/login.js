@@ -78,7 +78,6 @@ function makeZPattern() {
     }, 20000);
 
     let cosmoSquare = createSquare('cosmo-square', () => {
-        console.log('Cosmo square tapped');
         const cosmo = document.getElementById("cosmo");
         cosmo.classList.add("cosmo-slide");
         cosmo.classList.remove("cosmo-hide");

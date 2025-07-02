@@ -33,6 +33,7 @@ window.components.keypad = {
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
             // start loading animation
             this.loadAnimation();
+            this.clearIdEntry();
 
 
             let employee = await window.apiService.getEmployee(byuId);

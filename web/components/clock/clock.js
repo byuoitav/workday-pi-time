@@ -50,7 +50,14 @@ window.components.clock = {
         if (!response.status) {
             this.handleClockingError(response);
         } else {
-            this.handleClockingSuccess(positionNumber, clock_event_type);
+            const responseMsg = await response.json();
+            if (responseMsg.written_to_tcd === "true") {
+                this.handleClockingSuccess(positionNumber, clock_event_type);
+            } else {
+                this.handleClockingError("Please try again.");
+                await window.apiService.getEmployee(window.employee.workerId);
+                window.loadComponent('clock');
+            }
         }
     },
 
