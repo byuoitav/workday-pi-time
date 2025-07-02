@@ -1,31 +1,38 @@
 class ApiService {
     async getEmployee(byuID) {
         const url = "http://localhost:8463/get_employee_data/" + byuID;
-        let employee;
-        await fetch(url)
-            .then(res => res.json())
-            .then(json => {
-                if (json.error) {
-                    if (json.error.includes("no worker")) {
-                        window.showErrorPopup("No Worker Matches ID");
-                    } else {
-                        window.showErrorPopup(json.error);
-                    }
-                    return;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+
+            const json = await response.json();
+
+            if (json.error) {
+                if (json.error.includes("no worker")) {
+                    window.showErrorPopup("No Worker Matches ID");
+                } else {
+                    window.showErrorPopup(json.error);
                 }
-                try {
-                    employee = new Employee(json.employee);
-                    console.log("Employee data received:", employee);
-                }
-                catch (error) {
-                    console.error("Error parsing employee data:", error);
-                    window.showErrorPopup("Error parsing employee data. Please try again.");
-                    return;
-                }
+                return null;
+            }
+
+            try {
+                const employee = new Employee(json.employee);
+                console.log("Employee data received:", employee);
                 window.employee = employee; // Store the employee object globally
                 window.timeService = new TimeService(employee);
-                return;
-            });
+                return employee;
+            } catch (error) {
+                console.error("Error parsing employee data:", error);
+                window.showErrorPopup("Error parsing employee data. Please try again.");
+                return null;
+            }
+        } catch (error) {
+            window.showErrorPopup("Error communicating with server. Please try again.");
+            return null;
+        }
     }
 
     async punch(data) {
@@ -33,7 +40,7 @@ class ApiService {
             const json = JSON.stringify(data); // Serialize the data
             console.log(json);
 
-            const response = await fetch("http://localhost:8463/punch/" + data.id, {
+            const response = await fetch("http://localhost:8463/punch/" + data.worker_id, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -44,12 +51,10 @@ class ApiService {
             if (!response.ok) {
                 throw new Error(`Error punching: ${response.statusText}`);
             }
-
-            const responseText = await response.text();
-            return responseText;
+            return response;
         } catch (e) {
             console.error("Error punching", e);
-            throw e;
+            return e;
         }
     }
 }

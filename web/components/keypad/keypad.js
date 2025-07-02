@@ -33,15 +33,18 @@ window.components.keypad = {
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
             // start loading animation
             this.loadAnimation();
-            await window.apiService.getEmployee(byuId);
+
+
+            let employee = await window.apiService.getEmployee(byuId);
             this.stopAnimation();
 
-            if (!window.employee) {
-                this.clearIdEntry();
-                return;
+            if (!employee) {
+                throw new Error('Employee not found');
             }
+
             await window.loadComponent('clock');
             this.clearIdEntry();
+
         });
         this.updateButtonStates();
     },

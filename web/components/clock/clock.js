@@ -30,10 +30,91 @@ window.components.clock = {
         this.populateJobs();
         this.populateClockInfo();
         this.hideReviewTimeEntry();
+        this.updateRadioButtonStates();
     },
 
     cleanup: function () {
         window.removeEventListener("resize", this.setupScrolling);
+    },
+
+    clockInOut: async function (positionNumber, clock_event_type, timeEntryCode) {
+        clock_event_type = clock_event_type.toUpperCase();
+
+        console.log(`Clocking ${clock_event_type} for position: ${positionNumber} with TEC: ${timeEntryCode}`);
+        const clockData = this.createClockData(positionNumber, clock_event_type, timeEntryCode);
+
+        this.showClockingPopup(clock_event_type);
+
+        const response = await window.apiService.punch(clockData);
+
+        if (!response.status) {
+            this.handleClockingError(response);
+        } else {
+            this.handleClockingSuccess(positionNumber, clock_event_type);
+        }
+    },
+
+    createClockData: function (positionNumber, clock_event_type, timeEntryCode) {
+        return {
+            "worker_id": window.employee.workerId,
+            "position_number": positionNumber,
+            "clock_event_type": clock_event_type,
+            "time_entry_code": timeEntryCode
+        };
+    },
+
+    showClockingPopup: function (clock_event_type) {
+        window.showPopup(`Clocking ${clock_event_type}`, '');
+        const popupMsg = document.querySelector('.popup-message');
+        // add a loading spinner to the popup message
+        popupMsg.innerHTML = `<div class="loading-spinner"></div>`;
+    },
+
+    handleClockingError: function (response) {
+        window.showErrorPopup('Failed to clock in/out. ' + (response || 'Please try again later.'));
+    },
+
+    handleClockingSuccess: function (positionNumber, clock_event_type) {
+        window.showPopup(`Clocked ${clock_event_type}`, `Successfully clocked ${clock_event_type} for position: ${positionNumber}`);
+        const popupButtons = document.querySelector('.popup-buttons');
+
+        const logoutButton = this.createLogoutButton();
+        popupButtons.appendChild(logoutButton);
+
+        const returnButton = this.createReturnButton();
+        popupButtons.appendChild(returnButton);
+    },
+
+    createLogoutButton: function () {
+        const logoutButton = document.createElement('button');
+        logoutButton.textContent = 'Logout';
+        logoutButton.className = 'logout-btn red-btn';
+        logoutButton.onclick = () => {
+            window.hidePopup();
+            window.signOut();
+        };
+        return logoutButton;
+    },
+
+    createReturnButton: function () {
+        const returnButton = document.createElement('button');
+        returnButton.textContent = 'Return';
+        returnButton.className = 'return-btn';
+        returnButton.onclick = async () => {
+            window.hidePopup();
+            this.showReloadingPopup();
+            await window.apiService.getEmployee(window.employee.workerId);
+            window.loadComponent('clock');
+            window.hidePopup();
+        };
+        return returnButton;
+    },
+
+    showReloadingPopup: function () {
+        window.showPopup(`Reloading Clock`, '');
+        const popupMsg = document.querySelector('.popup-message');
+        // add a loading spinner to the popup message
+        popupMsg.innerHTML = `<div class="loading-spinner"></div>`;
     },
 
     populateClockInfo: function () {
@@ -88,7 +169,7 @@ window.components.clock = {
         clockGridContainer.appendChild(periodTime);
 
         if (this.hourlyMultiple) {
-            const timeEntryCodeSelect = this.createTimeEntryCodeSelector();
+            const timeEntryCodeSelect = this.createTimeEntryCodeSelector(position);
             clockGridContainer.appendChild(timeEntryCodeSelect);
         }
 
@@ -190,9 +271,11 @@ window.components.clock = {
         return periodTime;
     },
 
-    createTimeEntryCodeSelector: function () {
+    createTimeEntryCodeSelector: function (position) {
         const timeEntryCodeSelect = document.createElement('select');
         timeEntryCodeSelect.className = 'time-entry-code-select';
+        timeEntryCodeSelect.id = `tec-select-${position.positionNumber}`;
+
 
         // Sort codes by sortOrder ascending
         const sortedCodes = window.employee.timeEntryCodes.slice().sort((a, b) => a.sortOrder - b.sortOrder);
@@ -223,6 +306,25 @@ window.components.clock = {
         return customRadioContainer;
     },
 
+    // grey out the radio buttons for positions that are not clocked in
+    updateRadioButtonStates: function () {
+        const positions = window.employee.positions;
+        const clockedInPosition = positions.find(position => position.clockedIn);
+
+        positions.forEach(position => {
+            const inRadio = document.querySelector(`input[name='${position.positionNumber}'].in-radio`);
+            const outRadio = document.querySelector(`input[name='${position.positionNumber}'].out-radio`);
+
+            if (clockedInPosition && clockedInPosition.positionNumber !== position.positionNumber) {
+                if (inRadio) inRadio.parentElement.classList.add('radio-button-greyed-out');
+                if (outRadio) outRadio.parentElement.classList.add('radio-button-greyed-out');
+            } else {
+                if (inRadio) inRadio.parentElement.classList.remove('radio-button-greyed-out');
+                if (outRadio) outRadio.parentElement.classList.remove('radio-button-greyed-out');
+            }
+        });
+    },
+
     createRadioButton: function (value, name, labelText, isChecked) {
         const label = document.createElement('label');
         label.className = 'custom-radio';
@@ -246,13 +348,70 @@ window.components.clock = {
         label.appendChild(icon);
         label.appendChild(span);
 
+        // add event listener to handle clock in/out
+        let isProcessing = false;
+        label.addEventListener('click', (event) => {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            event.stopPropagation(); // Prevent event bubbling
+            const timeEntryCodeSelect = document.getElementById(`tec-select-${name}`);
+
+            let tecCode = '';
+            if (timeEntryCodeSelect) {
+                tecCode = timeEntryCodeSelect.value;
+            } else {
+                tecCode = window.employee.timeEntryCodes[0].backendId;
+            }
+
+            // avoids double clock in/out's
+            setTimeout(() => {
+                isProcessing = false;
+            }, 0); // Reset processing state after execution
+
+            if (input.checked) {
+                this.createDoubleClockPopup(name, value, tecCode);
+                return;
+            }
+
+            window.components.clock.clockInOut(name, value, tecCode);
+            this.updateRadioButtonStates();
+        });
+
         return label;
+    },
+
+    createDoubleClockPopup: function (name, value, tecCode) {
+        const popupTitle = `Double Clock ${value.toUpperCase()}`;
+        const popupMessage = `Are you sure you want to clock ${value === 'in' ? 'in' : 'out'} again?`;
+
+        window.showPopup(popupTitle, popupMessage);
+
+        popupButtons = document.querySelector('.popup-buttons');
+
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.className = 'cancel-double-clock-btn red-btn';
+        cancelButton.onclick = () => {
+            window.hidePopup();
+        };
+
+        popupButtons.appendChild(cancelButton);
+        const confirmButton = document.createElement('button');
+        confirmButton.textContent = 'Confirm';
+        confirmButton.className = 'confirm-double-clock-btn';
+        confirmButton.onclick = () => {
+            window.hidePopup();
+            window.components.clock.clockInOut(name, value, tecCode);
+        }
+
+        popupButtons.appendChild(confirmButton);
     },
 
     convertToTimeFormat: function (timeString) {
         // Remove the "H" and trim any whitespace
         const numericPart = parseFloat(timeString.replace('H', '').trim());
-        
+
         // Extract hours and minutes
         const hours = Math.floor(numericPart);
         const minutes = Math.round((numericPart - hours) * 60);
