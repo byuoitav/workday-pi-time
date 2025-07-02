@@ -31,6 +31,7 @@ window.components.clock = {
         this.populateClockInfo();
         this.hideReviewTimeEntry();
         this.updateRadioButtonStates();
+        this.showInternationalWarning();
     },
 
     cleanup: function () {
@@ -434,6 +435,28 @@ window.components.clock = {
             reviewTimeEntry.classList.add('grey-out');
             reviewTimeEntry.disabled = true;
         }
+    },
+
+    showInternationalWarning: function () {
+        if (parseFloat(window.employee.totalWeekHours.replace('H', '').trim()) > 15 && employee.international && !window.shownInternationalWarning) {
+            const message = "You have worked more than 15 hours this week."
+            window.showPopup("International Work Warning", message);
+
+            closeButton = document.createElement('button');
+            closeButton.textContent = 'Close';
+            closeButton.className = 'close-btn';
+            closeButton.onclick = () => {
+                window.hidePopup();
+            };
+
+            const popupButtons = document.querySelector('.popup-buttons');
+            popupButtons.appendChild(closeButton);
+
+            window.shownInternationalWarning = true; // Set the flag to true to prevent showing again in same session
+        }
+
+
+
     }
 
 };

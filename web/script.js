@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.curYear = null;
     window.curMonth = null;
     window.curDay = null;
+    window.shownInternationalWarning = false;
 
     currentComponent = 'login'; // default component
     await loadHeader('header');
@@ -169,6 +170,7 @@ window.signOut = function () {
     window.employee = undefined;
     window.curYear = null;
     window.curMonth = null;
+    window.shownInternationalWarning = false;
     // Reset the current component to login
     currentComponent = 'login';
     // Load the login component
