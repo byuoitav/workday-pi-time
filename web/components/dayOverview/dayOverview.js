@@ -59,6 +59,7 @@ window.components.dayOverview = {
                 totalHours += hours;
             }
         });
+        
         return totalHours;
     },
 

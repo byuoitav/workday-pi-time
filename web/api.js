@@ -10,7 +10,6 @@ class ApiService {
                         window.showErrorPopup("No Worker Matches ID");
                     } else {
                         window.showErrorPopup(json.error);
-
                     }
                     return;
                 }
@@ -27,5 +26,30 @@ class ApiService {
                 window.timeService = new TimeService(employee);
                 return;
             });
+    }
+
+    async punch(data) {
+        try {
+            const json = JSON.stringify(data); // Serialize the data
+            console.log(json);
+
+            const response = await fetch("http://localhost:8463/punch/" + data.id, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: json
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error punching: ${response.statusText}`);
+            }
+
+            const responseText = await response.text();
+            return responseText;
+        } catch (e) {
+            console.error("Error punching", e);
+            throw e;
+        }
     }
 }

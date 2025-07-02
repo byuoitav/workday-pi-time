@@ -138,6 +138,8 @@ window.components.clock = {
             clockGridContainer.classList.add('clock-grid-hourly-single');
         } else if (this.hourlyMultiple) {
             clockGridContainer.classList.add('clock-grid-hourly-multiple');
+        } else {
+            clockGridContainer.classList.add('clock-grid-not-hourly');
         }
     },
 
@@ -250,7 +252,7 @@ window.components.clock = {
     convertToTimeFormat: function (timeString) {
         // Remove the "H" and trim any whitespace
         const numericPart = parseFloat(timeString.replace('H', '').trim());
-
+        
         // Extract hours and minutes
         const hours = Math.floor(numericPart);
         const minutes = Math.round((numericPart - hours) * 60);
@@ -262,9 +264,10 @@ window.components.clock = {
     hideReviewTimeEntry: function () {
         const reviewTimeEntry = document.querySelector('.review-time-entry');
         // An employee can't clock in or out if they have no time entry codes
-        if (reviewTimeEntry && !(window.employee.timeEntryCodes.length > 0)) {
+        if (reviewTimeEntry && (!(window.employee.timeEntryCodes.length > 0) || window.employee.positions.length === 0)) {
             reviewTimeEntry.classList.add('grey-out');
             reviewTimeEntry.disabled = true;
         }
     }
+
 };
