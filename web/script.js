@@ -212,6 +212,7 @@ window.showErrorPopup = function (message) {
     okButton.textContent = 'Dismiss';
     okButton.className = 'close-error-btn';
     okButton.onclick = () => {
+        window.apiService.log('Error popup dismissed: ' + message, 'error-popup');
         window.hidePopup();
     };
     popupButtons.appendChild(okButton);

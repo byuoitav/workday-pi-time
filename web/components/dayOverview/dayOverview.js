@@ -2,6 +2,7 @@ window.components = window.components || {};
 
 window.components.dayOverview = {
     loadPage: function () {
+        window.apiService.log('Loading day overview component', 'none');
         window.components.header.updateHeader(false, 'calendar', "Day Overview", true, true);
         this.populatePositions();
         this.setDayHeader();
@@ -16,6 +17,7 @@ window.components.dayOverview = {
     },
 
     cleanup: function () {
+        window.apiService.log('Cleaning up day overview component', 'none');
         window.curDay = null;
     },
 

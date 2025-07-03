@@ -2,6 +2,7 @@ window.components = window.components || {};
 
 window.components.login = {
     loadPage: function () {
+        window.apiService.log('Loading login component', 'none');
         window.loadComponent('keypad', '.right-container');
         window.components.header.updateHeader(true, '', "Y-Time", false, false);
         this.loadMedallion();
@@ -10,6 +11,7 @@ window.components.login = {
     },
 
     cleanup: function () {
+        window.apiService.log('Cleaning up login component', 'none');
         // remove keypad component css
         const keypadStylesheet = document.querySelector('link[href="./components/keypad/keypad.css"]');
         if (keypadStylesheet) {
@@ -54,12 +56,16 @@ function makeZPattern() {
     let topLeft, topRight, bottomLeft, bottomRight;
 
     topLeft = createSquare('top-left', () => {
+        window.apiService.log('Top left square tapped', 'z-pattern-top-left');
         if (!topRight) {
             topRight = createSquare('top-right', () => {
+                window.apiService.log('Top right square tapped', 'z-pattern-top-right');
                 if (!bottomLeft) {
                     bottomLeft = createSquare('bottom-left', () => {
+                        window.apiService.log('Bottom left square tapped', 'z-pattern-bottom-left');
                         if (!bottomRight) {
                             bottomRight = createSquare('bottom-right', () => {
+                                window.apiService.log('Z-Pattern completed, redirecting to dashboard', 'z-pattern-complete');
                                 window.location.href = 'http://localhost:10000/dashboard/overview';
                             });
                         }

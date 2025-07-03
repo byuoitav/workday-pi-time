@@ -6,6 +6,7 @@ window.components.clock = {
     notHourly: false,
 
     loadPage: function () {
+        window.apiService.log('Loading clock component', 'none');
         window.components.header.updateHeader(true, '', "Y-Time", true, true);
         if (window.employee.timeEntryCodes.length === 0) {
             this.notHourly = true;
@@ -24,6 +25,7 @@ window.components.clock = {
         const reviewTimeEntry = document.querySelector('.review-time-entry');
         if (reviewTimeEntry) {
             reviewTimeEntry.addEventListener('click', () => {
+                window.apiService.log('Review Time Entry clicked', 'clock-review-time-entry');
                 window.loadComponent('calendar');
             });
         }
@@ -35,6 +37,7 @@ window.components.clock = {
     },
 
     cleanup: function () {
+        window.apiService.log('Cleaning up clock component', 'none');
         window.removeEventListener("resize", this.setupScrolling);
     },
 
@@ -98,6 +101,7 @@ window.components.clock = {
         logoutButton.textContent = 'Logout';
         logoutButton.className = 'logout-btn red-btn';
         logoutButton.onclick = () => {
+            window.apiService.log('Logout button clicked from clock in/out confirmation dialog', 'clock-logout-button');
             window.hidePopup();
             window.signOut();
         };
@@ -109,6 +113,7 @@ window.components.clock = {
         returnButton.textContent = 'Return';
         returnButton.className = 'return-btn';
         returnButton.onclick = async () => {
+            window.apiService.log('Return button clicked from clock in/out confirmation dialog', 'clock-return-button');
             window.hidePopup();
             this.showReloadingPopup();
             await window.apiService.getEmployee(window.employee.workerId);
@@ -359,6 +364,7 @@ window.components.clock = {
         // add event listener to handle clock in/out
         let isProcessing = false;
         label.addEventListener('click', (event) => {
+            window.apiService.log('Clock ' + value.toUpperCase() + ' button clicked for position ' + name , 'clock-' + value + '-button');
             if (isProcessing) return;
             isProcessing = true;
 
@@ -401,6 +407,7 @@ window.components.clock = {
         cancelButton.textContent = 'Cancel';
         cancelButton.className = 'cancel-double-clock-btn red-btn';
         cancelButton.onclick = () => {
+            window.apiService.log('Double clock cancel button clicked for position ' + name, 'clock-double-clock-cancel-button');
             window.hidePopup();
         };
 
@@ -409,6 +416,7 @@ window.components.clock = {
         confirmButton.textContent = 'Confirm';
         confirmButton.className = 'confirm-double-clock-btn';
         confirmButton.onclick = () => {
+            window.apiService.log('Double clock confirm button clicked for position ' + name, 'clock-double-clock-confirm-button');
             window.hidePopup();
             window.components.clock.clockInOut(name, value, tecCode);
         }
@@ -452,6 +460,7 @@ window.components.clock = {
             closeButton.textContent = 'OK';
             closeButton.className = 'close-btn';
             closeButton.onclick = () => {
+                window.apiService.log('International work warning acknowledged', 'international-work-warning');
                 window.hidePopup();
             };
 

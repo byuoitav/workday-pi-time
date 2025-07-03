@@ -1,10 +1,12 @@
 window.components = window.components || {};
 window.components.keypad = {
     loadPage: function () {
+        window.apiService.log('Loading keypad component', 'none');
         this.loadKeypad();
     },
 
     cleanup: function () {
+        window.apiService.log('Cleaning up keypad component', 'none');
         this.idEntry = null;
     },
 
@@ -30,6 +32,9 @@ window.components.keypad = {
         });
         if (this.backspaceBtn) this.backspaceBtn.addEventListener('click', () => this.backspaceIdEntry());
         if (this.enterBtn) this.enterBtn.addEventListener('click', async () => {
+
+            window.apiService.log('BYU ID Entered: ' + this.idEntry.textContent, 'enter-button-login');
+
             const byuId = this.idEntry.textContent.replace(/-/g, ''); // Remove hyphens
             // start loading animation
             this.loadAnimation();

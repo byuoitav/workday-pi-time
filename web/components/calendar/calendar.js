@@ -5,6 +5,7 @@ window.components.calendar = {
     calendarTitle: document.querySelector('.calendar-month'),
     monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     loadPage: async function () {
+        window.apiService.log('Loading calendar component', 'none');
         window.components.header.updateHeader(false, 'clock', "Calendar", true, true);
         if (window.curYear === null || window.curMonth === null) {
             const today = new Date();
@@ -17,13 +18,14 @@ window.components.calendar = {
     },
 
     cleanup: function () {
-
+        window.apiService.log('Cleaning up calendar component', 'none');
     },
 
     addDayListeners: function () {
         const dayButtons = document.querySelectorAll('.day-cell:not(.disabled)');
         dayButtons.forEach((dayButton) => {
             dayButton.addEventListener('click', () => {
+                window.apiService.log('Day clicked: ' + dayButton.id, 'calendar-day-button');
                 window.curDay = dayButton.id;
                 window.loadDayOverview(dayButton.id);
             });
@@ -113,6 +115,7 @@ window.components.calendar = {
         calendarLeftBtn = document.querySelector('.calendar-left');
         calendarRightBtn = document.querySelector('.calendar-right');
         calendarLeftBtn.addEventListener('click', () => {
+            window.apiService.log('Previous month button clicked', 'calendar-left-button');
             this.slideRight();
             this.dePopulateCalendar();
             if (window.curMonth === 0) {
@@ -122,6 +125,7 @@ window.components.calendar = {
             }
         });
         calendarRightBtn.addEventListener('click', () => {
+            window.apiService.log('Next month button clicked', 'calendar-right-button');
             this.slideLeft();
             this.dePopulateCalendar();
             if (window.curMonth === 11) {

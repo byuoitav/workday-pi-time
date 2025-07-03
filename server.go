@@ -112,10 +112,6 @@ func main() {
 	})
 
 	router.POST("/log-entry/level/:level/message/:message", func(context *gin.Context) {
-		// level := context.Param("level")
-		// message := context.Param("message")
-		// fmt.Println("level: ", level)
-		// fmt.Println("message: ", message)
 
 		var log workday.Log
 		err := context.BindJSON(&log)

@@ -74,6 +74,7 @@ window.components.header = {
         if (this.backArrowDestination) {
             this.backArrow.style.display = 'block';
             this.backArrow.onclick = () => {
+                window.apiService.log('Back arrow clicked, loading component: ' + this.backArrowDestination, 'header-back-arrow');
                 window.loadComponent(this.backArrowDestination);
             };
         } else {
@@ -100,6 +101,7 @@ window.components.header = {
         if (this.showSignOut) {
             this.signOutBtn.style.display = 'block';
             this.signOutBtn.onclick = () => {
+                window.apiService.log('Sign out button clicked', 'header-sign-out');
                 window.signOut();
             };
         } else {

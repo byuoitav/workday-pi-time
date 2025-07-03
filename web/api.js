@@ -66,4 +66,38 @@ class ApiService {
             return e;
         }
     }
+
+    async log(message, button) {
+        let byuID = window.employee ? window.employee.worker_id : null;
+        let strbyuID = byuID !== null && byuID !== undefined ? String(byuID) : null;
+        let strButton = button !== null && button !== undefined ? String(button) : null;
+        let logData = {
+            "time": new Date().toISOString(),
+            "message": String(message),
+            "byuID": strbyuID,
+            "button": strButton,
+            "notify": "false"
+        };
+
+        try {
+            const json = JSON.stringify(logData); // Serialize the data
+            const base = location.origin.split(":");
+            let url = base[0] + ":" + base[1];
+            let port = base[2];
+            // Encode the message to ensure it's a valid URL component
+            const encodedMessage = encodeURIComponent(message);
+            url = url + ":" + port + "/log-entry/level/debug/message/" + encodedMessage;
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: json
+            });
+        } catch (error) {
+            console.error("Error logging message:", error);
+        }
+    }
 }
+
