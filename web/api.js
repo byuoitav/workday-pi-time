@@ -20,9 +20,12 @@ class ApiService {
 
             try {
                 const employee = new Employee(json.employee);
+                const status = json.status || {};
                 console.log("Employee data received:", employee);
                 window.employee = employee; // Store the employee object globally
                 window.timeService = new TimeService(employee);
+                window.stats = status; // Store the status globally
+                window.unprocessedPunches = json.unprocessed_punches_in_tcd || 0; // Store unprocessed punches globally
                 return employee;
             } catch (error) {
                 console.error("Error parsing employee data:", error);

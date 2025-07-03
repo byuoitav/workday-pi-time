@@ -13,6 +13,7 @@ window.components.calendar = {
         }
         this.updateCalendarMonthYear(window.curYear, window.curMonth);
         this.addButtonListeners();
+        this.showUnprocessedPunchesMessage();
     },
 
     cleanup: function () {
@@ -178,6 +179,23 @@ window.components.calendar = {
             calendarLeftBtn.style.visibility = 'hidden';
         } else {
             calendarLeftBtn.style.visibility = 'visible';
+        }
+    },
+
+    showUnprocessedPunchesMessage: function () {
+        const messageContainer = document.querySelector('.unprocessed-punches-msg');
+        const unprocessedCount = window.unprocessedPunches;
+
+        if (messageContainer) {
+            if (unprocessedCount > 0) {
+                messageContainer.style.display = 'flex';
+                const messageText = messageContainer.querySelector('p');
+                if (messageText) {
+                    messageText.textContent = "⚠ " + unprocessedCount + " event" + ((unprocessedCount) > 1 ? "s have " : " has ") + "not yet processed.";
+                }
+            } else {
+                messageContainer.style.display = 'none';
+            }
         }
     }
 }

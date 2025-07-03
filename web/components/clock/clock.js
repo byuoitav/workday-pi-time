@@ -83,7 +83,7 @@ window.components.clock = {
     },
 
     handleClockingSuccess: function (positionNumber, clock_event_type) {
-        window.showPopup(`Clocked ${clock_event_type}`, `Successfully clocked ${clock_event_type} for position: ${positionNumber}`);
+        window.showPopup('Punch Successfully Submitted', `Your punch has been submitted, please verify your time in Workday`);
         const popupButtons = document.querySelector('.popup-buttons');
 
         const logoutButton = this.createLogoutButton();
@@ -435,6 +435,12 @@ window.components.clock = {
             reviewTimeEntry.classList.add('grey-out');
             reviewTimeEntry.disabled = true;
         }
+
+        // also disable it if the tcd employee cache or tcd timevents or workday api are offline
+        if (!window.stats.TCD_employee_cache_online || !window.stats.TCD_timeevents_online || !window.stats.workdayAPI_online) {
+            reviewTimeEntry.classList.add('grey-out');
+            reviewTimeEntry.disabled = true;
+        }
     },
 
     showInternationalWarning: function () {
@@ -443,7 +449,7 @@ window.components.clock = {
             window.showPopup("International Work Warning", message);
 
             closeButton = document.createElement('button');
-            closeButton.textContent = 'Close';
+            closeButton.textContent = 'OK';
             closeButton.className = 'close-btn';
             closeButton.onclick = () => {
                 window.hidePopup();
@@ -454,8 +460,6 @@ window.components.clock = {
 
             window.shownInternationalWarning = true; // Set the flag to true to prevent showing again in same session
         }
-
-
 
     }
 

@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.curMonth = null;
     window.curDay = null;
     window.shownInternationalWarning = false;
+    window.stats = undefined;
+    window.unprocessedPunches = 0; 
 
     currentComponent = 'login'; // default component
     await loadHeader('header');
