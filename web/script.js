@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearTimeout(inactivityTimeout);
         inactivityTimeout = setTimeout(() => {
             window.showScreensaver();
-        }, 300000); // 30 seconds
+        }, 30000); // 30 seconds
     }
     // Reset inactivity timeout on user interaction
     document.addEventListener('mousemove', resetInactivityTimeout);

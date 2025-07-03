@@ -56,13 +56,6 @@ function Lint {
 function Deps {
     Write-Output "Downloading Backend Dependencies"
     Invoke-Expression "go mod download"
-
-    Write-Output "Downloading Frontend Dependencies"
-    Set-Location "analog"
-    Invoke-Expression "npm install --legacy-peer-dep"
-    Invoke-Expression "cd .."
-    Write-Output "Exiting \analog"
-
 }
 
 function Build {
@@ -96,18 +89,6 @@ function Build {
     Set-Item -Path env:GOARCH -Value "amd64"
     Invoke-Expression "go build -v -o dist/${NAME}-windows.exe"
 
-    Write-Output "*****************************************"
-    Write-Output "Building Frontend"
-    if (Test-Path "analog") {
-        Set-Location "analog"
-        Write-Output "Entering \analog"
-        New-Item -Path dist -ItemType Directory
-        #Invoke-Expression "npm run-script build"
-        Invoke-Expression "npm run ng build --aot --optimization --base-href='/analog/'"
-        Invoke-Expression "cd .."
-        Write-Output "Exiting \analog and moving files to \dist"
-        Move-Item "$location\analog\dist\" -Destination "$location\dist\"
-    }
 }
 
 function Cleanup {
@@ -119,12 +100,6 @@ function Cleanup {
     } else {
         Write-Output "No dist directory to delete"
     }
-    if (Test-Path -Path "analog/dist") {
-        Remove-Item analog/dist -recurse
-        Write-Output "Recursively deleted dist/"
-        } else {
-            Write-Output "No analog/dist directory to delete"
-        }
 }
 
 function DockerFunc {   #can not just be docker because it creates an infinite loop

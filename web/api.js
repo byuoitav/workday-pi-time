@@ -1,6 +1,9 @@
 class ApiService {
     async getEmployee(byuID) {
-        const url = "http://localhost:8463/get_employee_data/" + byuID;
+        const base = location.origin.split(":");
+        let url = base[0] + ":" + base[1];
+        let port = base[2];
+        url = url + ":" + port + "/get_employee_data/" + byuID;
         try {
             const response = await fetch(url);
             if (!response.ok) {
@@ -41,7 +44,11 @@ class ApiService {
     async punch(data) {
         try {
             const json = JSON.stringify(data); // Serialize the data
-            const response = await fetch("http://localhost:8463/punch/" + data.worker_id, {
+            const base = location.origin.split(":");
+            let url = base[0] + ":" + base[1];
+            let port = base[2];
+            url = url + ":" + port + "/punch/" + data.worker_id;
+            const response = await fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -52,7 +59,7 @@ class ApiService {
             if (!response.ok) {
                 throw new Error(`Error punching: ${response.statusText}`);
             }
-            
+
             return response;
         } catch (e) {
             console.error("Error punching", e);
