@@ -8,20 +8,12 @@ window.components.clock = {
     loadPage: function () {
         window.apiService.log('Loading clock component', 'none');
         window.components.header.updateHeader(true, '', "Y-Time", true, true);
-        if (window.employee.timeEntryCodes.length === 0) {
-            this.notHourly = true;
-        }
 
-        else if (window.employee.timeEntryCodes.length === 1) {
-            this.hourlySingle = true;
-        }
-        else if (window.employee.timeEntryCodes.length > 1) {
-            this.hourlyMultiple = true;
-        } else {
-            console.error("Unexpected time entry codes length:", window.employee.timeEntryCodes.length);
-        }
+        const tecLength = window.employee.timeEntryCodes.length;
+        this.notHourly = tecLength === 0;
+        this.hourlySingle = tecLength === 1;
+        this.hourlyMultiple = tecLength > 1;
 
-        //.review-time-entry listener
         const reviewTimeEntry = document.querySelector('.review-time-entry');
         if (reviewTimeEntry) {
             reviewTimeEntry.addEventListener('click', () => {
@@ -29,8 +21,9 @@ window.components.clock = {
                 window.loadComponent('calendar');
             });
         }
-        this.populateJobs();
+
         this.populateClockInfo();
+        this.populateJobs();
         this.hideReviewTimeEntry();
         this.updateRadioButtonStates();
         this.showInternationalWarning();
@@ -41,109 +34,12 @@ window.components.clock = {
         window.removeEventListener("resize", this.setupScrolling);
     },
 
-    clockInOut: async function (positionNumber, clock_event_type, timeEntryCode) {
-        clock_event_type = clock_event_type.toUpperCase();
-
-        console.log(`Clocking ${clock_event_type} for position: ${positionNumber} with TEC: ${timeEntryCode}`);
-        const clockData = this.createClockData(positionNumber, clock_event_type, timeEntryCode);
-
-        this.showClockingPopup(clock_event_type);
-
-        const response = await window.apiService.punch(clockData);
-
-        if (!response.status) {
-            this.handleClockingError(response);
-        } else {
-            const responseMsg = await response.json();
-            if (responseMsg.written_to_tcd === "true") {
-                this.handleClockingSuccess(positionNumber, clock_event_type);
-            } else {
-                this.handleClockingError("Please try again.");
-                await window.apiService.getEmployee(window.employee.workerId);
-                window.loadComponent('clock');
-            }
-        }
-    },
-
-    createClockData: function (positionNumber, clock_event_type, timeEntryCode) {
-        return {
-            "worker_id": window.employee.workerId,
-            "position_number": positionNumber,
-            "clock_event_type": clock_event_type,
-            "time_entry_code": timeEntryCode
-        };
-    },
-
-    showClockingPopup: function (clock_event_type) {
-        window.showPopup(`Clocking ${clock_event_type}`, '');
-        const popupMsg = document.querySelector('.popup-message');
-        // add a loading spinner to the popup message
-        popupMsg.innerHTML = `<div class="loading-spinner"></div>`;
-    },
-
-    handleClockingError: function (response) {
-        window.showErrorPopup('Failed to clock in/out. ' + (response || 'Please try again later.'));
-    },
-
-    handleClockingSuccess: function (positionNumber, clock_event_type) {
-        window.showPopup('Punch Successfully Submitted', `Your punch has been submitted, please verify your time in Workday`);
-        const popupButtons = document.querySelector('.popup-buttons');
-
-        const logoutButton = this.createLogoutButton();
-        popupButtons.appendChild(logoutButton);
-
-        const returnButton = this.createReturnButton();
-        popupButtons.appendChild(returnButton);
-    },
-
-    createLogoutButton: function () {
-        const logoutButton = document.createElement('button');
-        logoutButton.textContent = 'Logout';
-        logoutButton.className = 'logout-btn red-btn';
-        logoutButton.onclick = () => {
-            window.apiService.log('Logout button clicked from clock in/out confirmation dialog', 'clock-logout-button');
-            window.hidePopup();
-            window.signOut();
-        };
-        return logoutButton;
-    },
-
-    createReturnButton: function () {
-        const returnButton = document.createElement('button');
-        returnButton.textContent = 'Return';
-        returnButton.className = 'return-btn';
-        returnButton.onclick = async () => {
-            window.apiService.log('Return button clicked from clock in/out confirmation dialog', 'clock-return-button');
-            window.hidePopup();
-            this.showReloadingPopup();
-            await window.apiService.getEmployee(window.employee.workerId);
-            window.loadComponent('clock');
-            window.hidePopup();
-        };
-        return returnButton;
-    },
-
-    showReloadingPopup: function () {
-        window.showPopup(`Reloading Clock`, '');
-        const popupMsg = document.querySelector('.popup-message');
-        // add a loading spinner to the popup message
-        popupMsg.innerHTML = `<div class="loading-spinner"></div>`;
-    },
-
     populateClockInfo: function () {
-        this.setWeeklyTotal()
-        this.setDailyTotal();
-    },
-
-    setWeeklyTotal: function () {
         const weeklyTotal = document.querySelector('.weekly-total');
+        const dailyTotal = document.querySelector('.daily-total');
         if (weeklyTotal) {
             weeklyTotal.textContent = `Week Total: ${this.convertToTimeFormat(window.employee.totalWeekHours)}`;
         }
-    },
-
-    setDailyTotal: function () {
-        const dailyTotal = document.querySelector('.daily-total');
         if (dailyTotal) {
             dailyTotal.textContent = `Pay Period Total: ${this.convertToTimeFormat(window.employee.totalPeriodHours)}`;
         }
@@ -151,325 +47,221 @@ window.components.clock = {
 
     populateJobs: function () {
         const jobs = window.employee.positions;
-
-        this.addHeaderRow();
-
-        // populate primary positions first
-        const primaryPositions = jobs.filter(job => job.primary);
-        primaryPositions.forEach(position => {
-            this.createJobRow(position);
-        });
-
-        // populate secondary positions
-        const secondaryPositions = jobs.filter(job => !job.primary);
-        secondaryPositions.forEach(position => {
-            this.createJobRow(position);
-        });
-
+        const container = document.querySelector('#clock-grid');
+        renderClockGrid(container, jobs, this.hourlySingle, this.hourlyMultiple, this.notHourly, window.employee.timeEntryCodes);
+        attachClockEvents(jobs, window.employee.timeEntryCodes, this);
     },
 
-    createJobRow: function (position) {
-        const clockGridContainer = document.querySelector('#clock-grid');
-        this.applyClockGridClass(clockGridContainer);
+    clockInOut: async function (positionNumber, clock_event_type, timeEntryCode) {
+        clock_event_type = clock_event_type.toUpperCase();
+        console.log(`Clocking ${clock_event_type} for position: ${positionNumber} with TEC: ${timeEntryCode}`);
 
-        const jobTitleContainer = this.createJobTitleContainer(position);
-        clockGridContainer.appendChild(jobTitleContainer);
-
-        const weekTime = this.createWeekTimeElement(position.weekHours);
-        clockGridContainer.appendChild(weekTime);
-
-        const periodTime = this.createPeriodTimeElement(position.periodHours);
-        clockGridContainer.appendChild(periodTime);
-
-        if (this.hourlyMultiple) {
-            const timeEntryCodeSelect = this.createTimeEntryCodeSelector(position);
-            clockGridContainer.appendChild(timeEntryCodeSelect);
-        }
-
-        if (!this.notHourly) {
-            const customRadioContainer = this.createClockInOutRadioButtons(position);
-            clockGridContainer.appendChild(customRadioContainer);
-        }
-    },
-
-    addHeaderRow: function () {
-        const clockGridContainer = document.querySelector('#clock-grid');
-
-        const jobTitleHeader = document.createElement('p');
-        jobTitleHeader.className = 'clock-heading';
-        jobTitleHeader.textContent = 'Job Title';
-        clockGridContainer.appendChild(jobTitleHeader);
-
-        const weekHeader = document.createElement('p');
-        weekHeader.className = 'clock-heading';
-        weekHeader.textContent = 'Week';
-        clockGridContainer.appendChild(weekHeader);
-
-        const payPeriodHeader = document.createElement('p');
-        payPeriodHeader.className = 'clock-heading';
-        payPeriodHeader.textContent = 'Pay Period';
-        clockGridContainer.appendChild(payPeriodHeader);
-
-        if (this.hourlyMultiple) {
-            const timeEntryCodeHeader = document.createElement('p');
-            timeEntryCodeHeader.className = 'clock-heading';
-            timeEntryCodeHeader.textContent = 'TEC';
-            clockGridContainer.appendChild(timeEntryCodeHeader);
-        }
-
-        if (!this.notHourly) {
-            const clockHeader = document.createElement('p');
-            clockHeader.className = 'clock-heading';
-            clockHeader.textContent = 'Clock';
-            clockGridContainer.appendChild(clockHeader);
-        }
-    },
-
-    applyClockGridClass: function (clockGridContainer) {
-        if (this.notHourly) {
-            clockGridContainer.classList.add('clock-grid-not-hourly');
-        } else if (this.hourlySingle) {
-            clockGridContainer.classList.add('clock-grid-hourly-single');
-        } else if (this.hourlyMultiple) {
-            clockGridContainer.classList.add('clock-grid-hourly-multiple');
-        } else {
-            clockGridContainer.classList.add('clock-grid-not-hourly');
-        }
-    },
-
-    createJobTitleContainer: function (position) {
-        const jobTitleContainer = document.createElement('div');
-        jobTitleContainer.className = 'job-title-container';
-
-        // Check if jobTitle or supervisoryOrg text is longer than 25 characters
-        const isLongText = (position.title && position.title.length > 25) ||
-            (position.org && position.org.length > 25);
-
-        if (isLongText) {
-            jobTitleContainer.classList.add('scrolling-container');
-        }
-
-        const scrollBlock = document.createElement('div');
-        scrollBlock.className = 'scroll-block';
-
-        const jobContainer = document.createElement('div');
-
-        const jobTitle = document.createElement('p');
-        jobTitle.className = 'job-title';
-        jobTitle.textContent = position.title;
-
-        const supervisoryOrg = document.createElement('p');
-        supervisoryOrg.className = 'job-department';
-        supervisoryOrg.textContent = position.org;
-
-        jobContainer.appendChild(jobTitle);
-        jobContainer.appendChild(supervisoryOrg);
-        scrollBlock.appendChild(jobContainer);
-        jobTitleContainer.appendChild(scrollBlock);
-
-        return jobTitleContainer;
-    },
-
-    createWeekTimeElement: function (weekHours) {
-        const weekTime = document.createElement('p');
-        weekTime.className = 'week-time';
-        weekTime.textContent = this.convertToTimeFormat(weekHours);
-        return weekTime;
-    },
-
-    createPeriodTimeElement: function (periodHours) {
-        const periodTime = document.createElement('p');
-        periodTime.className = 'pay-period';
-        periodTime.textContent = this.convertToTimeFormat(periodHours);
-        return periodTime;
-    },
-
-    createTimeEntryCodeSelector: function (position) {
-        const timeEntryCodeSelect = document.createElement('select');
-        timeEntryCodeSelect.className = 'time-entry-code-select';
-        timeEntryCodeSelect.id = `tec-select-${position.positionNumber}`;
-
-
-        // Sort codes by sortOrder ascending
-        const sortedCodes = window.employee.timeEntryCodes.slice().sort((a, b) => a.sortOrder - b.sortOrder);
-
-        sortedCodes.forEach((code, idx) => {
-            const option = document.createElement('option');
-            option.value = code.backendId;
-            option.textContent = code.frontendName;
-            // Select the first (lowest sortOrder) by default
-            if (idx === 0) {
-                option.selected = true;
-            }
-            timeEntryCodeSelect.appendChild(option);
-        });
-        return timeEntryCodeSelect;
-    },
-
-    createClockInOutRadioButtons: function (position) {
-        const customRadioContainer = document.createElement('div');
-        customRadioContainer.className = 'custom-radio-container';
-
-        const inLabel = this.createRadioButton('in', position.positionNumber, 'IN', position.clockedIn);
-        customRadioContainer.appendChild(inLabel);
-
-        const outLabel = this.createRadioButton('out', position.positionNumber, 'OUT', !position.clockedIn);
-        customRadioContainer.appendChild(outLabel);
-
-        return customRadioContainer;
-    },
-
-    // grey out the radio buttons for positions that are not clocked in
-    updateRadioButtonStates: function () {
-        const positions = window.employee.positions;
-        const clockedInPosition = positions.find(position => position.clockedIn);
-
-        positions.forEach(position => {
-            const inRadio = document.querySelector(`input[name='${position.positionNumber}'].in-radio`);
-            const outRadio = document.querySelector(`input[name='${position.positionNumber}'].out-radio`);
-
-            if (clockedInPosition && clockedInPosition.positionNumber !== position.positionNumber) {
-                if (inRadio) inRadio.parentElement.classList.add('radio-button-greyed-out');
-                if (outRadio) outRadio.parentElement.classList.add('radio-button-greyed-out');
-            } else {
-                if (inRadio) inRadio.parentElement.classList.remove('radio-button-greyed-out');
-                if (outRadio) outRadio.parentElement.classList.remove('radio-button-greyed-out');
-            }
-        });
-    },
-
-    createRadioButton: function (value, name, labelText, isChecked) {
-        const label = document.createElement('label');
-        label.className = 'custom-radio';
-
-        const input = document.createElement('input');
-        input.name = name;
-        input.type = 'radio';
-        input.className = `${value}-radio`;
-        input.value = value;
-        if (isChecked) {
-            input.checked = true;
-        }
-
-        const icon = document.createElement('div');
-        icon.className = 'radio-icon';
-
-        const span = document.createElement('span');
-        span.textContent = labelText;
-
-        label.appendChild(input);
-        label.appendChild(icon);
-        label.appendChild(span);
-
-        // add event listener to handle clock in/out
-        let isProcessing = false;
-        label.addEventListener('click', (event) => {
-            window.apiService.log('Clock ' + value.toUpperCase() + ' button clicked for position ' + name , 'clock-' + value + '-button');
-            if (isProcessing) return;
-            isProcessing = true;
-
-            event.stopPropagation(); // Prevent event bubbling
-            const timeEntryCodeSelect = document.getElementById(`tec-select-${name}`);
-
-            let tecCode = '';
-            if (timeEntryCodeSelect) {
-                tecCode = timeEntryCodeSelect.value;
-            } else {
-                tecCode = window.employee.timeEntryCodes[0].backendId;
-            }
-
-            // avoids double clock in/out's
-            setTimeout(() => {
-                isProcessing = false;
-            }, 0); // Reset processing state after execution
-
-            if (input.checked) {
-                this.createDoubleClockPopup(name, value, tecCode);
-                return;
-            }
-
-            window.components.clock.clockInOut(name, value, tecCode);
-            this.updateRadioButtonStates();
-        });
-
-        return label;
-    },
-
-    createDoubleClockPopup: function (name, value, tecCode) {
-        const popupTitle = `Double Clock ${value.toUpperCase()}`;
-        const popupMessage = `Are you sure you want to clock ${value === 'in' ? 'in' : 'out'} again?`;
-
-        window.showPopup(popupTitle, popupMessage);
-
-        popupButtons = document.querySelector('.popup-buttons');
-
-        const cancelButton = document.createElement('button');
-        cancelButton.textContent = 'Cancel';
-        cancelButton.className = 'cancel-double-clock-btn red-btn';
-        cancelButton.onclick = () => {
-            window.apiService.log('Double clock cancel button clicked for position ' + name, 'clock-double-clock-cancel-button');
-            window.hidePopup();
+        const clockData = {
+            worker_id: window.employee.workerId,
+            position_number: positionNumber,
+            clock_event_type,
+            time_entry_code: timeEntryCode
         };
 
-        popupButtons.appendChild(cancelButton);
-        const confirmButton = document.createElement('button');
-        confirmButton.textContent = 'Confirm';
-        confirmButton.className = 'confirm-double-clock-btn';
-        confirmButton.onclick = () => {
-            window.apiService.log('Double clock confirm button clicked for position ' + name, 'clock-double-clock-confirm-button');
+        renderPopup(`Clocking ${clock_event_type}`, `<div class="loading-spinner"></div>`);
+        const response = await window.apiService.punch(clockData);
+
+        if (!response.status) {
+            window.showErrorPopup('Failed to clock in/out. Please try again later.');
+        } else {
+            const result = await response.json();
+            if (result.written_to_tcd === "true") {
+                this.handleClockingSuccess(positionNumber, clock_event_type);
+            } else {
+                window.showErrorPopup("Please try again.");
+                await window.apiService.getEmployee(window.employee.workerId);
+                window.loadComponent('clock');
+            }
+        }
+    },
+
+    // handles the success of clocking in/out
+    handleClockingSuccess: function (positionNumber, clock_event_type) {
+        renderPopup('Punch Successfully Submitted', `Your punch has been submitted, please verify your time in Workday`);
+        const buttons = document.querySelector('.popup-buttons');
+        buttons.innerHTML = `
+            <button class="logout-btn red-btn">Logout</button>
+            <button class="return-btn">Return</button>
+        `;
+
+        buttons.querySelector('.logout-btn').onclick = () => {
+            window.apiService.log('Logout button clicked from clock success', 'clock-logout-button');
             window.hidePopup();
-            window.components.clock.clockInOut(name, value, tecCode);
-        }
-
-        popupButtons.appendChild(confirmButton);
+            window.signOut();
+        };
+        buttons.querySelector('.return-btn').onclick = async () => {
+            window.apiService.log('Return clicked from clock success', 'clock-return-button');
+            window.hidePopup();
+            renderPopup(`Reloading Clock`, `<div class="loading-spinner"></div>`);
+            await window.apiService.getEmployee(window.employee.workerId);
+            window.loadComponent('clock');
+            window.hidePopup();
+        };
     },
 
-    convertToTimeFormat: function (timeString) {
-        // Remove the "H" and trim any whitespace
-        const numericPart = parseFloat(timeString.replace('H', '').trim());
-
-        // Extract hours and minutes
-        const hours = Math.floor(numericPart);
-        const minutes = Math.round((numericPart - hours) * 60);
-
-        // Format as hh:mm
-        return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    // updates the radio button states based on clocked in positions
+    updateRadioButtonStates: function () {
+        const positions = window.employee.positions;
+        const clockedIn = positions.find(pos => pos.clockedIn);
+        positions.forEach(pos => {
+            ['in', 'out'].forEach(dir => {
+                const input = document.querySelector(`input[name='${pos.positionNumber}'].${dir}-radio`);
+                if (input?.parentElement) {
+                    if (clockedIn && clockedIn.positionNumber !== pos.positionNumber) {
+                        input.parentElement.classList.add('radio-button-greyed-out');
+                    } else {
+                        input.parentElement.classList.remove('radio-button-greyed-out');
+                    }
+                }
+            });
+        });
     },
 
+    // hides the review time entry button if conditions are not met
+    // (no time entry codes, no positions, or any of the online checks fail)
     hideReviewTimeEntry: function () {
-        const reviewTimeEntry = document.querySelector('.review-time-entry');
-        // An employee can't clock in or out if they have no time entry codes
-        if (reviewTimeEntry && (!(window.employee.timeEntryCodes.length > 0) || window.employee.positions.length === 0)) {
-            reviewTimeEntry.classList.add('grey-out');
-            reviewTimeEntry.disabled = true;
-        }
-
-        // also disable it if the tcd employee cache or tcd timevents or workday api are offline
-        if (!window.stats.TCD_employee_cache_online || !window.stats.TCD_timeevents_online || !window.stats.workdayAPI_online) {
-            reviewTimeEntry.classList.add('grey-out');
-            reviewTimeEntry.disabled = true;
+        const reviewBtn = document.querySelector('.review-time-entry');
+        if (reviewBtn) {
+            const disable = !(window.employee.timeEntryCodes.length > 0 && window.employee.positions.length > 0) ||
+                !window.stats.TCD_employee_cache_online ||
+                !window.stats.TCD_timeevents_online ||
+                !window.stats.workdayAPI_online;
+            if (disable) {
+                reviewBtn.classList.add('grey-out');
+                reviewBtn.disabled = true;
+            }
         }
     },
 
+    // show the international work warning if conditions are met 
+    // (more than 15 hours worked this week and international))
     showInternationalWarning: function () {
-        if (parseFloat(window.employee.totalWeekHours.replace('H', '').trim()) > 15 && employee.international && !window.shownInternationalWarning) {
-            const message = "You have worked more than 15 hours this week."
-            window.showPopup("International Work Warning", message);
-
-            closeButton = document.createElement('button');
-            closeButton.textContent = 'OK';
-            closeButton.className = 'close-btn';
-            closeButton.onclick = () => {
+        if (parseFloat(window.employee.totalWeekHours.replace('H', '').trim()) > 15 &&
+            window.employee.international && !window.shownInternationalWarning) {
+            renderPopup("International Work Warning", "You have worked more than 15 hours this week.");
+            const buttons = document.querySelector('.popup-buttons');
+            buttons.innerHTML = `<button class="close-btn">OK</button>`;
+            buttons.querySelector('.close-btn').onclick = () => {
                 window.apiService.log('International work warning acknowledged', 'international-work-warning');
                 window.hidePopup();
             };
-
-            const popupButtons = document.querySelector('.popup-buttons');
-            popupButtons.appendChild(closeButton);
-
-            window.shownInternationalWarning = true; // Set the flag to true to prevent showing again in same session
+            window.shownInternationalWarning = true;
         }
+    },
 
+    convertToTimeFormat: function (timeString) {
+        const n = parseFloat(timeString.replace('H', '').trim());
+        const h = Math.floor(n);
+        const m = Math.round((n - h) * 60);
+        return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+};
+
+// Render UI Functions
+function renderClockGrid(container, jobs, hourlySingle, hourlyMultiple, notHourly, timeEntryCodes) {
+    let html = `
+        <p class="clock-heading">Job Title</p>
+        <p class="clock-heading">Week</p>
+        <p class="clock-heading">Pay Period</p>
+        ${hourlyMultiple ? `<p class="clock-heading">TEC</p>` : ''}
+        ${!notHourly ? `<p class="clock-heading">Clock</p>` : ''}
+    `;
+
+    // primary positions first
+    const primaries = jobs.filter(j => j.primary);
+    const secondaries = jobs.filter(j => !j.primary);
+    const orderedJobs = [...primaries, ...secondaries];
+
+    // sort TEC once
+    let tecOptionsHTML = '';
+    if (hourlyMultiple) {
+        const sortedTECs = timeEntryCodes.slice().sort((a, b) => a.sortOrder - b.sortOrder);
+        tecOptionsHTML = sortedTECs.map((c, i) =>
+            `<option value="${c.backendId}" ${i === 0 ? 'selected' : ''}>${c.frontendName}</option>`
+        ).join('');
     }
 
-};
+    for (const pos of orderedJobs) {
+        const long = (pos.title?.length > 25 || pos.org?.length > 25);
+        html += `
+            <div class="job-title-container ${long ? 'scrolling-container' : ''}">
+                <div class="scroll-block">
+                    <div>
+                        <p class="job-title">${pos.title}</p>
+                        <p class="job-department">${pos.org}</p>
+                    </div>
+                </div>
+            </div>
+            <p class="week-time">${convertToTimeFormat(pos.weekHours)}</p>
+            <p class="pay-period">${convertToTimeFormat(pos.periodHours)}</p>
+        `;
+
+        if (hourlyMultiple) {
+            html += `<select class="time-entry-code-select" id="tec-select-${pos.positionNumber}">
+                ${tecOptionsHTML}
+            </select>`;
+        }
+
+        if (!notHourly) {
+            html += `
+            <div class="custom-radio-container">
+                <label class="custom-radio">
+                    <input type="radio" name="${pos.positionNumber}" class="in-radio" value="in" ${pos.clockedIn ? 'checked' : ''}>
+                    <div class="radio-icon"></div><span>IN</span>
+                </label>
+                <label class="custom-radio">
+                    <input type="radio" name="${pos.positionNumber}" class="out-radio" value="out" ${!pos.clockedIn ? 'checked' : ''}>
+                    <div class="radio-icon"></div><span>OUT</span>
+                </label>
+            </div>`;
+        }
+    }
+
+    container.innerHTML = html;
+    container.className = `clock-grid-${notHourly ? 'not-hourly' : hourlySingle ? 'hourly-single' : 'hourly-multiple'}`;
+}
+
+
+function attachClockEvents(positions, timeEntryCodes, clock) {
+    positions.forEach(pos => {
+        ['in', 'out'].forEach(dir => {
+            const input = document.querySelector(`input[name='${pos.positionNumber}'].${dir}-radio`);
+            if (!input) return;
+            input.addEventListener('click', () => {
+                const tecSelect = document.getElementById(`tec-select-${pos.positionNumber}`);
+                const tecCode = tecSelect ? tecSelect.value : (timeEntryCodes[0]?.backendId || '');
+                const isDoubleClock = (pos.clockedIn && dir === 'in') || (!pos.clockedIn && dir === 'out');
+                if (isDoubleClock) {
+                    renderPopup(`Double Clock ${dir.toUpperCase()}`, `Are you sure you want to clock ${dir} again?`);
+                    const buttons = document.querySelector('.popup-buttons');
+                    buttons.innerHTML = `
+                        <button class="cancel-double-clock-btn red-btn">Cancel</button>
+                        <button class="confirm-double-clock-btn">Confirm</button>
+                    `;
+                    buttons.querySelector('.cancel-double-clock-btn').onclick = () => window.hidePopup();
+                    buttons.querySelector('.confirm-double-clock-btn').onclick = () => {
+                        window.hidePopup();
+                        clock.clockInOut(pos.positionNumber, dir, tecCode);
+                    };
+                } else {
+                    clock.clockInOut(pos.positionNumber, dir, tecCode);
+                }
+                clock.updateRadioButtonStates();
+            });
+        });
+    });
+}
+
+function renderPopup(title, message) {
+    window.showPopup(title, message);
+}
+function convertToTimeFormat(timeString) {
+    const n = parseFloat(timeString.replace('H', '').trim());
+    const h = Math.floor(n), m = Math.round((n - h) * 60);
+    return `${h}:${m.toString().padStart(2, '0')}`;
+}

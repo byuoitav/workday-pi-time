@@ -185,7 +185,7 @@ window.showPopup = function (title, message) {
     const popupMessage = popupContainer.querySelector('.popup-message');
 
     popupHeader.textContent = title;
-    popupMessage.textContent = message;
+    popupMessage.innerHTML = message;
 
     popupContainer.style.visibility = 'visible';
 }
