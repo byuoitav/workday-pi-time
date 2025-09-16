@@ -82,8 +82,8 @@ window.components.dayOverview = {
 
     renderTimeBlocks: function (timeBlocks) {
         return timeBlocks.map(block => {
-            const start = block.clockIn ? new Date(block.clockIn).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-            const end = block.clockOut ? new Date(block.clockOut).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+            const start = block.clockIn ? new Date(block.clockIn).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
+            const end = block.clockOut ? new Date(block.clockOut).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
             return `
             <div class="time-block">
                 <p class="time-type">${block.timeEntryCodeName}</p>
@@ -97,7 +97,7 @@ window.components.dayOverview = {
 
     renderUnmatchedTimeEvents: function (events) {
         return events.map(event => {
-            const time = new Date(event.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const time = new Date(event.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
             const type = event.clockEventType === 'Check-in' ? 'IN' : 'OUT';
             return `
             <div class="unmatched-time-event">

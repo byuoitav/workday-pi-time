@@ -83,13 +83,4 @@ function makeZPattern() {
         topRight = bottomLeft = bottomRight = null;
     }, 20000);
 
-    let cosmoSquare = createSquare('cosmo-square', () => {
-        const cosmo = document.getElementById("cosmo");
-        cosmo.classList.add("cosmo-slide");
-        cosmo.classList.remove("cosmo-hide");
-        setTimeout(() => {
-        cosmo.classList.remove("cosmo-slide");
-        cosmo.classList.add("cosmo-hide");
-        }, 4000);
-    });
 }

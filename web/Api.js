@@ -7,11 +7,10 @@ class ApiService {
         try {
             const response = await fetch(url);
             if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
+                // throw new Error(`Server responded with status: ${response.status}`);
             }
 
             const json = await response.json();
-
             if (json.error) {
                 if (json.error.includes("no worker")) {
                     window.showErrorPopup("No Worker Matches ID");

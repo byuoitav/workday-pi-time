@@ -188,18 +188,26 @@ function renderClockGrid(container, jobs, hourlySingle, hourlyMultiple, notHourl
 
     for (const pos of orderedJobs) {
         const long = (pos.title?.length > 25 || pos.org?.length > 25);
+
         html += `
             <div class="job-title-container ${long ? 'scrolling-container' : ''}">
-                <div class="scroll-block">
-                    <div>
-                        <p class="job-title">${pos.title}</p>
-                        <p class="job-department">${pos.org}</p>
-                    </div>
+            <div class="scroll-block">
+                <div>
+                <p class="job-title">${pos.title}</p>
+                <p class="job-department">${pos.org}</p>
                 </div>
+                ${long ? `
+                <div>
+                <p class="job-title">${pos.title}</p>
+                <p class="job-department">${pos.org}</p>
+                </div>` : ""}
+            </div>
             </div>
             <p class="week-time">${convertToTimeFormat(pos.weekHours)}</p>
             <p class="pay-period">${convertToTimeFormat(pos.periodHours)}</p>
         `;
+
+
 
         if (hourlyMultiple) {
             html += `<select class="time-entry-code-select" id="tec-select-${pos.positionNumber}">
