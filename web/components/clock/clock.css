@@ -1,0 +1,341 @@
+.totals-header {
+  display: flex;
+  flex-direction: row;
+  width: 90%;
+  background-color: white;
+  border-radius: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  justify-content: space-around;
+  padding: 0.5rem;
+  margin-top: 5px;
+}
+
+.totals-header p {
+  margin: 0px;
+}
+
+.clock-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  height: 300px;
+  /* Adjust for header height */
+  overflow-y: auto;
+  /* Allow scrolling if content overflows */
+  background-color: white;
+  margin-top: 5px;
+  border-radius: 15px;
+  padding: .5rem;
+}
+
+/* Grid with Time Entry Codes and in/out buttons */
+.clock-grid-hourly-multiple {
+  display: grid;
+  grid-template-columns: 3fr 2fr 2fr 2fr 4fr;
+  /* column widths */
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  /* row gap and column gap */
+  font-size: 1em;
+}
+
+/* Grid with no in/out */
+.clock-grid-not-hourly {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  /* column widths */
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  /* row gap and column gap */
+  font-size: 1em;
+}
+
+/* Grid with no Time Entry Codes but has in/out buttons */
+.clock-grid-hourly-single {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr;
+  /* column widths */
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  /* row gap and column gap */
+  font-size: 1em;
+}
+
+.clock-heading {
+  font-weight: bold;
+  font-size: 1.0em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin: 5px 0;
+  text-align: center;
+}
+
+
+.week-time,
+.pay-period {
+  margin: 0;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+.job-title {
+  font-weight: normal;
+  font-size: .9em;
+  width: 150px;
+  margin: 0;
+}
+
+.job-department {
+  font-size: .7em;
+  color: #296fc3;
+  margin: 0;
+}
+
+.job-title-container {
+  height: 50px;
+  overflow: hidden;
+  position: relative;
+  margin-left: 20px;
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+  width: 100%;
+}
+
+.scrolling-container {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.scrolling-container .scroll-block {
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  animation: scroll-left 12s linear infinite;
+}
+
+.scroll-block>div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  padding-right: 10px;
+  /* spacing between copies */
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+    /* only move halfway, because of duplicate */
+  }
+}
+
+.time-entry-code-select {
+  background-color: #fff;
+  border-radius: 20px;
+  border-width: 2px !important;
+  min-height: 6vh;
+  min-width: 10vw;
+  padding: 1.8vh .8vw;
+  border-color: #b3b3b3;
+  border-style: solid;
+  font-size: .8em;
+}
+
+.clock-buttons {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.clock-in,
+.clock-out {
+  cursor: pointer;
+}
+
+
+
+.clock-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+input[type="radio"] {
+  width: 10px;
+  height: 10px;
+  cursor: pointer;
+  accent-color: #007BFF;
+
+  /* modern browsers to change the dot color */
+}
+
+.custom-radio-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .7rem;
+  width: 100%;
+  margin-top: 5px;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: solid;
+  border-color: #b3b3b3;
+  border-radius: 15px;
+  border-width: 3px;
+  ;
+  font-size: 1.0em;
+  cursor: pointer;
+  padding: 5px;
+  width: 25%;
+}
+
+.custom-radio {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5em;
+  padding: 10px;
+  font-size: 1.0em;
+  width: 30%;
+  position: relative;
+}
+
+/* Hide native radio */
+.custom-radio input[type="radio"] {
+  display: none;
+}
+
+/* Outer circle */
+.radio-icon {
+  width: 20px;
+  height: 20px;
+  border: 2px solid red;
+  /* default red, overridden below */
+  border-radius: 50%;
+  background-color: white;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Inner filled dot when selected */
+.radio-icon::after {
+  content: "";
+  display: none;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: red;
+  /* overridden below */
+}
+
+/* When checked, show dot */
+.custom-radio input.in-radio:checked+.radio-icon::after,
+.custom-radio input.out-radio:checked+.radio-icon::after {
+  display: block;
+}
+
+/* Change circle/dot color for "in" */
+.custom-radio input.in-radio+.radio-icon {
+  border-color: green;
+}
+
+.custom-radio input.in-radio:checked+.radio-icon::after {
+  background-color: green;
+}
+
+/* Change circle/dot color for "out" */
+.custom-radio input.out-radio+.radio-icon {
+  border-color: red;
+}
+
+.custom-radio input.out-radio:checked+.radio-icon::after {
+  background-color: red;
+}
+
+/* review-time-entry button */
+button {
+  width: 92%;
+  height: 40px;
+  border-radius: 15px;
+  background-color: #246bc2;
+  border-width: 0;
+  margin-top: 5px;
+  color: white;
+  font-size: 1.4em;
+  transition: transform 0.05s, box-shadow 0.05s, background-color 0.05s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.10);
+  background-color: #4f9bd98e;
+  /* lighter shade */
+}
+
+.grey-out {
+  background-color: #b3b3b3;
+  cursor: not-allowed;
+}
+
+.red-btn {
+  background-color: red;
+}
+
+.radio-button-greyed-out {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  /* Light grey */
+  border-top: 5px solid #3498db;
+  /* Blue */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.popup-message {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

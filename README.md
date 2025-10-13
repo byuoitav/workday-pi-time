@@ -6,6 +6,9 @@ This is the source code deployed on the raspberry-pi based timeclocks around BYU
 `Debug` must be the current loglevel for complete logs of user interactions with the timeclock to be displayed.
 (GET 127.0.0.1:8463/logLevel/level)
 
+#### Web UI
+Web UI Docs are in the `web/WebUIDocs.md` file.
+
 
 ## Environment vars required:
   * WORKDAY_DB_HOST

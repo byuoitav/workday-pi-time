@@ -1,8 +1,10 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,13 +12,19 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
+	"github.com/byuoitav/pi-time/log"
 	"github.com/byuoitav/workday-pi-time/database"
 	"github.com/byuoitav/workday-pi-time/handlers"
 	"github.com/byuoitav/workday-pi-time/workday"
 )
 
-var logger *slog.Logger
+var (
+	logger *slog.Logger
+	//go:embed web/*
+	embeddedFiles embed.FS
+)
 
 func main() {
 	var err error
@@ -42,10 +50,29 @@ func main() {
 		logger.Error("can not set log level", "error", err)
 	}
 
-	//start up a server to serve the angular site and set up the handlers for the UI to use
+	// Setup the Frontend
+	subFS, err := fs.Sub(embeddedFiles, "web")
+	if err != nil {
+		log.P.Fatal("failed to create sub filesystem for web files", zap.Error(err))
+	}
+
+	//start up a server to serve the site and set up the handlers for the UI to use
 	router := gin.Default()
 
 	router.Use(corsMiddleware())
+
+	router.StaticFS("/web", http.FS(subFS))
+
+	router.NoRoute(func(c *gin.Context) {
+		if c.Request.URL.Path == "/" {
+			c.Redirect(http.StatusFound, "/web/")
+		} else if len(c.Request.URL.Path) >= 5 && c.Request.URL.Path[:5] == "/web/" {
+			c.FileFromFS("index.html", http.FS(subFS))
+		} else {
+			c.String(http.StatusNotFound, "Not found")
+			log.P.Error("404 Not Found", zap.String("path", c.Request.URL.Path))
+		}
+	})
 
 	// health endpoint
 	router.GET("/healthz", func(context *gin.Context) {
@@ -85,10 +112,6 @@ func main() {
 	})
 
 	router.POST("/log-entry/level/:level/message/:message", func(context *gin.Context) {
-		// level := context.Param("level")
-		// message := context.Param("message")
-		// fmt.Println("level: ", level)
-		// fmt.Println("message: ", message)
 
 		var log workday.Log
 		err := context.BindJSON(&log)
@@ -178,24 +201,6 @@ func main() {
 			context.JSON(http.StatusServiceUnavailable, err)
 		}
 		context.JSON(http.StatusOK, punches)
-	})
-
-	//serve the angular web page
-	sitePath := "/analog"
-	router.GET("/", func(context *gin.Context) {
-		context.Redirect(http.StatusTemporaryRedirect, sitePath)
-	})
-
-	webRoot := "./dist/analog"
-	fmt.Println("http.Dir(webRoot)", http.Dir(webRoot))
-	router.StaticFS(sitePath, http.Dir(webRoot))
-
-	router.NoRoute(func(context *gin.Context) {
-		if strings.HasPrefix(context.Request.RequestURI, sitePath) {
-			// Only redirect if we are already in the angular sitePath
-			context.File(webRoot + "/index.html")
-		}
-		context.Redirect(http.StatusFound, sitePath)
 	})
 
 	listeningPort := ":" + *port

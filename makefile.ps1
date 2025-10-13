@@ -1,17 +1,16 @@
 $COMMAND = $args[0]
 
-$NAME = "workday-pi-time"
+${NAME} = "workday-pi-time"
 $OWNER = "byuoitav"
-$PKG = "github.com/$OWNER/$NAME"
+$PKG = "github.com/$OWNER/${NAME}"
 $DOCKER_URL = "ghcr.io"
-$DOCKER_PKG = "$DOCKER_URL/$OWNER/$NAME"
+$DOCKER_PKG = "$DOCKER_URL/$OWNER/${NAME}"
 
 Write-Output "PKG: $PKG"
 Write-Output "DOCKER_PKG: $DOCKER_PKG"
 
 $PRD_TAG_REGEX = "v[0-9]+\.[0-9]+\.[0-9]+"
 $DEV_TAG_REGEX = "v[0-9]+\.[0-9]+\.[0-9]+-.+"
-
 
 $COMMIT_HASH = Invoke-Expression "git rev-parse --short HEAD"
 $TAG = Invoke-Expression "git rev-parse --short HEAD"
@@ -33,7 +32,6 @@ Write-Output "The TAG is: $TAG"
 $PKG_LIST = Invoke-Expression "go list $PKG/..."
 Write-Output "PKG_LIST: $PKG_LIST"
 
-
 function All {
     Write-Output "All"
 }
@@ -54,96 +52,53 @@ function Lint {
 }
 
 function Deps {
-    Write-Output "Downloading Backend Dependencies"
+    Write-Output "Downloading Dependencies"
     Invoke-Expression "go mod download"
-
-    Write-Output "Downloading Frontend Dependencies"
-    Set-Location "analog"
-    Invoke-Expression "npm install --legacy-peer-dep"
-    Invoke-Expression "cd .."
-    Write-Output "Exiting \analog"
-
 }
 
 function Build {
     Write-Output "Build"
 
     New-Item -Path dist -ItemType Directory
-    $location = Get-Location
-    Write-Output $location\deps
-    # Write-Output "$location\redirect.html"
-    # Copy-Item "$location\redirect.html" -Destination "$location\dist\"
-    Copy-Item "$location\version.txt" -Destination "$location\dist\"
 
     Write-Output "*****************************************"
-    Write-Output "Building for linux-amd64"
+    Write-Output "Building for linux-arm64"
     Set-Item -Path env:CGO_ENABLED -Value 0
     Set-Item -Path env:GOOS -Value "linux"
-    Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-bin"
+    Set-Item -Path env:GOARCH -Value "arm64"
+    Invoke-Expression "go build -v -o ./dist/${NAME}"
 
-    Write-Output "*****************************************"
-    Write-Output "Building for linux-arm"
-    Set-Item -Path env:CGO_ENABLED -Value 0
-    Set-Item -Path env:GOOS -Value "linux"
-    Set-Item -Path env:GOARCH -Value "arm"
-    Invoke-Expression "go build -v -o dist/${NAME}-arm"
-
-    Write-Output "*****************************************"
-    Write-Output "Building for linux-arm"
-    Set-Item -Path env:CGO_ENABLED -Value 0
-    Set-Item -Path env:GOOS -Value "windows"
-    Set-Item -Path env:GOARCH -Value "amd64"
-    Invoke-Expression "go build -v -o dist/${NAME}-windows.exe"
-
-    Write-Output "*****************************************"
-    Write-Output "Building Frontend"
-    if (Test-Path "analog") {
-        Set-Location "analog"
-        Write-Output "Entering \analog"
-        New-Item -Path dist -ItemType Directory
-        #Invoke-Expression "npm run-script build"
-        Invoke-Expression "npm run ng build --aot --optimization --base-href='/analog/'"
-        Invoke-Expression "cd .."
-        Write-Output "Exiting \analog and moving files to \dist"
-        Move-Item "$location\analog\dist\" -Destination "$location\dist\"
-    }
+    Write-Output "Build output is located in ./dist/."
 }
 
 function Cleanup {
     Write-Output "Clean"
     Invoke-Expression "go clean"
     if (Test-Path -Path "dist") {
-    Remove-Item dist -recurse
-    Write-Output "Recursively deleted dist/"
+        Remove-Item dist -recurse
+        Write-Output "Recursively deleted dist/"
     } else {
         Write-Output "No dist directory to delete"
     }
-    if (Test-Path -Path "analog/dist") {
-        Remove-Item analog/dist -recurse
-        Write-Output "Recursively deleted dist/"
-        } else {
-            Write-Output "No analog/dist directory to delete"
-        }
 }
 
-function DockerFunc {   #can not just be docker because it creates an infinite loop
+function DockerFunc {
     Write-Output "Function Docker      Commit Hash: $COMMIT_HASH     Tag: $TAG"
     if ($COMMIT_HASH -eq $TAG) {
-        Write-Output "Building dev containers with tag $COMMIT_HASH"
+        Write-Output "Building dev container with tag $COMMIT_HASH"
 
-        Write-Output "Building container $DOCKER_PKG/$NAME-dev:$COMMIT_HASH"
-        Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$COMMIT_HASH dist"
+        Write-Output "Building container $DOCKER_PKG/${NAME}:$COMMIT_HASH"
+        Invoke-Expression "docker build --platform linux/arm64 -f .\dockerfile --build-arg NAME=${NAME} -t $DOCKER_PKG/${NAME}:$COMMIT_HASH dist"
     } elseif ($TAG -match $DEV_TAG_REGEX) {
-        Write-Output "Building dev containers with tag $TAG"
+        Write-Output "Building dev container with tag $TAG"
 
-    	Write-Output "Building container $DOCKER_PKG/$NAME-dev:$TAG"
-    	Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/$NAME-dev:$TAG dist"
+        Write-Output "Building container $DOCKER_PKG/${NAME}:$TAG"
+        Invoke-Expression "docker build --platform linux/arm64 -f .\dockerfile --build-arg NAME=${NAME} -t $DOCKER_PKG/${NAME}:$TAG dist"
     } elseif ($TAG -match $PRD_TAG_REGEX) {
-        Write-Output "Building prd containers with tag $TAG"
+        Write-Output "Building prd container with tag $TAG"
 
-    	Write-Output "Building container $DOCKER_PKG/${NAME}:$TAG"
-    	Invoke-Expression "docker build -f dockerfile --platform linux/arm/v7 --build-arg NAME=$NAME-arm -t $DOCKER_PKG/${NAME}:$TAG dist"
+        Write-Output "Building container $DOCKER_PKG/${NAME}:$TAG"
+        Invoke-Expression "docker build --platform linux/arm64 -f .\dockerfile --build-arg NAME=${NAME} -t $DOCKER_PKG/${NAME}:$TAG dist"
     } else {
         Write-Output "Docker function quit unexpectedly. Commit Hash: $COMMIT_HASH     Tag: $TAG"
     }
@@ -156,25 +111,24 @@ function Deploy {
     Invoke-Expression "docker login $DOCKER_URL -u $Env:DOCKER_USERNAME -p $Env:DOCKER_PASSWORD"
     
     if ($COMMIT_HASH -eq $TAG) {
-            Write-Output "Pushing dev containers with tag $COMMIT_HASH"
-    
-            Write-Output "Pushing container $DOCKER_PKG/$NAME-dev:$COMMIT_HASH"
-            Invoke-Expression "docker push $DOCKER_PKG/$NAME-dev:$COMMIT_HASH"
-        } elseif ($TAG -match $DEV_TAG_REGEX) {
-            Write-Output "Pushing dev containers with tag $TAG"
-    
-            Write-Output "Pushing container $DOCKER_PKG/$NAME-dev:$TAG"
-            Invoke-Expression "docker push $DOCKER_PKG/$NAME-dev:$TAG"
-        } elseif ($TAG -match $PRD_TAG_REGEX) {
-            Write-Output "Pushing prd containers with tag $TAG"
-    
-            Write-Output "Pushing container $DOCKER_PKG/${NAME}:$TAG"
-            Invoke-Expression "docker push $DOCKER_PKG/${NAME}:$TAG"
-        } else {
-            Write-Output "Deploy function quit unexpectedly. Commit Hash: $COMMIT_HASH     Tag: $TAG"
-        }
-}
+        Write-Output "Pushing dev container with tag $COMMIT_HASH"
 
+        Write-Output "Pushing container $DOCKER_PKG/${NAME}:$COMMIT_HASH"
+        Invoke-Expression "docker push $DOCKER_PKG/${NAME}:$COMMIT_HASH"
+    } elseif ($TAG -match $DEV_TAG_REGEX) {
+        Write-Output "Pushing dev container with tag $TAG"
+
+        Write-Output "Pushing container $DOCKER_PKG/${NAME}:$TAG"
+        Invoke-Expression "docker push $DOCKER_PKG/${NAME}:$TAG"
+    } elseif ($TAG -match $PRD_TAG_REGEX) {
+        Write-Output "Pushing prd container with tag $TAG"
+
+        Write-Output "Pushing container $DOCKER_PKG/${NAME}:$TAG"
+        Invoke-Expression "docker push $DOCKER_PKG/${NAME}:$TAG"
+    } else {
+        Write-Output "Deploy function quit unexpectedly. Commit Hash: $COMMIT_HASH     Tag: $TAG"
+    }
+}
 
 if ($COMMAND -eq "All") {
     Cleanup
@@ -209,6 +163,7 @@ elseif ($COMMAND -eq "Docker" ) {
     Deps
     Build
     DockerFunc
+    Cleanup
 }
 elseif ($COMMAND -eq "Deploy" ) {
     Cleanup
@@ -216,9 +171,7 @@ elseif ($COMMAND -eq "Deploy" ) {
     Build
     DockerFunc
     Deploy
-}
-elseif ($COMMAND -eq "DeployOnly" ) {
-    Deploy
+    Cleanup
 }
 else {
     Write-Output "Please include a valid command parameter"

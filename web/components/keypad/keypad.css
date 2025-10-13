@@ -1,0 +1,27 @@
+.keypad-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background-color: #246bc2;
+    border-width: 0;
+    margin: 2px;
+    color: white;
+    font-size: 1.5em;
+    font-weight: bold;
+    transition: transform 0.05s, box-shadow 0.05s, background-color 0.05s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.keypad-button:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.10);
+    background-color: #4f7fd9; /* lighter shade */
+}
+
+.unclickable {
+    background-color: #c2c9d5; 
+    color: #808080; 
+    cursor: not-allowed;
+    box-shadow: none;
+    pointer-events: none; 
+}
