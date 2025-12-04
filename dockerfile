@@ -6,4 +6,4 @@ ARG NAME
 
 COPY ${NAME} /workday-pi-time
 
-ENTRYPOINT ["/workday-pi-time"]
+ENTRYPOINT ["/workday-pi-time", "-p", "8888"]
